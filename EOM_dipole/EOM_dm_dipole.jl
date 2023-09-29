@@ -119,7 +119,7 @@ end
 
 function fft_pol(pol)
     pol_along_Efield=pol*E_vec
-    F = fftshift(fft(pol_along_Efield[2:length(pol_along_Efield)]))
+    F = fftshift(fft(pol_along_Efield))
     @show length(t_range),n_steps
     freqs = fftshift(fftfreq(length(t_range), 1.0/n_steps))
     return F,freqs,pol_along_Efield
@@ -145,7 +145,7 @@ sleep(3)
 display(plot(freqs, real.(pol_w[:]),xlim=(0, +1e-5), title = "Spectrum"))
 sleep(3)
 display(plot(freqs, imag.(pol_w[:]),xlim=(0, +1e-5), title = "Spectrum"))
-sleep(10)
+sleep(3)
 
 
 
