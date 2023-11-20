@@ -34,11 +34,16 @@
 
 =# 
 
+
 module hBN2D
 
+using LinearAlgebra
+include("TB_tools.jl")
+using .TB_tools
+#
 # In this program the lattice constant is equal to 1
 
-export Hamiltonian,Berry_Connection,Dipole_Matrices
+export Hamiltonian,Berry_Connection,Dipole_Matrices,Calculate_UdU
   #
   global ndim=2
   #
@@ -100,6 +105,38 @@ export Hamiltonian,Berry_Connection,Dipole_Matrices
            k_minus[id]=k[id]
        end
        return dH
+   end
+   #
+   function Calculate_UdU(k, U;  dk=0.01)
+       #
+       #tau distance between neighbor
+       tau=2.732
+       #
+       k_plus =copy(k)
+       k_minus=copy(k)
+       UdU=zeros(Complex{Float64},2,2,ndim)
+       #
+       for id in 1:ndim
+           k_plus[id] =k[id]+dk
+           k_minus[id]=k[id]-dk
+           H_plus =Hamiltonian(k_plus)
+	   data_plus= eigen(H_plus)
+	   eigenvec_p = data_plus.vectors
+	   eigenvec_p= fix_eigenvec_phase(eigenvec_p)
+
+           H_minus=Hamiltonian(k_minus)
+	   data_minus= eigen(H_minus)
+	   eigenvec_m = data_minus.vectors
+	   eigenvec_m= fix_eigenvec_phase(eigenvec_m)
+	   
+	   dU=(eigenvec_p-eigenvec_m)/(2.0*dk)*tau
+	   UdU[:,:,id]=(U')*dU
+
+           k_plus[id] =k[id]
+           k_minus[id]=k[id]
+       end
+       #
+       return UdU
    end
    #
 end

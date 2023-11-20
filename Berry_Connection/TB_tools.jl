@@ -2,7 +2,7 @@ module TB_tools
 
 using Printf
 
-export generate_circuit,generate_unif_grid,evaluate_DOS
+export generate_circuit,generate_unif_grid,evaluate_DOS,fix_eigenvec_phase
   #
   function generate_circuit(points, n_steps)
 	println("Generate k-path ")
@@ -78,3 +78,30 @@ function HW_rotate(M,eigenvec,mode)
 	return rot_M
 end 
 
+#
+# Fix phase of the eigenvectors in such a way
+# to have a positive definite diagonal
+#
+function fix_eigenvec_phase(eigenvec)
+#	println("Before phase fixing : ")
+#	show(stdout,"text/plain",eigenvec)
+	#
+	# Rotation phase matrix
+	#
+	phase_m=zeros(Complex{Float64},2,2)
+	phase_m[1,1]=exp(-1im*angle(eigenvec[1,1]))
+        phase_m[2,2]=exp(-1im*angle(eigenvec[2,2]))
+	#
+	# New eigenvectors
+	#
+	eigenvec=eigenvec*phase_m
+#	println("\nAfter phase fixed : ")
+#	show(stdout,"text/plain",eigenvec)
+	#
+	# Norm
+	#
+#	println(norm(eigenvec[:,1]))
+#	println(norm(eigenvec[:,2]))
+	#
+	return eigenvec
+end

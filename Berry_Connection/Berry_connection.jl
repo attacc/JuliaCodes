@@ -10,12 +10,6 @@ using .hBN2D
 
 include("TB_tools.jl")
 using .TB_tools
-
-# 
-# Reciprocal Lattice Vectors
-#
-b_1=[6.0,0]
-b_2=[0,6.0]
 #
 nk=40
 n_kx=nk
@@ -45,6 +39,10 @@ for ix in 1:n_kx
 	eigenval = data.values
 	eigenvec = data.vectors
         #
+	# Fix phase of eigenvectors
+	#
+	eigenvec=fix_eigenvec_phase(eigenvec)
+	#
         # Calculate A(W) and rotate in H-gauge
         # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
         #
@@ -56,9 +54,15 @@ for ix in 1:n_kx
         # namely the simple dipole.
         # (In principle I can use the dynamical Berry phase formulation for this term)
         #
-        dH=Dipole_Matrices(k_vec)
+#        dH=Dipole_Matrices(k_vec)
+#        A =A + dH
         #
-        A=A+dH
+	# Calculate U^+ \d/dk U
+        #
+	UdU=Calculate_UdU(k_vec, eigenvec)
+	#
+	#
+        A=A+UdU
         #
         rot_A_x=HW_rotate(A[:,:,1],eigenvec,"W_to_H")
         rot_A_y=HW_rotate(A[:,:,2],eigenvec,"W_to_H")

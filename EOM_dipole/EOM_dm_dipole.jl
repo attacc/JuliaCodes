@@ -53,8 +53,8 @@ end
 #
 T_2=5.0
 t_start=0.0
-dt =0.005
-t_end  =T_2*10.0
+dt =0.001
+t_end  =T_2*6.0
 E_vec=[1.0,0.0]
 #
 n_steps=floor(Integer,(t_end-t_start)/dt)
@@ -141,11 +141,11 @@ pol_w,freqs,pol_Edir=fft_pol(pol)
 # Plot the results
 
 display(plot(t_range, pol_Edir))
-sleep(3)
+sleep(10)
 display(plot(freqs, real.(pol_w[:]),xlim=(0, +1e-5), title = "Spectrum"))
-sleep(3)
-display(plot(freqs, imag.(pol_w[:]),xlim=(0, +1e-5), title = "Spectrum"))
-sleep(3)
+sleep(5)
+#display(plot(freqs, imag.(pol_w[:]),xlim=(0, +1e-5), title = "Spectrum"))
+#sleep(5)
 
 
 
