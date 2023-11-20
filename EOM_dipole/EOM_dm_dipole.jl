@@ -53,8 +53,8 @@ end
 #
 T_2=5.0
 t_start=0.0
-dt =0.001
-t_end  =T_2*6.0
+dt =0.01
+t_end  =T_2*8.0
 E_vec=[1.0,0.0]
 #
 n_steps=floor(Integer,(t_end-t_start)/dt)
@@ -120,8 +120,8 @@ end
 function fft_pol(pol)
     pol_along_Efield=pol*E_vec
     F = fftshift(fft(pol_along_Efield))
-    @show length(t_range),n_steps
-    freqs = fftshift(fftfreq(length(t_range), 1.0/n_steps))
+    @show length(t_range),dt
+    freqs = fftshift(fftfreq(length(t_range), dt))
     return F,freqs,pol_along_Efield
 end
 
@@ -142,10 +142,10 @@ pol_w,freqs,pol_Edir=fft_pol(pol)
 
 display(plot(t_range, pol_Edir))
 sleep(10)
-display(plot(freqs, real.(pol_w[:]),xlim=(0, +1e-5), title = "Spectrum"))
+display(plot(freqs, real.(pol_w[:]),xlim=(0, +1e-6), title = "Spectrum"))
 sleep(5)
-#display(plot(freqs, imag.(pol_w[:]),xlim=(0, +1e-5), title = "Spectrum"))
-#sleep(5)
+display(plot(freqs, imag.(pol_w[:]),xlim=(0, +1e-5), title = "Spectrum"))
+sleep(5)
 
 
 
