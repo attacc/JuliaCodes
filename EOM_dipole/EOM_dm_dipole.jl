@@ -69,6 +69,7 @@ println("External field versor ",E_vec)
 
 #
 t_range = t_start:dt:t_end
+itstart = 50 # start of the external field
 
 function get_Efield(t ; itstart=3)
 	#
@@ -94,7 +95,7 @@ function deriv_rho(rho, t)::Vector{Complex{Float64}}
 	#
 	# Electrinc field
 	#
-	E_field=get_Efield(t, itstart=50)
+	E_field=get_Efield(t, itstart=itstart)
 	#
         E_dot_DIP=zeros(Complex{Float64},2,2)
         for d in 1:s_dim
@@ -137,7 +138,15 @@ solution_mat=reshape(solution,length(t_range),h_dim,h_dim)
 pol=get_polarization(solution_mat)
 
 # Write polarization on disk
-header=["# Pol_x","Pol_y"] 
-CSV.write("Polarization.csv", delim=" ", Tables.table(pol), header=header)
+header1=["# Pol_x","Pol_y"] 
+CSV.write("Polarization.csv", delim=" ", Tables.table(pol), header=header1)
 
+t_and_E=zeros(Float64,n_steps,3)
+for it in 1:n_steps
+ t=it*dt
+ E_field_t=get_Efield(t,itstart=itstart)
+ t_and_E[it,:]=[t,E_field_t[1],E_field_t[2]]
+end
+header2=["# Time ", " Efield_x"," Efield_y"] 
+CSV.write("External_field.csv", delim=" ", Tables.table(t_and_E), header=header2)
 
