@@ -3,8 +3,10 @@
 # Claudio Attaccalite (2023)
 #
 using LinearAlgebra
-using Plots;
-using FFTW
+using Plots
+using CSV
+using Tables
+
 
 include("TB_hBN.jl")
 using .hBN2D
@@ -117,14 +119,6 @@ function get_polarization(rho_solution)
     return pol
 end 
 
-function fft_pol(pol)
-    pol_along_Efield=pol*E_vec
-    F = fftshift(fft(pol_along_Efield))
-    @show length(t_range),dt
-    freqs = fftshift(fftfreq(length(t_range), dt))
-    return F,freqs,pol_along_Efield
-end
-
 rho0=zeros(Complex{Float64},h_dim,h_dim)
 rho0[1,1]=1.0
 
@@ -136,19 +130,9 @@ solution_mat=reshape(solution,length(t_range),h_dim,h_dim)
 # Calculate the polarization in time and frequency
 
 pol=get_polarization(solution_mat)
-pol_w,freqs,pol_Edir=fft_pol(pol)
 
-# Plot the results
-
-display(plot(t_range, pol_Edir))
-sleep(10)
-display(plot(freqs, real.(pol_w[:]),xlim=(0, +1e-6), title = "Spectrum"))
-sleep(5)
-display(plot(freqs, imag.(pol_w[:]),xlim=(0, +1e-5), title = "Spectrum"))
-sleep(5)
-
-
-
-
+# Write polarization on disk
+header=["# Pol_x","Pol_y"] 
+CSV.write("Polarization.csv", delim=" ", Tables.table(pol), header=header)
 
 
