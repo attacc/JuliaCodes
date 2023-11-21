@@ -41,6 +41,10 @@ using LinearAlgebra
 include("TB_tools.jl")
 using .TB_tools
 #
+ha2ev     =27.211396132
+CORE_CONST=2.418884326505
+fs2aut    =100.0/CORE_CONST
+#
 # In this program the lattice constant is equal to 1
 #
 # Distance between neighbor 
@@ -48,11 +52,11 @@ tau=2.732  # a.u.
 #
 #
 # Default TB paramters from PRB 100, 195201 (2019)
-t_0 = 2.92  # eV
-E_gap=5.62  # eV
+t_0 = 2.92/ha2ev  # eV
+E_gap=5.62/ha2ev  # eV
 #
 
-export Hamiltonian,Berry_Connection,Dipole_Matrices,Calculate_UdU
+export Hamiltonian,Berry_Connection,Dipole_Matrices,Calculate_UdU,fs2aut,ha2ev
   #
   global ndim=2
   #

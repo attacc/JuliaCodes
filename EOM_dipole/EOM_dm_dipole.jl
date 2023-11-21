@@ -53,23 +53,23 @@ end
 # 
 # Input paramters for linear optics with delta function
 #
-T_2=5.0
+T_2=6.0*fs2aut   # fs
 t_start=0.0
-dt =0.01
-t_end  =T_2*8.0
+dt =0.01*fs2aut  # fs
+t_end  =T_2*10.0
 E_vec=[1.0,0.0]
 #
-n_steps=floor(Integer,(t_end-t_start)/dt)
+t_range = t_start:dt:t_end
+n_steps=size(t_range)[1] 
 
 println(" * * * Linear response from density matrix EOM within dipole approx. * * *")
-println("Time rage ",t_start,t_end)
+println("Time rage ",t_start/fs2aut," - ",t_end/fs2aut)
 println("Number of steps ",n_steps)
-println("Dephasing time ",T_2)
-println("External field versor ",E_vec)
+println("Dephasing time ",T_2/fs2aut," [fs] ")
+println("External field versor :",E_vec)
 
 #
-t_range = t_start:dt:t_end
-itstart = 50 # start of the external field
+itstart = 3 # start of the external field
 
 function get_Efield(t ; itstart=3)
 	#
@@ -104,7 +104,7 @@ function deriv_rho(rho, t)::Vector{Complex{Float64}}
         #
         # Commutato D*rho-rho*D
         #
-        d_rho=d_rho+1im*(E_dot_DIP*rho_mat-rho_mat*E_dot_DIP)
+        d_rho=d_rho-1im*(E_dot_DIP*rho_mat-rho_mat*E_dot_DIP)
 	#
 	# Damping
 	#
@@ -139,11 +139,11 @@ pol=get_polarization(solution_mat)
 
 # Write polarization and external field on disk
 
-t_and_E=zeros(Float64,n_steps+1,3)
+t_and_E=zeros(Float64,n_steps,3)
 for it in 1:n_steps
  t=it*dt
  E_field_t=get_Efield(t,itstart=itstart)
- t_and_E[it,:]=[t,E_field_t[1],E_field_t[2]]
+ t_and_E[it,:]=[t/fs2aut,E_field_t[1],E_field_t[2]]
 end
 
 
@@ -151,8 +151,9 @@ df = DataFrame(time  = t_and_E[:,1],
                pol_x = pol[:,1], 
                pol_y = pol[:,2],
                )
-CSV.write("Polarization.csv", delim=" ", df)
+f = open("polarization.csv","w") 
+CSV.write(f, df; quotechar=' ', delim=' ')
 
-header2=["# Time ", " Efield_x"," Efield_y"] 
-CSV.write("External_field.csv", delim=" ", Tables.table(t_and_E), header=header2)
+header2=["time [fs]", "efield_x","efield_y"] 
+CSV.write("external_field.csv", delim=' ', Tables.table(t_and_E), header=header2, quotechar=' ')
 
