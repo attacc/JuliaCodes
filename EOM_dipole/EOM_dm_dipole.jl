@@ -5,7 +5,7 @@
 using LinearAlgebra
 using Plots
 using CSV
-using Tables
+using DataFrames
 
 
 include("TB_hBN.jl")
@@ -137,16 +137,22 @@ solution_mat=reshape(solution,length(t_range),h_dim,h_dim)
 
 pol=get_polarization(solution_mat)
 
-# Write polarization on disk
-header1=["# Pol_x","Pol_y"] 
-CSV.write("Polarization.csv", delim=" ", Tables.table(pol), header=header1)
+# Write polarization and external field on disk
 
-t_and_E=zeros(Float64,n_steps,3)
+t_and_E=zeros(Float64,n_steps+1,3)
 for it in 1:n_steps
  t=it*dt
  E_field_t=get_Efield(t,itstart=itstart)
  t_and_E[it,:]=[t,E_field_t[1],E_field_t[2]]
 end
+
+
+df = DataFrame(time  = t_and_E[:,1], 
+               pol_x = pol[:,1], 
+               pol_y = pol[:,2],
+               )
+CSV.write("Polarization.csv", delim=" ", df)
+
 header2=["# Time ", " Efield_x"," Efield_y"] 
 CSV.write("External_field.csv", delim=" ", Tables.table(t_and_E), header=header2)
 
