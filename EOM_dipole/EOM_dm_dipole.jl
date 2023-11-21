@@ -70,12 +70,12 @@ println("External field versor ",E_vec)
 #
 t_range = t_start:dt:t_end
 
-function get_Efield(t)
+function get_Efield(t ; itstart=3)
 	#
 	# Field in direction y
 	#
-	if dt<=2*t && t<3*dt 
-		a_t=1.0
+        if t>=(itstart-1)*dt && t<itstart*dt 
+		a_t=1.0/dt
 	else
 		a_t=0.0
 	end
@@ -94,11 +94,16 @@ function deriv_rho(rho, t)::Vector{Complex{Float64}}
 	#
 	# Electrinc field
 	#
-	E_field=get_Efield(t)
+	E_field=get_Efield(t, itstart=50)
 	#
+        E_dot_DIP=zeros(Complex{Float64},2,2)
         for d in 1:s_dim
-          d_rho=d_rho+1im*E_field[d]*(Dip_h[:,:,d]*rho_mat-rho_mat*Dip_h[:,:,d])
+            E_dot_DIP=E_dot_DIP+E_field[d]*Dip_h[:,:,d]
         end
+        #
+        # Commutato D*rho-rho*D
+        #
+        d_rho=d_rho+1im*(E_dot_DIP*rho_mat-rho_mat*E_dot_DIP)
 	#
 	# Damping
 	#
