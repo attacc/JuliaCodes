@@ -20,7 +20,7 @@ using .hBN2D
 
 function FFT_1D(times, freqs, pol, e_vec)
     pol_w=zeros(Complex{Float64},length(freqs))
-    pol_edir=pol*e_vec
+#    pol_edir=pol*e_vec
     dt=times[2]-times[1]
     for (itime,time) in enumerate(times)
       for (ifreqs, freq) in enumerate(freqs)
@@ -40,7 +40,7 @@ function Divide_by_the_field(pol_w, times, itstart)
   #
   # E(w) = \int dt \delta(t-t_0} e^{-omega * t} = e^{ -omega t_0} 
   #
-  tstart=itstart*(times[2]-times[1])
+  tstart=times[itstart]
   println("Starting time of delta function: ",tstart/fs2aut)
   #
   for (ifreqs, freq) in enumerate(freqs)
@@ -51,18 +51,38 @@ function Divide_by_the_field(pol_w, times, itstart)
   #
 end
 
+function damp_it(times, pol,T2,itstart)
+    tstart=times[itstart]
+    for (itime,time) in enumerate(times)
+        if itime >= itstart
+            pol[itime,:]=pol[itime,:]*exp(-T2*(time-tstart))
+        end
+    end
+end
+
 df = CSV.read("polarization.csv",DataFrame)
-pol=Matrix(df)
+pol_and_times=Matrix(df)
 e_vec=[1.0, 0.0]
+
+s_dim=size(pol_and_times)[2]-1
+println("Spacial dimensions ",s_dim)
+pol  =pol_and_times[:,2:3]
+times=pol_and_times[:,1]*fs2aut
 
 freqs_range  =[0.0/ha2ev, 20.0/ha2ev] # eV
 freqs_nsteps =200
 
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 
-pol_w=FFT_1D(pol[:,1]*fs2aut, freqs, pol[:,2:3], e_vec)
-itstart=3 # should be the same of the EOM_dm_dipoles.jl
-pol_w=Divide_by_the_field(pol_w,pol[:,1]*fs2aut,itstart)
+# These two paramters should be the same of the EOM_dm_dipoles.jl
+itstart=3 
+T2     =6.0*fs2aut
+#
+# Dampo polarization if required
+#
+pol  =damp_it(times,pol, T2, itstart)
+pol_w=FFT_1D(times, freqs, pol, e_vec)
+pol_w=Divide_by_the_field(pol_w,times,itstart)
 #
 # Write data on file
 #

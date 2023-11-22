@@ -70,7 +70,7 @@ end
 #
 T_2=6.0*fs2aut   # fs
 t_start=0.0
-dt =0.01*fs2aut  # fs
+dt =0.005*fs2aut  # fs
 t_end  =T_2*10.0
 E_vec=[1.0,0.0]
 #
@@ -123,7 +123,8 @@ function deriv_rho(rho, t)::Vector{Complex{Float64}}
 	#
 	# Damping
 	#
-	if T_2!=0.0
+        damping=false
+	if T_2!=0.0 && damping==true
 		d_rho=d_rho-1im/T_2*off_diag.*rho_mat
 	end
         d_rho_vec=-1.0im*reshape(d_rho,h_dim*h_dim)
