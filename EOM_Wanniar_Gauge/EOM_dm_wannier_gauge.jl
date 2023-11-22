@@ -1,5 +1,5 @@
 #
-# Density matrix EOM in dipole approximation (TB approximation)
+# Density matrix EOM in the Wannier Gauge (TB approximation)
 # Claudio Attaccalite (2023)
 #
 using LinearAlgebra
