@@ -136,7 +136,7 @@ function get_polarization(rho_solution)
     pol=zeros(Float64,nsteps,s_dim)
     for it in 1:nsteps,id in 1:s_dim
         rho_t=view(rho_solution,it,:,:)
-        pol[it,id]=real.(sum(Dip_h[:,:,id] .* rho_t ))
+        pol[it,id]=real.(sum(Dip_h[:,:,id] .* transpose(rho_t)))
     end
     return pol
 end 

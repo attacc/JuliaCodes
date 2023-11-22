@@ -59,7 +59,6 @@ function damp_it(times, pol,T2,itstart)
         else
             damp_func=1.0
         end
-        println(itime," and ",damp_func)
             pol[itime,:].=pol[itime,:]*damp_func
     end
     return pol
