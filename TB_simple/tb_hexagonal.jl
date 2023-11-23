@@ -95,7 +95,7 @@ Gamma=[0,0]
 
 points=[Gamma,K,M,Gamma]
 
-path=generate_circuit(points,20)
+path=generate_circuit(points,10)
 band_structure = zeros(Float64, length(path), 2)
 
 for (i,kpt) in enumerate(path)
