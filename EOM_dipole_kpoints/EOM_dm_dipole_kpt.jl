@@ -26,13 +26,40 @@ h_dim=2
 # Space dimension
 s_dim=2
 
+
+
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
-H_w=Hamiltonian(k_vec)
-data= eigen(H_w)      # Diagonalize the matrix
-eigenval = data.values
-eigenvec = data.vectors
+# K-points
+n_k1=3
+n_k2=1
+
+b_1=2*pi/3.0*[1.0, -sqrt(3)]
+b_2=2*pi/3.0*[1.0,  sqrt(3)]
+b_1=[1,0]
+b_2=[0,1]
+
+k_list=generate_unif_grid(n_k1, n_k2, b_1, b_2)
+
+nk=n_k1*n_k2
+
+eigenval=zeros(Float64,s_dim,nk)
+eigenvec=zeros(Float64,s_dim,s_dim,nk)
+
+println(" K-point list ")
+println(" nk = ",nk)
+for ik in 1:nk
+	println(k_list[:,ik])
+end
+exit()
+
+for (ik, k_vec) in enumerate(k_list)
+	H_w=Hamiltonian(k_vec)
+	data= eigen(H_w)      # Diagonalize the matrix
+	eigenval[:,ik]   = data.values
+	eigenvec[:,:,ik] = data.vectors
+end
 
 # rotate in the Hamiltonian guage
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
@@ -58,16 +85,16 @@ end
 #
 for i in 1:h_dim
     for j in i+1:h_dim
-	do ik in 1:nk
+	for ik in 1:nk
           Dip_h[i,j,ik,:]= 1im*Dip_h[i,j,ik,:]/(eigenval[j,ik]-eigenval[i,ik])
           Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
-	enddo
+	end
     end
 end
 
-H_h=zeros(Complex{Float64},h_dim,h_dim)
+H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
 for i in 1:h_dim
-	H_h[i,i]=eigenval[i]
+	H_h[i,i,:]=eigenval[i,:]
 end
 
 # 

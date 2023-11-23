@@ -32,12 +32,26 @@ export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigen
  end
  #
  function generate_unif_grid(n_kx, n_ky, b_1, b_2)
-     k_grid=Any[]
+     s_dim=2
+     nk   =n_kx*n_ky
+     k_grid=zeros(Float64,s_dim,nk)
      d_b1=b_1/n_kx
      d_b2=b_2/n_ky
-     for ix in 0:(n_kx-1),iy in 0:(n_ky-1)
-         vec=-b_1/2.0-b_2/2.0+d_b1*ix+d_b2*iy
-         push!(k_grid,vec)
+     ik=1
+     for ix in 1:n_kx,iy in 1:n_ky
+         vec=d_b1*ix+d_b2*iy
+	 k_grid[:,ik]=vec
+	 ik=ik+1
+     end
+     if isodd(n_kx)
+	for ik in 1:nk
+	  k_grid[:,ik]=k_grid[:,ik]-b_1/2.0
+	end
+     end
+     if isodd(n_ky)
+	for ik in 1:nk
+	  k_grid[:,ik]=k_grid[:,ik] #+d_b2/2.0
+	end
      end
      return k_grid
  end
