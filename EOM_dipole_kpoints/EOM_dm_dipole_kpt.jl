@@ -187,7 +187,8 @@ end
 function get_polarization(rho_s)
     nsteps=size(rho_s,1)
     pol=zeros(Float64,nsteps,s_dim)
-    Threads.@threads for it in 1:nsteps
+    println("Calculate polarization: ")
+    Threads.@threads for it in ProgressBar(1:nsteps)
 	    for id in 1:s_dim
     		for ik in 1:nk
      	    	pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id] .* transpose(rho_s[it,:,:,ik])))
