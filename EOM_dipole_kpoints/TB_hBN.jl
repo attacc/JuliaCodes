@@ -51,9 +51,9 @@ fs2aut    =100.0/CORE_CONST
 tau=2.732  # a.u.
 #
 #
-# Default TB paramters from PRB 100, 195201 (2019)
-t_0 = 2.92/ha2ev  # eV
-E_gap=5.62/ha2ev  # eV
+# Default TB paramters from PRB 94, 125303 
+t_0 = 2.30/ha2ev  # eV
+E_gap=3.625*2.0/ha2ev  # eV
 #
 
 export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,fs2aut,ha2ev
@@ -70,9 +70,9 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,fs2aut,ha2ev
 	H[2,2]=-E_gap/2.0
         #
         # Off diagonal part
-        # f(k)=e^{-i * k_x} * (1+2*e^{ i * k_x *3/2} ) * cos(sqrt(3)/2 *k_y)
+        # f(k)=e^{-i * k_y} * (1+2*e^{ i * k_y *3/2} ) * cos(sqrt(3)/2 *k_x)
         #
-	f_k=exp(-1im*k[1])*(1.0+2.0*exp(1im*k[1]*3.0/2.0)*cos(sqrt(3.0)*k[2]/2.0))
+	f_k=exp(-1im*k[2])*(1.0+2.0*exp(1im*k[2]*3.0/2.0)*cos(sqrt(3.0)*k[1]/2.0))
 	H[1,2]=t_0*f_k
 	H[2,1]=conj(H[1,2])
 	return H
