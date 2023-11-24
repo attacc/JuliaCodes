@@ -85,7 +85,7 @@ freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 
 # These two paramters should be the same of the EOM_dm_dipoles.jl
 itstart=3 
-T2     =6.0*fs2aut
+T2     =3.0*fs2aut
 #
 # Dampo polarization if required
 #

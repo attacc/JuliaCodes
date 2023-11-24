@@ -32,8 +32,8 @@ s_dim=2
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=48
-n_k2=48
+n_k1=96
+n_k2=96
 
 b_1=2*pi/3.0*[1.0, -sqrt(3)]
 b_2=2*pi/3.0*[1.0,  sqrt(3)]
