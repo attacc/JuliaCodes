@@ -36,7 +36,7 @@ function generate_circuit(points, n_steps)
      s_dim=2
      nk   =n_kx*n_ky
      k_grid=zeros(Float64,s_dim,nk)
-	 vec_crystal=zeros(Float64,s_dim)
+     vec_crystal=zeros(Float64,s_dim)
      dx=1.0/n_kx
      dy=1.0/n_ky
 

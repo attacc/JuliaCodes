@@ -9,8 +9,8 @@ using Plots
 #=
  Lattice vectors
  
- a_1=a/2 (3,  sqrt(3))
- a_2=a/2 (3, -sqrt(3))
+ a_1=a/2 (1,  sqrt(3))
+ a_2=a  ( 1, 0 )
  
  First neighboars
  
@@ -23,13 +23,16 @@ using Plots
 
  Reciprocal space
  
- b_1 = 2\pi (a_1 ^ a_2) /V = 2\pi/3a (1,  sqrt(3)) 
- b_2 = 2\pi (a_2 ^ a_1) /V = 2\pi/3a (1, -sqrt(3))
+ b_1 = 2\pi * 2/3a (1,  1/sqrt(3)) 
+ b_2 = 2\pi * 2/3a (1, -1/sqrt(3))
 
  Special K-points
 
  K =  2\pi/3a (1,  1/sqrt(3))  
  K'= -2\pi/3a (1, -1/sqrt(3))
+
+ 
+
  M = b_1/2
  M'= b_2/2
 

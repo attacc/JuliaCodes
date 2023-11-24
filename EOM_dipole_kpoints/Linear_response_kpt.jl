@@ -3,10 +3,11 @@
 # Claudio Attaccalite (2023)
 #
 using LinearAlgebra
-using Plots
 using CSV
 using DataFrames
 using Base.Threads
+using PyPlot
+
 
 include("TB_hBN.jl")
 using .hBN2D
@@ -32,11 +33,11 @@ s_dim=2
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=6
-n_k2=6
+n_k1=96
+n_k2=96
 
 b_1=2*pi/3.0*[1.0, -sqrt(3)]
-b_2=2*pi/3.0*[1.0,  sqrt(3)]
+b_2=2*pi/3.0*[0.0, 1.0]
 
 #
 # Matrix to pass from crystal to cartesian
@@ -59,9 +60,29 @@ println(" nk = ",nk)
 # 	println(k_list[:,ik])
 # end
 
+K=[1.0/3.0,1.0/3.0]
+K_cc=b_mat*K
+println(K_cc)
+K_t=[2*pi/3.0,2*pi/sqrt(3.0)/3.0]
+println(K_t)
+K_t=[2*pi/3.0,-2*pi/sqrt(3.0)/3.0]
+println(K_t)
+exit()
+
+println(h_k[1,1]*ha2ev,"---",h_k[1,2]*ha2ev)
+println(h_k[2,1]*ha2ev,"---",h_k[2,2]*ha2ev)
+	data= eigen(h_k)      # Diagonalize the matrix
+        println(data.values*ha2ev)
+h_k=Hamiltonian(K_t)
+println(h_k[1,1]*ha2ev,"---",h_k[1,2]*ha2ev)
+println(h_k[2,1]*ha2ev,"---",h_k[2,2]*ha2ev)
+	data= eigen(h_k)      # Diagonalize the matrix
+        println(data.values*ha2ev)
+exit()
+
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
 println("Building Hamiltonian: ")
-for ik in ProgressBar(1:nk)
+Threads.@threads for ik in ProgressBar(1:nk)
         H_w=Hamiltonian(k_list[:,ik])
 	data= eigen(H_w)      # Diagonalize the matrix
 	eigenval[:,ik]   = data.values
@@ -75,7 +96,7 @@ end
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 
 println("Building Dipoles: ")
-for ik in ProgressBar(1:nk)
+Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
   Dip_w=Grad_H(k_list[:,ik])
   for id in 1:s_dim
@@ -102,9 +123,9 @@ end
 
 
 
-E_field_ver=[1.0,0.0]
+E_field_ver=[1.0,1.0]
 freqs_range  =[0.0/ha2ev, 20.0/ha2ev] # eV
-eta          =0.1/ha2ev
+eta          =0.15/ha2ev
 freqs_nsteps =200
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 
@@ -122,7 +143,7 @@ function Linear_response(freqs,E_field_ver, eta)
    print("Xhi: ")
    Threads.@threads for ifreq in ProgressBar(1:length(freqs))
      for ik in 1:nk,iv in 1:nv,ic in nv+1:h_dim
-        xhi[ifreq]=xhi[ifreq]+Res/(eigenval[ic,ik]-eigenval[iv,ik]-freqs[ifreqs]+eta*1im)
+         xhi[ifreq]=xhi[ifreq]+abs(Res[iv,ic,ik])^2/(eigenval[ic,ik]-eigenval[iv,ik]-freqs[ifreq]-eta*1im)
      end
    end
    return xhi
@@ -130,8 +151,9 @@ end
 
 xhi = Linear_response(freqs, E_field_ver, eta)
 
-df = DataFrame(freqs = freqs, xhi = xhi)
+fig = figure("Linear response",figsize=(10,20))
+plot(freqs*ha2ev,real(xhi[:]))
+plot(freqs*ha2ev,imag(xhi[:]))
+PyPlot.show();
 
-f = open("linear_response.csv","w") 
-CSV.write(f, df; quotechar=' ', delim=' ')
 

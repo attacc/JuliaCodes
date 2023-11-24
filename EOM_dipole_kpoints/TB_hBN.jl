@@ -70,7 +70,7 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,fs2aut,ha2ev
 	H[2,2]=-E_gap/2.0
         #
         # Off diagonal part
-        # f(k)=e^{-i * k_x) * (1+2*e^{ i * k_x *3/2} ) * cos(sqrt3)/2 *k_y)
+        # f(k)=e^{-i * k_x} * (1+2*e^{ i * k_x *3/2} ) * cos(sqrt(3)/2 *k_y)
         #
 	f_k=exp(-1im*k[1])*(1.0+2.0*exp(1im*k[1]*3.0/2.0)*cos(sqrt(3.0)*k[2]/2.0))
 	H[1,2]=t_0*f_k
