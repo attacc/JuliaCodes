@@ -10,6 +10,9 @@ using ProgressBars
 include("TB_hBN.jl")
 using .hBN2D
 
+include("units.jl")
+using .Units
+
 # function fft_pol(time, pol,e_vec)
 #     pol_along_Efield=pol*e_vec
 #     pol_w = fftshift(fft(pol_along_Efield))

@@ -14,16 +14,13 @@ using .hBN2D
 
 include("TB_tools.jl")
 using .TB_tools
+
+include("units.jl")
+using .Units
 # 
 # Code This code is in Hamiltonian space
 # in dipole approximation only at the K-point
 #
-# Hamiltonian dimension
-h_dim=2
-# Space dimension
-s_dim=2
-
-
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
@@ -31,20 +28,6 @@ off_diag=.~I(h_dim)
 # K-points
 n_k1=96
 n_k2=96
-
-a_1=[    sqrt(3.0)     , 0.0]
-a_2=[ sqrt(3.0)/2.0, 3.0/2.0]
-
-b_1=2*pi/3.0*[ sqrt(3.0),  -1.0 ]
-b_2=2*pi/3.0*[ 0.0,         2.0 ]
-
-#
-# Matrix to pass from crystal to cartesian
-#
-b_mat=zeros(Float64,s_dim,s_dim)
-b_mat[:,1]=b_1
-b_mat[:,2]=b_2
-
 
 k_list=generate_unif_grid(n_k1, n_k2, b_mat)
 
@@ -55,30 +38,6 @@ eigenvec=zeros(Complex{Float64},s_dim,s_dim,nk)
 
 println(" K-point list ")
 println(" nk = ",nk)
-# for ik in 1:nk
-# 	println(k_list[:,ik])
-# end
-
-#K=[1.0/3.0,-1.0/3.0]
-#K_cc=b_mat*K
-#K_cc=1.0/3.0*b_1+2.0/3.0*b_2
-#println(K_cc)
-#K_t=2*pi/3.0* [1/sqrt(3.0), 1]
-#println(K_t)
-#K_t2=2*pi/3.0*[-1/sqrt(3.0), 1]
-#println(K_t2)
-
-#h_k=Hamiltonian(K_cc)
-#println(h_k[1,1]*ha2ev,"---",h_k[1,2]*ha2ev)
-#println(h_k[2,1]*ha2ev,"---",h_k[2,2]*ha2ev)
-#	data= eigen(h_k)      # Diagonalize the matrix
-#        println(data.values*ha2ev)
-#h_k=Hamiltonian(K_t2)
-#println(h_k[1,1]*ha2ev,"---",h_k[1,2]*ha2ev)
-#println(h_k[2,1]*ha2ev,"---",h_k[2,2]*ha2ev)
-#	data= eigen(h_k)      # Diagonalize the matrix
-#        println(data.values*ha2ev)
-#exit()
 
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
 println("Building Hamiltonian: ")
@@ -146,6 +105,7 @@ function Linear_response(freqs,E_field_ver, eta)
          xhi[ifreq]=xhi[ifreq]+abs(Res[iv,ic,ik])^2/(eigenval[ic,ik]-eigenval[iv,ik]-freqs[ifreq]-eta*1im)
      end
    end
+   xhi.=xhi/nk
    return xhi
 end
 

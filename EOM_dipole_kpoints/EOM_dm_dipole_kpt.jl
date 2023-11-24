@@ -13,38 +13,18 @@ using .hBN2D
 
 include("TB_tools.jl")
 using .TB_tools
+
+include("units.jl")
+using .Units
 # 
 # Code This code is in Hamiltonian space
-# in dipole approximation only at the K-point
-#
-
-k_vec=[1,1/sqrt(3)]
-k_vec=k_vec*2*pi/3
-
-# Hamiltonian dimension
-h_dim=2
-# Space dimension
-s_dim=2
-
-
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=96
-n_k2=96
-
-b_1=2*pi/3.0*[1.0, -sqrt(3)]
-b_2=2*pi/3.0*[1.0,  sqrt(3)]
-
-#
-# Matrix to pass from crystal to cartesian
-#
-b_mat=zeros(Float64,s_dim,s_dim)
-b_mat[:,1]=b_1
-b_mat[:,2]=b_2
-
+n_k1=36
+n_k2=36
 
 k_list=generate_unif_grid(n_k1, n_k2, b_mat)
 
@@ -145,15 +125,27 @@ function deriv_rho(rho, t)
 	#
 	# Hamiltonian term
 	#
-	Threads.@threads for ik in 1:nk
- 	   d_rho[:,:,ik]=H_h[:,:,ik]*rho[:,:,ik]-rho[:,:,ik]*H_h[:,:,ik]
-	end
+        h_space=true 
+        if h_space
+          # in h-space the Hamiltonian is diagonal
+	  Threads.@threads for ik in 1:nk
+             for ib in 1:h_dim
+ 	        d_rho[ib,:,ik] =H_h[ib,ib,ik]*rho[ib,:,ik]
+                d_rho[:,ib,ik]-=rho[:,ib,ik]*H_h[ib,ib,ik]
+             end
+	  end
+        else
+          # in the w-space the Hamiltonian is not diagonal
+	  Threads.@threads for ik in 1:nk
+ 	     d_rho[:,:,ik]=H_h[:,:,ik]*rho[:,:,ik]-rho[:,:,ik]*H_h[:,:,ik]
+	  end
+        end
 	#
 	# Electrinc field
 	#
 	E_field=get_Efield(t, itstart=itstart)
 
-    E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim)
+        E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim)
 	#
 	Threads.@threads for ik in 1:nk
 	   #
@@ -192,8 +184,8 @@ function get_polarization(rho_s)
 	    for id in 1:s_dim
     		for ik in 1:nk
      	    	pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id] .* transpose(rho_s[it,:,:,ik])))
-			end
 		end
+	    end
     end
     pol=pol/nk
     return pol
