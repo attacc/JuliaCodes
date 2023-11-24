@@ -1,10 +1,11 @@
 module TB_tools
 
 using Printf
+using ProgressBars
 
-export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase
-  #
-  function generate_circuit(points, n_steps)
+export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar
+
+function generate_circuit(points, n_steps)
 	println("Generate k-path ")
 	n_points=length(points)
 	@printf("number of points:%5i \n",n_points)
@@ -31,27 +32,20 @@ export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigen
    return fermi_function
  end
  #
- function generate_unif_grid(n_kx, n_ky, b_1, b_2)
+ function generate_unif_grid(n_kx, n_ky, b_mat)
      s_dim=2
      nk   =n_kx*n_ky
      k_grid=zeros(Float64,s_dim,nk)
-     d_b1=b_1/n_kx
-     d_b2=b_2/n_ky
+	 vec_crystal=zeros(Float64,s_dim)
+     dx=1.0/n_kx
+     dy=1.0/n_ky
+
      ik=1
-     for ix in 1:n_kx,iy in 1:n_ky
-         vec=d_b1*ix+d_b2*iy
-	 k_grid[:,ik]=vec
-	 ik=ik+1
-     end
-     if isodd(n_kx)
-	for ik in 1:nk
-	  k_grid[:,ik]=k_grid[:,ik]-b_1/2.0
-	end
-     end
-     if isodd(n_ky)
-	for ik in 1:nk
-	  k_grid[:,ik]=k_grid[:,ik] #+d_b2/2.0
-	end
+     for ix in 0:(n_kx-1),iy in 0:(n_ky-1)
+	   vec_crystal[1]=dx*ix
+	   vec_crystal[2]=dy*iy
+	   k_grid[:,ik]=b_mat*vec_crystal
+	   ik=ik+1
      end
      return k_grid
  end
@@ -98,9 +92,10 @@ function rungekutta2_dm(d_rho, rho_0, t)
     h_dim = size(rho_0)[1]
     rho_t = zeros(Complex{Float64},n, h_dim, h_dim, nk)
     rho_t[1,:,:,:] = rho_0
-    for i in 1:n-1
+	println("Real-time equation integration: ")
+    for i in ProgressBar(1:n-1)
         h = t[i+1] - t[i]
-	rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
+		rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
     end
     return rho_t
 end

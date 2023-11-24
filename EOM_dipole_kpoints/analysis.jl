@@ -5,6 +5,7 @@
 using CSV
 using DataFrames
 using FFTW
+using ProgressBars
 
 include("TB_hBN.jl")
 using .hBN2D
@@ -22,9 +23,10 @@ function FFT_1D(times, freqs, pol, e_vec)
     pol_w=zeros(Complex{Float64},length(freqs))
     pol_edir=pol*e_vec
     dt=times[2]-times[1]
-    for (itime,time) in enumerate(times)
+    println("FFT: ")
+    for itime in ProgressBar(1:length(times))
       for (ifreqs, freq) in enumerate(freqs)
-          pol_w[ifreqs] =pol_w[ifreqs]+exp(-1im*freq*time)*pol_edir[itime]
+          pol_w[ifreqs] =pol_w[ifreqs]+exp(-1im*freq*times[itime])*pol_edir[itime]
       end
     end
     pol_w=pol_w*dt
