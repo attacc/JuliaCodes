@@ -36,15 +36,15 @@ off_diag=.~I(h_dim)
 n_k1=96
 n_k2=96
 
-b_1=2*pi/3.0*[1.0, -sqrt(3)]
-b_2=2*pi/3.0*[0.0, 1.0]
+b_1=2*pi/3.0*[ 1.0, sqrt(3.0)]
+b_2=2*pi/3.0*[ 1.0,-sqrt(3.0)]
 
 #
 # Matrix to pass from crystal to cartesian
 #
 b_mat=zeros(Float64,s_dim,s_dim)
-b_mat[:,1]=b_1
-b_mat[:,2]=b_2
+b_mat[1,:]=b_1
+b_mat[2,:]=b_2
 
 
 k_list=generate_unif_grid(n_k1, n_k2, b_mat)
@@ -63,12 +63,12 @@ println(" nk = ",nk)
 K=[1.0/3.0,1.0/3.0]
 K_cc=b_mat*K
 println(K_cc)
-K_t=[2*pi/3.0,2*pi/sqrt(3.0)/3.0]
+K_t=2*pi/3.0*[1, 1/sqrt(3.0)]
 println(K_t)
-K_t=[2*pi/3.0,-2*pi/sqrt(3.0)/3.0]
+K_t=2*pi/3.0*[1,-1/sqrt(3.0)]
 println(K_t)
-exit()
 
+h_k=Hamiltonian(K_cc)
 println(h_k[1,1]*ha2ev,"---",h_k[1,2]*ha2ev)
 println(h_k[2,1]*ha2ev,"---",h_k[2,2]*ha2ev)
 	data= eigen(h_k)      # Diagonalize the matrix
