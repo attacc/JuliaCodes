@@ -61,6 +61,9 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,b_1,b_2,b_mat,s_dim,h_d
    #
    function Berry_Connection(k)  
         #
+        # Notice that in TB-approximation 
+        # the Berry connect does not depend from k
+        # but if we start from Wannier function it does
         #
 	A=zeros(Complex{Float64},2,2,ndim)
         A[1,1,1]=0

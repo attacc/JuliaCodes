@@ -26,7 +26,7 @@ off_diag=.~I(h_dim)
 n_k1=12
 n_k2=12
 
-k_list=generate_unif_grid(n_k1, n_k2, b_mat)
+k_grid,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, b_mat)
 
 nk=n_k1*n_k2
 
@@ -36,17 +36,17 @@ eigenvec=zeros(Complex{Float64},s_dim,s_dim,nk)
 println(" K-point list ")
 println(" nk = ",nk)
 # for ik in 1:nk
-#  	println(k_list[:,ik])
+#  	println(k_grid[:,ik])
 # end
 #
 # Use only k=K
-# k_list[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
+# k_grid[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
 #
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
 Threads.@threads for ik in ProgressBar(1:nk)
-        H_w=Hamiltonian(k_list[:,ik])
+        H_w=Hamiltonian(k_grid[:,ik])
 	data= eigen(H_w)      # Diagonalize the matrix
 	eigenval[:,ik]   = data.values
 	eigenvec[:,:,ik] = data.vectors
@@ -67,7 +67,7 @@ Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 println("Building Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
-  Dip_w=Grad_H(k_list[:,ik])
+  Dip_w=Grad_H(k_grid[:,ik])
   for id in 1:s_dim
         Dip_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
@@ -89,6 +89,39 @@ Threads.@threads for ik in ProgressBar(1:nk)
       end
   end
 end
+#
+# Calculate A^H(k) 
+#
+println("Calculate A^H(k) : ")
+A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
+Threads.@threads for ik in ProgressBar(1:nk)
+  #
+  # Fix phase of eigenvectors
+  #
+  eigenvec[:,:,ik]=fix_eigenvec_phase(eigenvec[:,:,ik])
+  #
+  # Calculate A(W) and rotate in H-gauge
+  # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
+  #
+  A_h[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
+  #
+  # Now I rotate from W -> H
+  #
+  #
+  for id in 1:s_dim
+      A_h[:,:,id,ik]=HW_rotate(A_h[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
+  end
+  #
+  # Calculate U^+ \d/dk U
+  #
+  UdU=Calculate_UdU(k_grid[:,ik], eigenvec[:,:,ik])
+  #
+  #
+  A_h[:,:,:,ik]=A_h[:,:,:,ik]+UdU
+  #
+end
+
+#
 # 
 # Input paramters for linear optics with delta function
 #
@@ -100,6 +133,8 @@ E_vec=[1.0,0.0]
 #
 t_range = t_start:dt:t_end
 n_steps=size(t_range)[1] 
+
+exit()
 
 println(" * * * Linear response from density matrix EOM within dipole approx. * * *")
 println("Time rage ",t_start/fs2aut," - ",t_end/fs2aut)
@@ -127,13 +162,17 @@ end
 
 function deriv_rho(rho, t)
 	#
+        # Variable of the dynamics
+        #
 	h_dim=2
+        use_Dipoles=true
+        h_space=true 
+        #
 	#
 	d_rho=zeros(Complex{Float64},h_dim,h_dim,nk) #
 	#
 	# Hamiltonian term
 	#
-        h_space=true 
         if h_space
           # in h-space the Hamiltonian is diagonal
 	  Threads.@threads for ik in 1:nk
@@ -162,13 +201,28 @@ function deriv_rho(rho, t)
 	   #
 	   E_dot_DIP.=0.0
 	   #
-        for id in 1:s_dim
-			E_dot_DIP[:,:]=E_dot_DIP[:,:]-E_field[id]*Dip_h[:,:,ik,id]
-        end
-            # 
+           if use_Dipole:
+             for id in 1:s_dim
+         	E_dot_DIP+=-E_field[id]*Dip_h[:,:,ik,id]
+              end
+            else
+             for id in 1:s_dim
+         	E_dot_DIP+=-E_field[id]*A_h[:,:,id,ik]
+              end
+            end
+            #
+            # Add d_rho/dk
+            #
+            Dk_rho=Evaluate_Dk_rho(ik, d_rho, ik_grid, ik_grid_inv, eigenvec)
+            #
+            for id in 1:s_dim
+              d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
+            end
+            #
             # Commutator D*rho-rho*D
             # 
 	    d_rho[:,:,ik]=d_rho[:,:,ik]-(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
+            #
 	end
 	#
 	# Damping

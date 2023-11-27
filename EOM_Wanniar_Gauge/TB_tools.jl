@@ -36,19 +36,50 @@ function generate_circuit(points, n_steps)
      s_dim=2
      nk   =n_kx*n_ky
      k_grid=zeros(Float64,s_dim,nk)
+     ik_grid    =zeros(Int,n_kx,n_ky)
+     ik_grid_inv=zeros(Int,2,nk)
+
      vec_crystal=zeros(Float64,s_dim)
      dx=1.0/n_kx
      dy=1.0/n_ky
 
      ik=1
      for ix in 0:(n_kx-1),iy in 0:(n_ky-1)
-           println(ix,iy)
+           ik_grid[ix+1,iy+1]=ik
+           ik_grid_inv[:,ik]   =[ix+1,iy+1]
 	   vec_crystal[1]=dx*ix
 	   vec_crystal[2]=dy*iy
 	   k_grid[:,ik]=b_mat*vec_crystal
 	   ik=ik+1
      end
-     return k_grid
+     return k_grid,ik_grid,ik_grid_inv
+ end
+ #
+ function get_k_neighbor(ik,id,istep,ik_grid,ik_grid_inv)
+     s_dim=2
+
+     k_xyz=ik_grid_inv[ik]
+     k_n     =k_xyz
+     k_n[id] =k_n[id] 
+
+     for id in range(1:s_dim)
+        d_size=size(ik_grid)[id]
+        if k_n[id] > d_size
+            k_n[id]=k_n[id]-d_size
+        elseif k_n[id]<=0
+            k_n[id]=k_n[id]+d_size
+        end
+     end
+
+     if s_dim==1
+             ik_n=ik_grid[k_n[1]]
+     elseif s_dim ==2
+             ik_n=ik_grid[k_n[1],k_n[2]]
+     elseif s_dim ==3
+             ik_n=ik_grid[k_n[1],k_n[2],k_n[3]]
+     end
+
+     return ik_n
  end
  #
  function lorentzian(x,x_0, Gamma)
@@ -126,4 +157,28 @@ function fix_eigenvec_phase(eigenvec)
 #	println(norm(eigenvec[:,2]))
 	#
 	return eigenvec
+end
+
+function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
+  s_dim=2
+  h_dim=2
+  tau=2.732  # a.u.
+
+  dk_rho=zeros(Complex{Float64},h_dim,h_dim,s_dim)
+  do id in 1:s_dim
+    #  
+    ik_plus =get_k_neighbor(ik,id,1,ik_grid,ik_grid_inv)
+    ik_minus=get_k_neighbor(ik,id,-1,ik_grid,ik_grid_inv)
+    #
+    rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
+    rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
+    #
+    dk=norm(k_grid[:,ik_plus]-k_grid[:,ik_minus])/2.0
+    # 
+    dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)*tau
+    #
+    dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
+  end
+
+  return dk_rho
 end
