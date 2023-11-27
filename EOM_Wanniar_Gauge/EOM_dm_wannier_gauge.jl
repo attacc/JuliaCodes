@@ -42,8 +42,13 @@ println(" nk = ",nk)
 # Use only k=K
 # k_grid[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
 #
-h_space=false 
+h_space=true #false 
 #
+if h_space
+    println("* * * Hamiltonian gauge * * * ")
+else
+    println("* * * Wannier gauge * * * ")
+end
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
@@ -56,7 +61,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
           for i in 1:h_dim
              H_h[i,i,ik]=eigenval[i,ik]
           end
-        elseif
+        else
           H_h[:,:,ik]=H_w
         end
 end
@@ -78,9 +83,6 @@ Threads.@threads for ik in ProgressBar(1:nk)
         Dip_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
 	Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
-        if !h_space
-           Dip_h[:,:,ik,id]=HW_rotate(Dip_h[:,:,ik,id],eigenvec[:,:,ik],"H_to_W")
-        end
   end
 
 # Now I have to divide for the energies
@@ -96,6 +98,14 @@ Threads.@threads for ik in ProgressBar(1:nk)
           Dip_h[i,j,ik,:]= 1im*Dip_h[i,j,ik,:]/(eigenval[j,ik]-eigenval[i,ik])
           Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
       end
+  end
+  #
+  # I bring them back in Wannier gauge
+  #
+  if !h_space
+    for id in 1:s_dim
+        Dip_h[:,:,ik,id]=HW_rotate(Dip_h[:,:,ik,id],eigenvec[:,:,ik],"H_to_W")
+     end
   end
 end
 #
@@ -148,12 +158,12 @@ n_steps=size(t_range)[1]
 println(" * * * Damping Matrix * * *")
 damp_mat=zeros(Complex{Float64},h_dim,h_dim,nk)
 if h_space
-  Threads.@threads for ik in 1:nk
+    Threads.@threads for ik in ProgressBar(1:nk)
     damp_mat[:,:,ik]=1im/T_2*off_diag
   end
 else
-  Threads.@threads for ik in 1:nk
-      damp_mat[:,:,ik]=1im/T_2*HW_rotate(off_dia,eigenvec[:,:,ik],"H_to_W")
+    Threads.@threads for ik in ProgressBar(1:nk)
+    damp_mat[:,:,ik]=1im/T_2*HW_rotate(off_diag,eigenvec[:,:,ik],"H_to_W")
   end
 end
 #
@@ -214,13 +224,12 @@ function deriv_rho(rho, t)
 	#
 	E_field=get_Efield(t, itstart=itstart)
 
-        E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim)
 	#
 	Threads.@threads for ik in 1:nk
 	  #
 	  # Dipole dot field
 	  #
-	  E_dot_DIP.=0.0
+          E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim)
 	  #
           if use_Dipoles
             for id in 1:s_dim
@@ -256,7 +265,7 @@ function deriv_rho(rho, t)
         damping=false
 	if T_2!=0.0 && damping==true
 	   Threads.@threads for ik in 1:nk
-	      d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*rho[:,:,ik]
+               d_rho[:,:,ik]=d_rho[:,:,ik]-damp_mat[:,:,ik].*rho[:,:,ik]
 	   end
 	end
 
@@ -271,10 +280,11 @@ function get_polarization(rho_s)
     println("Calculate polarization: ")
     Threads.@threads for it in ProgressBar(1:nsteps)
         for id in 1:s_dim
-        	for ik in 1:nk
-     	    	pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id] .* transpose(rho_s[it,:,:,ik])))
-		end
-	    end
+           for ik in 1:nk
+              Dip_rot=Dip_h[:,:,ik,id]
+     	       pol[it,id]=pol[it,id]+real.(sum(Dip_rot .* transpose(rho_s[it,:,:,ik])))
+	   end
+        end
     end
     pol=pol/nk
     return pol
@@ -285,10 +295,11 @@ rho0[1,1,:].=1.0
 #
 # Transform in Wannier Gauge
 #
-for ik in 1:nk
-   rho0[:,:,ik]=HW_rotate(rho0[:,:,id],eigenvec[:,:,ik],"H_to_W")
-
-
+if !h_space
+  Threads.@threads for ik in 1:nk
+     rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],eigenvec[:,:,ik],"H_to_W")
+  end
+end
 
 # Solve EOM
 
