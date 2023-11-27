@@ -6,7 +6,7 @@ using LinearAlgebra
 using Plots
 using CSV
 using DataFrames
-
+using Base.Threads
 
 include("TB_hBN.jl")
 using .hBN2D
@@ -14,38 +14,67 @@ using .hBN2D
 include("TB_tools.jl")
 using .TB_tools
 
-# This code is in Hamiltonian space
-# in dipole approximation only at the K-point
-#
- 
-k_vec=[1,1/sqrt(3)]
-k_vec=k_vec*2*pi/3
-
-# Hamiltonian dimension
-h_dim=2
-# Space dimension
-s_dim=2
+include("units.jl")
+using .Units
+# 
+# Code This code is in Hamiltonian space
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
-H_w=Hamiltonian(k_vec)
-data= eigen(H_w)      # Diagonalize the matrix
-eigenval = data.values
-eigenvec = data.vectors
+# K-points
+n_k1=12
+n_k2=12
 
-# Dipoles
-Dip_w=Grad_H(k_vec)
+k_list=generate_unif_grid(n_k1, n_k2, b_mat)
 
-# rotate in the Hamiltonian guage
-Dip_h=zeros(Complex{Float64},h_dim,h_dim,s_dim)
-for d in 1:s_dim
-	Dip_h[:,:,d]=HW_rotate(Dip_w[:,:,d],eigenvec,"W_to_H")
-# I set to zero the diagonal part of dipoles
-	Dip_h[:,:,d]=Dip_h[:,:,d].*off_diag
+nk=n_k1*n_k2
+
+eigenval=zeros(Float64,s_dim,nk)
+eigenvec=zeros(Complex{Float64},s_dim,s_dim,nk)
+
+println(" K-point list ")
+println(" nk = ",nk)
+# for ik in 1:nk
+#  	println(k_list[:,ik])
+# end
+#
+# Use only k=K
+# k_list[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
+#
+
+println("Building Hamiltonian: ")
+H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
+Threads.@threads for ik in ProgressBar(1:nk)
+        H_w=Hamiltonian(k_list[:,ik])
+	data= eigen(H_w)      # Diagonalize the matrix
+	eigenval[:,ik]   = data.values
+	eigenvec[:,:,ik] = data.vectors
+        for i in 1:h_dim
+           H_h[i,i,ik]=eigenval[i,ik]
+        end
 end
 
-# Now I have to dived for the energies
+#Hamiltonian info
+dir_gap=minimum(eigenval[2,:]-eigenval[1,:])
+println("Direct gap : ",dir_gap*ha2ev," [eV] ")
+ind_gap=minimum(eigenval[2,:])-maximum(eigenval[1,:])
+println("Direct gap : ",ind_gap*ha2ev," [eV] ")
+
+# rotate in the Hamiltonian guage
+Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
+
+println("Building Dipoles: ")
+Threads.@threads for ik in ProgressBar(1:nk)
+# Dipoles
+  Dip_w=Grad_H(k_list[:,ik])
+  for id in 1:s_dim
+        Dip_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
+# I set to zero the diagonal part of dipoles
+	Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
+  end
+
+# Now I have to divide for the energies
 #
 #  p = \grad_k H 
 #
@@ -53,18 +82,13 @@ end
 #
 #  (diagonal terms are set to zero)
 #
-for i in 1:h_dim
-    for j in i+1:h_dim
-        Dip_h[i,j,:]=1im*Dip_h[i,j,:]/(eigenval[j]-eigenval[i])
-        Dip_h[j,i,:]=conj(Dip_h[i,j,:])
-    end
+  for i in 1:h_dim
+      for j in i+1:h_dim
+          Dip_h[i,j,ik,:]= 1im*Dip_h[i,j,ik,:]/(eigenval[j,ik]-eigenval[i,ik])
+          Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
+      end
+  end
 end
-
-H_h=zeros(Complex{Float64},h_dim,h_dim)
-for i in 1:h_dim
-	H_h[i,i]=eigenval[i]
-end
-
 # 
 # Input paramters for linear optics with delta function
 #
@@ -101,62 +125,96 @@ function get_Efield(t ; itstart=3)
 	return Efield
 end
 
-function deriv_rho(rho, t)::Vector{Complex{Float64}}
+function deriv_rho(rho, t)
+	#
+	h_dim=2
+	#
+	d_rho=zeros(Complex{Float64},h_dim,h_dim,nk) #
 	#
 	# Hamiltonian term
 	#
-        rho_mat=reshape(rho,h_dim,h_dim)
-	d_rho=H_h*rho_mat-rho_mat*H_h
+        h_space=true 
+        if h_space
+          # in h-space the Hamiltonian is diagonal
+	  Threads.@threads for ik in 1:nk
+             for ib in 1:h_dim
+                for ic in 1:h_dim
+ 	          d_rho[ib,ic,ik] =H_h[ib,ib,ik]*rho[ib,ic,ik]-rho[ib,ic,ik]*H_h[ic,ic,ik]
+                end
+             end
+	  end
+        else
+          # in the w-space the Hamiltonian is not diagonal
+	  Threads.@threads for ik in 1:nk
+ 	     d_rho[:,:,ik]=H_h[:,:,ik]*rho[:,:,ik]-rho[:,:,ik]*H_h[:,:,ik]
+	  end
+        end
 	#
 	# Electrinc field
 	#
 	E_field=get_Efield(t, itstart=itstart)
+
+        E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim)
 	#
-        E_dot_DIP=zeros(Complex{Float64},2,2)
-        for d in 1:s_dim
-            E_dot_DIP=E_dot_DIP-E_field[d]*Dip_h[:,:,d]
+	Threads.@threads for ik in 1:nk
+	   #
+	   # Dipole dot field
+	   #
+	   E_dot_DIP.=0.0
+	   #
+        for id in 1:s_dim
+			E_dot_DIP[:,:]=E_dot_DIP[:,:]-E_field[id]*Dip_h[:,:,ik,id]
         end
-        #
-        # Commutator D*rho-rho*D
-        #
-        d_rho=d_rho-(E_dot_DIP*rho_mat-rho_mat*E_dot_DIP)
+            # 
+            # Commutator D*rho-rho*D
+            # 
+	    d_rho[:,:,ik]=d_rho[:,:,ik]-(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
+	end
 	#
 	# Damping
 	#
         damping=false
 	if T_2!=0.0 && damping==true
-		d_rho=d_rho-1im/T_2*off_diag.*rho_mat
+	   Threads.@threads for ik in 1:nk
+	      d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*rho[:,:,ik]
+	   end
 	end
-        d_rho_vec=-1.0im*reshape(d_rho,h_dim*h_dim)
-        return d_rho_vec
+
+	d_rho.=-1.0im*d_rho
+	
+    return d_rho
 end
 
-function get_polarization(rho_solution)
-    nsteps=size(rho_solution,1)
+function get_polarization(rho_s)
+    nsteps=size(rho_s,1)
     pol=zeros(Float64,nsteps,s_dim)
-    for it in 1:nsteps,id in 1:s_dim
-        rho_t=view(rho_solution,it,:,:)
-        pol[it,id]=real.(sum(Dip_h[:,:,id] .* transpose(rho_t)))
+    println("Calculate polarization: ")
+    Threads.@threads for it in ProgressBar(1:nsteps)
+        for id in 1:s_dim
+        	for ik in 1:nk
+     	    	pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id] .* transpose(rho_s[it,:,:,ik])))
+		end
+	    end
     end
+    pol=pol/nk
     return pol
 end 
 
-rho0=zeros(Complex{Float64},h_dim,h_dim)
-rho0[1,1]=1.0
+rho0=zeros(Complex{Float64},h_dim,h_dim,nk)
+rho0[1,1,:].=1.0
 
 # Solve EOM
 
-solution = rungekutta2(deriv_rho, reshape(rho0,h_dim*h_dim), t_range)
-solution_mat=reshape(solution,length(t_range),h_dim,h_dim)
+solution = rungekutta2_dm(deriv_rho, rho0, t_range)
 
 # Calculate the polarization in time and frequency
 
-pol=get_polarization(solution_mat)
+pol=get_polarization(solution)
 
 # Write polarization and external field on disk
 
 t_and_E=zeros(Float64,n_steps,3)
-for it in 1:n_steps
+Threads.@threads for it in 1:n_steps
  t=it*dt
  E_field_t=get_Efield(t,itstart=itstart)
  t_and_E[it,:]=[t/fs2aut,E_field_t[1],E_field_t[2]]

@@ -42,6 +42,7 @@ function generate_circuit(points, n_steps)
 
      ik=1
      for ix in 0:(n_kx-1),iy in 0:(n_ky-1)
+           println(ix,iy)
 	   vec_crystal[1]=dx*ix
 	   vec_crystal[2]=dy*iy
 	   k_grid[:,ik]=b_mat*vec_crystal
