@@ -1,5 +1,5 @@
 #
-# Density matrix EOM in the Hamiltonian Gauge (TB approximation)
+# Density matrix EOM in the Wannier Gauge (TB approximation)
 # Claudio Attaccalite (2023)
 #
 using LinearAlgebra
@@ -42,6 +42,8 @@ println(" nk = ",nk)
 # Use only k=K
 # k_grid[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
 #
+h_space=false 
+#
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
@@ -50,8 +52,12 @@ Threads.@threads for ik in ProgressBar(1:nk)
 	data= eigen(H_w)      # Diagonalize the matrix
 	eigenval[:,ik]   = data.values
 	eigenvec[:,:,ik] = data.vectors
-        for i in 1:h_dim
-           H_h[i,i,ik]=eigenval[i,ik]
+        if h_space
+          for i in 1:h_dim
+             H_h[i,i,ik]=eigenval[i,ik]
+          end
+        elseif
+          H_h[:,:,ik]=H_w
         end
 end
 
@@ -72,6 +78,9 @@ Threads.@threads for ik in ProgressBar(1:nk)
         Dip_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
 	Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
+        if !h_space
+           Dip_h[:,:,ik,id]=HW_rotate(Dip_h[:,:,ik,id],eigenvec[:,:,ik],"H_to_W")
+        end
   end
 
 # Now I have to divide for the energies
@@ -120,7 +129,6 @@ Threads.@threads for ik in ProgressBar(1:nk)
   A_h[:,:,:,ik]=A_h[:,:,:,ik]+UdU
   #
 end
-
 #
 # 
 # Input paramters for linear optics with delta function
@@ -132,8 +140,24 @@ t_end  =T_2*10.0
 E_vec=[1.0,0.0]
 #
 t_range = t_start:dt:t_end
-n_steps=size(t_range)[1] 
-
+n_steps=size(t_range)[1]
+#
+#
+# Damping Matrix
+#
+println(" * * * Damping Matrix * * *")
+damp_mat=zeros(Complex{Float64},h_dim,h_dim,nk)
+if h_space
+  Threads.@threads for ik in 1:nk
+    damp_mat[:,:,ik]=1im/T_2*off_diag
+  end
+else
+  Threads.@threads for ik in 1:nk
+      damp_mat[:,:,ik]=1im/T_2*HW_rotate(off_dia,eigenvec[:,:,ik],"H_to_W")
+  end
+end
+#
+#
 println(" * * * Linear response from density matrix EOM within dipole approx. * * *")
 println("Time rage ",t_start/fs2aut," - ",t_end/fs2aut)
 println("Number of steps ",n_steps)
@@ -164,7 +188,6 @@ function deriv_rho(rho, t)
         #
 	h_dim=2
         use_Dipoles=true
-        h_space=true 
         #
 	#
 	d_rho=zeros(Complex{Float64},h_dim,h_dim,nk) #
@@ -259,6 +282,13 @@ end
 
 rho0=zeros(Complex{Float64},h_dim,h_dim,nk)
 rho0[1,1,:].=1.0
+#
+# Transform in Wannier Gauge
+#
+for ik in 1:nk
+   rho0[:,:,ik]=HW_rotate(rho0[:,:,id],eigenvec[:,:,ik],"H_to_W")
+
+
 
 # Solve EOM
 

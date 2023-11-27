@@ -165,7 +165,7 @@ function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
   tau=2.732  # a.u.
 
   dk_rho=zeros(Complex{Float64},h_dim,h_dim,s_dim)
-  do id in 1:s_dim
+  for id in 1:s_dim
     #  
     ik_plus =get_k_neighbor(ik,id,1,ik_grid,ik_grid_inv)
     ik_minus=get_k_neighbor(ik,id,-1,ik_grid,ik_grid_inv)
