@@ -38,7 +38,10 @@ println(" nk = ",nk)
 # for ik in 1:nk
 #  	println(k_list[:,ik])
 # end
-k_list[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
+#
+# Use only k=K
+# k_list[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
+#
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
