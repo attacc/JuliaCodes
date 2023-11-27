@@ -175,7 +175,7 @@ function deriv_rho(rho, t)
 	#
         damping=false
 	if T_2!=0.0 && damping==true
-		Threads.@threads for ik in 1:nk
+	   Threads.@threads for ik in 1:nk
 	      d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*rho[:,:,ik]
 	   end
 	end
@@ -190,8 +190,8 @@ function get_polarization(rho_s)
     pol=zeros(Float64,nsteps,s_dim)
     println("Calculate polarization: ")
     Threads.@threads for it in ProgressBar(1:nsteps)
-	    for id in 1:s_dim
-    		for ik in 1:nk
+        for id in 1:s_dim
+        	for ik in 1:nk
      	    	pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id] .* transpose(rho_s[it,:,:,ik])))
 		end
 	    end
