@@ -23,8 +23,8 @@ using .Units
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=36
-n_k2=36
+n_k1=12
+n_k2=12
 
 k_list=generate_unif_grid(n_k1, n_k2, b_mat)
 
@@ -36,20 +36,33 @@ eigenvec=zeros(Complex{Float64},s_dim,s_dim,nk)
 println(" K-point list ")
 println(" nk = ",nk)
 # for ik in 1:nk
-# 	println(k_list[:,ik])
+#  	println(k_list[:,ik])
 # end
+k_list[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
 
-for ik in 1:nk
+println("Building Hamiltonian: ")
+H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
+Threads.@threads for ik in ProgressBar(1:nk)
         H_w=Hamiltonian(k_list[:,ik])
 	data= eigen(H_w)      # Diagonalize the matrix
 	eigenval[:,ik]   = data.values
 	eigenvec[:,:,ik] = data.vectors
+        for i in 1:h_dim
+           H_h[i,i,ik]=eigenval[i,ik]
+        end
 end
+
+#Hamiltonian info
+dir_gap=minimum(eigenval[2,:]-eigenval[1,:])
+println("Direct gap : ",dir_gap*ha2ev," [eV] ")
+ind_gap=minimum(eigenval[2,:])-maximum(eigenval[1,:])
+println("Direct gap : ",ind_gap*ha2ev," [eV] ")
 
 # rotate in the Hamiltonian guage
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 
-for ik in 1:nk
+println("Building Dipoles: ")
+Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
   Dip_w=Grad_H(k_list[:,ik])
   for id in 1:s_dim
@@ -57,7 +70,6 @@ for ik in 1:nk
 # I set to zero the diagonal part of dipoles
 	Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
   end
-end
 
 # Now I have to divide for the energies
 #
@@ -67,20 +79,13 @@ end
 #
 #  (diagonal terms are set to zero)
 #
-for i in 1:h_dim
-    for j in i+1:h_dim
-	for ik in 1:nk
+  for i in 1:h_dim
+      for j in i+1:h_dim
           Dip_h[i,j,ik,:]= 1im*Dip_h[i,j,ik,:]/(eigenval[j,ik]-eigenval[i,ik])
           Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
-	end
-    end
+      end
+  end
 end
-
-H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
-for i in 1:h_dim
-	H_h[i,i,:]=eigenval[i,:]
-end
-
 # 
 # Input paramters for linear optics with delta function
 #
@@ -130,8 +135,9 @@ function deriv_rho(rho, t)
           # in h-space the Hamiltonian is diagonal
 	  Threads.@threads for ik in 1:nk
              for ib in 1:h_dim
- 	        d_rho[ib,:,ik] =H_h[ib,ib,ik]*rho[ib,:,ik]
-                d_rho[:,ib,ik]-=rho[:,ib,ik]*H_h[ib,ib,ik]
+                for ic in 1:h_dim
+ 	          d_rho[ib,ic,ik] =H_h[ib,ib,ik]*rho[ib,ic,ik]-rho[ib,ic,ik]*H_h[ic,ic,ik]
+                end
              end
 	  end
         else

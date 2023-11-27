@@ -39,17 +39,19 @@ eigenvec=zeros(Complex{Float64},s_dim,s_dim,nk)
 println(" K-point list ")
 println(" nk = ",nk)
 
-H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
 println("Building Hamiltonian: ")
 Threads.@threads for ik in ProgressBar(1:nk)
         H_w=Hamiltonian(k_list[:,ik])
 	data= eigen(H_w)      # Diagonalize the matrix
 	eigenval[:,ik]   = data.values
 	eigenvec[:,:,ik] = data.vectors
-        for i in 1:h_dim
-           H_h[i,i,ik]=eigenval[i,ik]
-        end
 end
+
+#Hamiltonian info
+dir_gap=minimum(eigenval[2,:]-eigenval[1,:])
+println("Direct gap : ",dir_gap*ha2ev," [eV] ")
+ind_gap=minimum(eigenval[2,:])-maximum(eigenval[1,:])
+println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 
 # rotate in the Hamiltonian guage
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
@@ -116,4 +118,9 @@ plot(freqs*ha2ev,real(xhi[:]))
 plot(freqs*ha2ev,imag(xhi[:]))
 PyPlot.show();
 
-
+df = DataFrame(freq  = freqs*ha2ev,
+               im_xhi = imag(xhi[:]),
+               re_rhi = real(xhi[:]),
+               )
+f = open("xhi_w.csv","w")
+CSV.write(f, df; quotechar=' ', delim=' ')
