@@ -54,7 +54,7 @@ damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-use_Dipoles=false
+use_Dipoles=true
 
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
@@ -321,7 +321,7 @@ function get_current(rho_s)
         for id in 1:s_dim
            for ik in 1:nk
   	      j_intra[it,id]=j_intra[it,id]-real.(sum(Grad_h[:,:,ik,id].* transpose(rho_s[it,:,:,ik])))
-	      commutator=A_h[:,:,ik,id]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,ik,id]
+	      commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
 	      j_inter[it,id]=j_inter[it,id]-imag.(sum(commutator.* transpose(rho_s[it,:,:,ik])))
 	   end
         end
