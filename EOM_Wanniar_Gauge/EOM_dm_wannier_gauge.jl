@@ -3,7 +3,6 @@
 # Claudio Attaccalite (2023)
 #
 using LinearAlgebra
-using Plots
 using CSV
 using DataFrames
 using Base.Threads
@@ -42,8 +41,10 @@ println(" nk = ",nk)
 # Use only k=K
 # k_grid[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
 #
-h_space=true #false 
+h_space=false 
 #
+damping=true
+
 if h_space
     println("* * * Hamiltonian gauge * * * ")
 else
@@ -152,26 +153,27 @@ E_vec=[1.0,0.0]
 t_range = t_start:dt:t_end
 n_steps=size(t_range)[1]
 #
+# Buildo rho_0
 #
-# Damping Matrix
+rho0=zeros(Complex{Float64},h_dim,h_dim,nk)
+rho0[1,1,:].=1.0
 #
-println(" * * * Damping Matrix * * *")
-damp_mat=zeros(Complex{Float64},h_dim,h_dim,nk)
-if h_space
-    Threads.@threads for ik in ProgressBar(1:nk)
-    damp_mat[:,:,ik]=1im/T_2*off_diag
-  end
-else
-    Threads.@threads for ik in ProgressBar(1:nk)
-    damp_mat[:,:,ik]=1im/T_2*HW_rotate(off_diag,eigenvec[:,:,ik],"H_to_W")
+# Transform in Wannier Gauge
+#
+if !h_space
+  Threads.@threads for ik in 1:nk
+     rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],eigenvec[:,:,ik],"H_to_W")
   end
 end
+#
 #
 #
 println(" * * * Linear response from density matrix EOM within dipole approx. * * *")
 println("Time rage ",t_start/fs2aut," - ",t_end/fs2aut)
 println("Number of steps ",n_steps)
-println("Dephasing time ",T_2/fs2aut," [fs] ")
+if damping
+   println("Dephasing time ",T_2/fs2aut," [fs] ")
+end
 println("External field versor :",E_vec)
 
 #
@@ -262,10 +264,16 @@ function deriv_rho(rho, t)
 	#
 	# Damping
 	#
-        damping=false
 	if T_2!=0.0 && damping==true
 	   Threads.@threads for ik in 1:nk
-               d_rho[:,:,ik]=d_rho[:,:,ik]-damp_mat[:,:,ik].*rho[:,:,ik]
+	     if h_space
+	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*(rho[:,:,ik]-rho0[:,:,ik])
+       	     else
+	       rho_s=rho[:,:,ik] # -rho0[:,:,ik]
+	       rho_s=off_diag.*HW_rotate(rho_s,eigenvec[:,:,ik],"W_to_H")
+	       damp_mat=HW_rotate(rho_s,eigenvec[:,:,ik],"H_to_W")
+	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*damp_mat
+	     end
 	   end
 	end
 
@@ -290,16 +298,6 @@ function get_polarization(rho_s)
     return pol
 end 
 
-rho0=zeros(Complex{Float64},h_dim,h_dim,nk)
-rho0[1,1,:].=1.0
-#
-# Transform in Wannier Gauge
-#
-if !h_space
-  Threads.@threads for ik in 1:nk
-     rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],eigenvec[:,:,ik],"H_to_W")
-  end
-end
 
 # Solve EOM
 
