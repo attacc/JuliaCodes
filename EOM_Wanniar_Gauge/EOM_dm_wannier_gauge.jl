@@ -41,15 +41,23 @@ println(" nk = ",nk)
 # Use only k=K
 # k_grid[:,1]=b_mat*[1.0/3.0,-1.0/3.0]
 #
-h_space=false 
+# Select the space of the dynamics:
+#
+# Hamiltonian gauge:  h_space = true  
+# Wannier gauge    :  h_space = false
+#
+h_space=true 
+#
+# Add damping to the dynamics -i T_2 * \rho_{ij}
 #
 damping=true
+#
+# Use dipole d_k = d_H/d_k (in the Wannier guage)
+#
+use_Dipoles=false
 
-if h_space
-    println("* * * Hamiltonian gauge * * * ")
-else
-    println("* * * Wannier gauge * * * ")
-end
+if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
+if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
@@ -75,15 +83,16 @@ println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 
 # rotate in the Hamiltonian guage
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
+Grad_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 
 println("Building Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
   Dip_w=Grad_H(k_grid[:,ik])
   for id in 1:s_dim
-        Dip_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
+        Grad_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
-	Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
+	Grad_h[:,:,ik,id]=Grad_h[:,:,ik,id].*off_diag
   end
 
 # Now I have to divide for the energies
@@ -96,7 +105,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
 #
   for i in 1:h_dim
       for j in i+1:h_dim
-          Dip_h[i,j,ik,:]= 1im*Dip_h[i,j,ik,:]/(eigenval[j,ik]-eigenval[i,ik])
+          Dip_h[i,j,ik,:]= 1im*Grad_h[i,j,ik,:]/(eigenval[j,ik]-eigenval[i,ik])
           Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
       end
   end
@@ -114,6 +123,7 @@ end
 #
 println("Calculate A^H(k) : ")
 A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
+A_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 Threads.@threads for ik in ProgressBar(1:nk)
   #
   # Fix phase of eigenvectors
@@ -122,14 +132,14 @@ Threads.@threads for ik in ProgressBar(1:nk)
   #
   # Calculate A(W) and rotate in H-gauge
   # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
+  # Notice that in TB-approxamation the Berry Connection is independent from k
   #
-  A_h[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
+  A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
   #
   # Now I rotate from W -> H
   #
-  #
   for id in 1:s_dim
-      A_h[:,:,id,ik]=HW_rotate(A_h[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
+      A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
   end
   #
   # Calculate U^+ \d/dk U
@@ -199,7 +209,6 @@ function deriv_rho(rho, t)
         # Variable of the dynamics
         #
 	h_dim=2
-        use_Dipoles=true
         #
 	#
 	d_rho=zeros(Complex{Float64},h_dim,h_dim,nk) #
@@ -238,20 +247,26 @@ function deriv_rho(rho, t)
                 E_dot_DIP+=-E_field[id]*Dip_h[:,:,ik,id]
              end
           else
-            for id in 1:s_dim
-               E_dot_DIP+=-E_field[id]*A_h[:,:,id,ik]
-            end
+   	    if h_space
+              for id in 1:s_dim
+                 E_dot_DIP+=-E_field[id]*A_h[:,:,id,ik]
+              end
+	    else
+              for id in 1:s_dim
+                 E_dot_DIP+=-E_field[id]*A_w[:,:,id,ik]
+              end
+	    end
           end
           #
           if !use_Dipoles
              # 
              # Add d_rho/dk
              #
-             Dk_rho=Evaluate_Dk_rho(ik, d_rho, ik_grid, ik_grid_inv, eigenvec)
+#             Dk_rho=Evaluate_Dk_rho(ik, d_rho, ik_grid, ik_grid_inv, eigenvec)
              #
-             for id in 1:s_dim
-               d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
-             end
+#             for id in 1:s_dim
+#               d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
+#             end
              #
            end
            #
@@ -289,8 +304,7 @@ function get_polarization(rho_s)
     Threads.@threads for it in ProgressBar(1:nsteps)
         for id in 1:s_dim
            for ik in 1:nk
-              Dip_rot=Dip_h[:,:,ik,id]
-     	       pol[it,id]=pol[it,id]+real.(sum(Dip_rot .* transpose(rho_s[it,:,:,ik])))
+     	       pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
 	   end
         end
     end
@@ -298,6 +312,24 @@ function get_polarization(rho_s)
     return pol
 end 
 
+function get_current(rho_s)
+    nsteps=size(rho_s,1)
+    j_intra=zeros(Float64,nsteps,s_dim)
+    j_inter=zeros(Float64,nsteps,s_dim)
+    println("Calculate current: ")
+    Threads.@threads for it in ProgressBar(1:nsteps)
+        for id in 1:s_dim
+           for ik in 1:nk
+  	      j_intra[it,id]=j_intra[it,id]-real.(sum(Grad_h[:,:,ik,id].* transpose(rho_s[it,:,:,ik])))
+	      commutator=A_h[:,:,ik,id]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,ik,id]
+	      j_inter[it,id]=j_inter[it,id]-imag.(sum(commutator.* transpose(rho_s[it,:,:,ik])))
+	   end
+        end
+    end
+    j_intra=j_intra/nk
+    j_inter=j_inter/nk
+    return j_intra,j_inter
+end 
 
 # Solve EOM
 
@@ -306,6 +338,7 @@ solution = rungekutta2_dm(deriv_rho, rho0, t_range)
 # Calculate the polarization in time and frequency
 
 pol=get_polarization(solution)
+j_intra,j_inter=get_current(solution)
 
 # Write polarization and external field on disk
 
@@ -322,6 +355,16 @@ df = DataFrame(time  = t_and_E[:,1],
                pol_y = pol[:,2],
                )
 f = open("polarization.csv","w") 
+CSV.write(f, df; quotechar=' ', delim=' ')
+
+
+df = DataFrame(time  = t_and_E[:,1], 
+               j_intra_x = j_intra[:,1], 
+               j_intra_y = j_intra[:,2],
+               j_inter_x = j_inter[:,1], 
+               j_inter_y = j_inter[:,2],
+               )
+f = open("current.csv","w") 
 CSV.write(f, df; quotechar=' ', delim=' ')
 
 header2=["time [fs]", "efield_x","efield_y"] 
