@@ -54,7 +54,8 @@ damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-use_Dipoles=true
+use_Dipoles=false
+#use_Dipoles=true
 
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
@@ -62,17 +63,22 @@ if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else printl
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
 Threads.@threads for ik in ProgressBar(1:nk)
-        H_w=Hamiltonian(k_grid[:,ik])
-	data= eigen(H_w)      # Diagonalize the matrix
-	eigenval[:,ik]   = data.values
-	eigenvec[:,:,ik] = data.vectors
-        if h_space
-          for i in 1:h_dim
-             H_h[i,i,ik]=eigenval[i,ik]
-          end
-        else
-          H_h[:,:,ik]=H_w
+    H_w=Hamiltonian(k_grid[:,ik])
+    data= eigen(H_w)      # Diagonalize the matrix
+    eigenval[:,ik]   = data.values
+    eigenvec[:,:,ik] = data.vectors
+    if h_space
+       for i in 1:h_dim
+          H_h[i,i,ik]=eigenval[i,ik]
         end
+    else
+        H_h[:,:,ik]=H_w
+    end
+    #
+    # Fix phase of eigenvectors
+    #
+    eigenvec[:,:,ik]=fix_eigenvec_phase(eigenvec[:,:,ik])
+    #
 end
 
 #Hamiltonian info
@@ -126,10 +132,6 @@ A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 A_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 Threads.@threads for ik in ProgressBar(1:nk)
   #
-  # Fix phase of eigenvectors
-  #
-  eigenvec[:,:,ik]=fix_eigenvec_phase(eigenvec[:,:,ik])
-  #
   # Calculate A(W) and rotate in H-gauge
   # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
   # Notice that in TB-approxamation the Berry Connection is independent from k
@@ -138,9 +140,9 @@ Threads.@threads for ik in ProgressBar(1:nk)
   #
   # Now I rotate from W -> H
   #
-  for id in 1:s_dim
-      A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
-  end
+#  for id in 1:s_dim
+#     A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
+#  end
   #
   # Calculate U^+ \d/dk U
   #
