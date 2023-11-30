@@ -21,6 +21,16 @@ using .Units
 # Code This code is in Hamiltonian space
 # in dipole approximation only at the K-point
 #
+# * * * DIPOLES * * * #
+#
+# if use_Dipoles=true  dipoles are calculated
+# using dH/dh
+#
+# if use_Dipoles=false dipoles are calculated
+# uding UdU with fixed phase
+#
+use_Dipoles=false
+
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
@@ -45,6 +55,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
 	data= eigen(H_w)      # Diagonalize the matrix
 	eigenval[:,ik]   = data.values
 	eigenvec[:,:,ik] = data.vectors
+	eigenvec[:,:,ik] = fix_eigenvec_phase(eigenvec[:,:,ik])
 end
 
 #Hamiltonian info
@@ -56,15 +67,16 @@ println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 # rotate in the Hamiltonian guage
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 
-println("Building Dipoles: ")
-Threads.@threads for ik in ProgressBar(1:nk)
+if use_Dipoles
+  println("Building Dipoles using dH/dk:")
+  Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
-  Dip_w=Grad_H(k_list[:,ik])
-  for id in 1:s_dim
-        Dip_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
+    Dip_w=Grad_H(k_list[:,ik])
+    for id in 1:s_dim
+          Dip_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
-	Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
-  end
+          Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
+    end
 
 # Now I have to divide for the energies
 #
@@ -74,12 +86,21 @@ Threads.@threads for ik in ProgressBar(1:nk)
 #
 #  (diagonal terms are set to zero)
 #
-  for i in 1:h_dim
-    for j in i+1:h_dim
-          Dip_h[i,j,ik,:]= 1im*Dip_h[i,j,ik,:]/(eigenval[j,ik]-eigenval[i,ik])
-          Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
-	end
-   end
+    for i in 1:h_dim
+      for j in i+1:h_dim
+            Dip_h[i,j,ik,:]= 1im*Dip_h[i,j,ik,:]/(eigenval[j,ik]-eigenval[i,ik])
+            Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
+  	end
+     end
+  end
+else
+  println("Building Dipoles using UdU/dk:")
+  Threads.@threads for ik in ProgressBar(1:nk)
+     UdU=Calculate_UdU(k_list[:,ik], eigenvec[:,:,ik])
+     for id in 1:s_dim
+        Dip_h[:,:,ik,id]=UdU[:,:,id]
+     end
+  end
 end
 
 
