@@ -67,9 +67,9 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,b_1,b_2,b_mat,s_dim,h_d
         #
 	A=zeros(Complex{Float64},2,2,ndim)
         A[1,1,1]=0
-        A[2,2,1]=3.0*tau/2.0
-	A[2,2,2]=0.0
+        A[2,2,1]=2.0*tau
 	A[1,1,2]=0.0 #sqrt(3)/2.0*tau
+	A[2,2,2]=0.0
 	return A
    end
    #

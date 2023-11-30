@@ -22,8 +22,8 @@ using .Units
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=5
-n_k2=5
+n_k1=24
+n_k2=24
 
 k_grid,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, b_mat)
 
@@ -54,8 +54,8 @@ damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-#use_Dipoles=true
-use_Dipoles=false
+use_Dipoles=true
+#use_Dipoles=false
 
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
@@ -136,13 +136,13 @@ Threads.@threads for ik in ProgressBar(1:nk)
   # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
   # Notice that in TB-approxamation the Berry Connection is independent from k
   #
-#  A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
+  A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
   #
   # Now I rotate from W -> H
   #
-#  for id in 1:s_dim
-#     A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
-#  end
+  for id in 1:s_dim
+     A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
+  end
   #
   # Calculate U^+ \d/dk U
   #
@@ -236,7 +236,6 @@ function deriv_rho(rho, t)
 	# Electrinc field
 	#
 	E_field=get_Efield(t, itstart=itstart)
-
 	#
 	Threads.@threads for ik in 1:nk
 	  #
@@ -260,17 +259,17 @@ function deriv_rho(rho, t)
 	    end
           end
           #
-#          if !use_Dipoles
+          if !use_Dipoles
              # 
              # Add d_rho/dk
              #
-#             Dk_rho=Evaluate_Dk_rho(ik, d_rho, ik_grid, ik_grid_inv, eigenvec)
+             Dk_rho=Evaluate_Dk_rho(ik, d_rho, ik_grid, ik_grid_inv, eigenvec)
              #
-#             for id in 1:s_dim
-#               d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
-#             end
+             for id in 1:s_dim
+               d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
+             end
              #
-#           end
+           end
            #
            # Commutator D*rho-rho*D
            # 
