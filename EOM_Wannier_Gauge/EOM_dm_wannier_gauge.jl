@@ -149,7 +149,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   UdU=Calculate_UdU(k_grid[:,ik], eigenvec[:,:,ik])
   #
   #
-  A_h[:,:,:,ik]=A_h[:,:,:,ik]+UdU
+  A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU
   #
 end
 #
@@ -274,10 +274,10 @@ function deriv_rho(rho, t)
            #
            # Commutator D*rho-rho*D
            # 
-#	   d_rho[:,:,ik]=d_rho[:,:,ik]-(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
+	   d_rho[:,:,ik]=d_rho[:,:,ik]-(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
            #
            # 
-#	end
+	end
 	#
 	# Damping
 	#
@@ -306,7 +306,11 @@ function get_polarization(rho_s)
     Threads.@threads for it in ProgressBar(1:nsteps)
         for id in 1:s_dim
            for ik in 1:nk
-     	       pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
+	      if use_Dipoles
+       	        pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
+	      else
+       	        pol[it,id]=pol[it,id]+real.(sum(A_h[:,:,id,ik].*transpose(rho_s[it,:,:,ik])))
+	      end
 	   end
         end
     end
