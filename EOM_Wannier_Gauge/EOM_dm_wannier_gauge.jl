@@ -54,8 +54,8 @@ damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-use_Dipoles=false
 #use_Dipoles=true
+use_Dipoles=false
 
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
@@ -136,7 +136,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
   # Notice that in TB-approxamation the Berry Connection is independent from k
   #
-  A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
+#  A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
   #
   # Now I rotate from W -> H
   #
@@ -260,7 +260,7 @@ function deriv_rho(rho, t)
 	    end
           end
           #
-          if !use_Dipoles
+#          if !use_Dipoles
              # 
              # Add d_rho/dk
              #
@@ -270,14 +270,14 @@ function deriv_rho(rho, t)
 #               d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
 #             end
              #
-           end
+#           end
            #
            # Commutator D*rho-rho*D
            # 
-	   d_rho[:,:,ik]=d_rho[:,:,ik]-(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
+#	   d_rho[:,:,ik]=d_rho[:,:,ik]-(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
            #
            # 
-	end
+#	end
 	#
 	# Damping
 	#

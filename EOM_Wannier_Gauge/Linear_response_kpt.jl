@@ -29,15 +29,15 @@ using .Units
 # if use_Dipoles=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_Dipoles=false
+use_Dipoles=true
 
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=96
-n_k2=96
+n_k1=5
+n_k2=5
 
 k_list,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, b_mat)
 
