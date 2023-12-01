@@ -54,8 +54,8 @@ damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-use_Dipoles=true
-#use_Dipoles=false
+#use_Dipoles=true
+use_Dipoles=false
 
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
@@ -263,7 +263,7 @@ function deriv_rho(rho, t)
              # 
              # Add d_rho/dk
              #
-             Dk_rho=Evaluate_Dk_rho(ik, d_rho, ik_grid, ik_grid_inv, eigenvec)
+             Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
              #
              for id in 1:s_dim
                d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]

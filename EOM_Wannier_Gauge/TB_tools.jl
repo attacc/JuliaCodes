@@ -3,7 +3,7 @@ module TB_tools
 using Printf
 using ProgressBars
 
-export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar
+export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,ProgressBar
 
 function generate_circuit(points, n_steps)
 	println("Generate k-path ")
@@ -37,7 +37,7 @@ function generate_circuit(points, n_steps)
      nk   =n_kx*n_ky
      k_grid=zeros(Float64,s_dim,nk)
      ik_grid    =zeros(Int,n_kx,n_ky)
-     ik_grid_inv=zeros(Int,2,nk)
+     ik_grid_inv=zeros(Int,s_dim,nk)
 
      vec_crystal=zeros(Float64,s_dim)
      dx=1.0/n_kx
@@ -57,12 +57,13 @@ function generate_circuit(points, n_steps)
  #
  function get_k_neighbor(ik,id,istep,ik_grid,ik_grid_inv)
      s_dim=2
+     ik_n =0
 
-     k_xyz=ik_grid_inv[ik]
+     k_xyz   =ik_grid_inv[:,ik]
      k_n     =k_xyz
      k_n[id] =k_n[id] 
-
-     for id in range(1:s_dim)
+#
+     for id in 1:s_dim
         d_size=size(ik_grid)[id]
         if k_n[id] > d_size
             k_n[id]=k_n[id]-d_size
@@ -70,7 +71,7 @@ function generate_circuit(points, n_steps)
             k_n[id]=k_n[id]+d_size
         end
      end
-
+#
      if s_dim==1
              ik_n=ik_grid[k_n[1]]
      elseif s_dim ==2
@@ -127,7 +128,7 @@ function rungekutta2_dm(d_rho, rho_0, t)
 	println("Real-time equation integration: ")
     for i in ProgressBar(1:n-1)
         h = t[i+1] - t[i]
-		rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
+	rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
     end
     return rho_t
 end
@@ -168,14 +169,14 @@ function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
   for id in 1:s_dim
     #  
     ik_plus =get_k_neighbor(ik,id,1,ik_grid,ik_grid_inv)
-    ik_minus=get_k_neighbor(ik,id,-1,ik_grid,ik_grid_inv)
-    #
-    rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
-    rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
-    #
-    dk=norm(k_grid[:,ik_plus]-k_grid[:,ik_minus])/2.0
-    # 
-    dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)*tau
+    ik_minus=get_k_neighbor(ik,id,-1,   ik_grid,ik_grid_inv)
+#    #
+#    rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
+#    rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
+#    #
+#    dk=norm(k_grid[:,ik_plus]-k_grid[:,ik_minus])/2.0
+#    # 
+#    dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)*tau
     #
     dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
   end
