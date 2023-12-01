@@ -171,12 +171,12 @@ function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
     ik_plus =get_k_neighbor(ik,id,1,ik_grid,ik_grid_inv)
     ik_minus=get_k_neighbor(ik,id,-1,   ik_grid,ik_grid_inv)
 #    #
-#    rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
-#    rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
+    rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
+    rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
 #    #
-#    dk=norm(k_grid[:,ik_plus]-k_grid[:,ik_minus])/2.0
+    dk=norm(k_grid[:,ik_plus]-k_grid[:,ik_minus])/2.0
 #    # 
-#    dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)*tau
+    dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)*tau
     #
     dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
   end
