@@ -160,7 +160,7 @@ function fix_eigenvec_phase(eigenvec)
 	return eigenvec
 end
 
-function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
+function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, b_mat, eigenvec)
   s_dim=2
   h_dim=2
   tau=2.732  # a.u.
@@ -180,6 +180,25 @@ function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
     #
     dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
   end
-
+  #
+  # From crystal to cartesian coordinated
+  #
+#  for i1 in 1:h_dim
+#    for i2 in 1:h_bim
+#        dk_rho[i1,i2,:]=b_mat*dk_rho[i1,i2,:]
+#    end
+#  end
+  #
   return dk_rho
 end
+
+function BerryConnection_by_Finite_Diff(ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
+    #
+    # We used the formula Eq. 44 of PRB 74 195118 to
+    # calculate the BerryConnection by finite difference
+    #
+    BerryCon=zeros(Complex{Float64},h_dim,h_dim,s_dim)
+    #
+    return BerryConnection
+end
+

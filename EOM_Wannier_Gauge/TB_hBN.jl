@@ -78,6 +78,8 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,b_1,b_2,b_mat,s_dim,h_d
    #
    function Grad_H(k; dk=0.01)
        #
+       # calculate dH/dk in the Wannier Gauge
+       #
        k_plus =copy(k)
        k_minus=copy(k)
        dH=zeros(Complex{Float64},2,2,ndim)
@@ -92,10 +94,24 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,b_1,b_2,b_mat,s_dim,h_d
            k_minus[id]=k[id]
        end
        #
-       # calculate dH/dk in the Wannier Gauge
+       # Transform from crystal to cartesian coordinates
+       #
+       dH=Coordinates_transform(dH,"crys_to_cart")
        #
        return dH
    end
+   #
+   function Coordinates_transform(M,KIND)
+      if KIND == "crys_to_cart":
+      elseif KIND == "cart_to_crys"
+      else
+        println("Wrong call to the function 'Coordinates_transform'")
+        exit()
+      end
+      #
+      return M
+      #
+   end 
    #
    function Calculate_UdU(k, U;  dk=0.01)
        #
