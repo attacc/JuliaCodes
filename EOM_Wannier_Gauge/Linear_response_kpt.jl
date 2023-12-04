@@ -34,15 +34,15 @@ lattice=set_Lattice(2,[a_1,a_2])
 # if use_Dipoles=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_Dipoles=true
+use_Dipoles=false
 
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=5
-n_k2=5
+n_k1=96
+n_k2=96
 
 k_list,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, lattice)
 
@@ -76,7 +76,7 @@ if use_Dipoles
   println("Building Dipoles using dH/dk:")
   Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
-    Dip_w=Grad_H(k_list[:,ik])
+    Dip_w=k_deriv_to_cart(Grad_H(k_list[:,ik]),lattice)
     for id in 1:s_dim
           Dip_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
@@ -101,7 +101,7 @@ if use_Dipoles
 else
   println("Building Dipoles using UdU/dk:")
   Threads.@threads for ik in ProgressBar(1:nk)
-     UdU=Calculate_UdU(k_list[:,ik], eigenvec[:,:,ik])
+     UdU=k_deriv_to_cart(Calculate_UdU(k_list[:,ik], eigenvec[:,:,ik]), lattice)
      for id in 1:s_dim
         Dip_h[:,:,ik,id]=UdU[:,:,id]
      end

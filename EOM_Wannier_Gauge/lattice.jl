@@ -2,12 +2,13 @@ module LatticeTools
 
 using LinearAlgebra
 
-export Lattice,set_Lattice
+export Lattice,set_Lattice,k_deriv_to_cart
 
 mutable struct Lattice
     dim::Int8
     vectors::Array{Array{Float64,1},1}
     rvectors::Array{Array{Float64,1},1} #reciplocal lattice vectors
+    rv_norm::Array{Float64,1}  # norm of the reciprocal lattice vectors
     vol::Float64
     r_vol::Float64
 end
@@ -74,13 +75,21 @@ function set_Lattice(dim, vectors)
        vol=abs(vol)
     end
     
+    rv_norm=zeros(Float64,dim)
+
     if dim == 1
-        rvectors = [[rvector_1[1]]]
-	
+        rvectors  = [[rvector_1[1]]]
+	rv_norm[1] =norm(rvector_1[1])
     elseif dim == 2
         rvectors = [rvector_1[1:2], rvector_2[1:2]]
+	rv_norm[1] =norm(rvector_1[1:2])
+	rv_norm[2] =norm(rvector_1[1:2])
+
     elseif dim == 3
         rvectors = [rvector_1[1:3], rvector_2[1:3], rvector_3[1:3]]
+	rv_norm[1] =norm(rvector_1[1:3])
+	rv_norm[2] =norm(rvector_1[1:3])
+	rv_norm[3] =norm(rvector_1[1:3])
     end
 
     r_vol=(2π)^3/vol
@@ -101,10 +110,21 @@ function set_Lattice(dim, vectors)
         dim,
 	vectors,
 	rvectors,
+	rv_norm,
 	vol,
 	r_vol
     )
     return lattice
+end
+
+function k_deriv_to_cart(M_crys,lattice)
+  M_cart=similar(M_crys)
+  M_cart.=0.0
+  for iv in lattice.dim,id in lattice.dim
+     M_cart[:,:,id]=M_cart[:,:,id]+lattice.vectors[iv][id]*M_crys[:,:,iv]*lattice.rv_norm[iv]
+  end
+  M_cart./=(2.0*pi)
+  return M_cart
 end
 
 end 

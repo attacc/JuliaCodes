@@ -28,14 +28,7 @@ a_cc=2.632 # a.u.
 a_1=a_cc/2.0*[3.0,  sqrt(3.0)]
 a_2=a_cc/2.0*[3.0, -sqrt(3.0)]
 
-b_1=2*pi/3.0*[ sqrt(3.0),  -1.0 ]
-b_2=2*pi/3.0*[ 0.0,         2.0 ]
-
-b_mat=zeros(Float64,s_dim,s_dim)
-b_mat[:,1]=b_1
-b_mat[:,2]=b_2
-
-export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,b_1,b_2,b_mat,s_dim,h_dim
+export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim
   #
   global ndim=2
   #
@@ -51,7 +44,7 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,b_1,b_2,b_mat,s
         # Off diagonal part
         # f(k)=e^{-i * k_y} * (1+2*e^{ i * k_y *3/2} ) * cos(sqrt(3)/2 *k_x)
         #
-	f_k=exp(-1im*k[2])*(1.0+2.0*exp(1im*k[2]*3.0/2.0)*cos(sqrt(3.0)*k[1]/2.0))
+	f_k=exp(-1im*k[2]*a_cc)*(1.0+2.0*exp(1im*k[2]*3.0*a_cc/2.0)*cos(sqrt(3.0)*k[1]*a_cc/2.0))
 	H[1,2]=t_0*f_k
 	H[2,1]=conj(H[1,2])
 	return H
@@ -88,29 +81,26 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,b_1,b_2,b_mat,s
            k_minus[id]=k[id]-dk
            H_plus =Hamiltonian(k_plus)
            H_minus=Hamiltonian(k_minus)
-           dH[:,:,id]=(H_plus-H_minus)/(2.0*dk)*a_cc
+           dH[:,:,id]=(H_plus-H_minus)/(2.0*dk)
            k_plus[id] =k[id]
            k_minus[id]=k[id]
        end
        #
-       # Transform from crystal to cartesian coordinates
-       #
-       dH=Coordinates_transform(dH,"crys_to_cart")
-       #
        return dH
    end
    #
-   function Coordinates_transform(M,KIND)
-      if KIND == "crys_to_cart"
-      elseif KIND == "cart_to_crys"
-      else
-        println("Wrong call to the function 'Coordinates_transform'")
-        exit()
-      end
-      #
-      return M
-      #
+   function k_deriv_to_cart(M_crys,lattice)
+	M_cart=zeros(M_crys)
+        for iv in lattice.dim,iv in lattice.dim
+	  for id in lattice.dim
+      	     M_cart[:,:,id]=M_cart[:,:,id]+lattice.vectors[iv][id]*M_crys[:,:,iv]*lattice.rb_norm[iv]
+	  end
+	end
+        M_cart=M_cart/(2.0*pi)
+      return M_cart
    end 
+   #
+   # Calculate derivatives along the rvectors directions
    #
    function Calculate_UdU(k, U;  dk=0.01)
        #
@@ -131,7 +121,7 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,b_1,b_2,b_mat,s
 	   eigenvec_m = data_minus.vectors
 	   eigenvec_m= fix_eigenvec_phase(eigenvec_m)
 	   
-	   dU=(eigenvec_p-eigenvec_m)/(2.0*dk)*a_cc
+	   dU=(eigenvec_p-eigenvec_m)/(2.0*dk)
 	   UdU[:,:,id]=(U')*dU
 
            k_plus[id] =k[id]
