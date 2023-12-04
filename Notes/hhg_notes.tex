@@ -105,9 +105,12 @@ where $\bb_i$ are reciprocal lattice vectors and $\ab_i$ direct lattice vectors 
 \ee
 then the derivative along a $\bb_i$ vector can be rewritten in cartesian coordinates as:
 \be
-\nabla \PP = \frac{1}{2\pi} \sum_{i=1,3} \ab_i \left( \frac{\partial \PP_i}{\partial \kk_i} \right)
+\nabla \PP = \frac{1}{2\pi} \sum_{i=1,3} \ab_i \left( \frac{\partial \PP_i}{\partial \kk_i} |\bb_i| \right)
 \ee 
-where $\kk_i$ are k-points along the $\bb_i$ vector.
+where $\partial \PP_i/\partial \kk_i$ is the derivative along the $\bb_i$ direction, or one can write the finite difference derivative using $\Delta \kk_i = \bb_i/N_i$.
+\be
+\nabla \PP = \frac{1}{2\pi} \sum_{i=1,3} \ab_i \left( \frac{\Delta \PP_i}{\Delta \kk_i}  |\bb_i|  \right) = \frac{1}{2\pi} \sum_{i=1,3} \ab_i \left( N_i \Delta \PP_i \right)
+\ee 
 
 \addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{apsrev4-1}
