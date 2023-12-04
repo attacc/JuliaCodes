@@ -32,14 +32,13 @@ function generate_circuit(points, n_steps)
    return fermi_function
  end
  #
- function generate_unif_grid(n_kx, n_ky, b_mat)
-     s_dim=2
+ function generate_unif_grid(n_kx, n_ky, lattice)
      nk   =n_kx*n_ky
-     k_grid=zeros(Float64,s_dim,nk)
+     k_grid=zeros(Float64,lattice.dim,nk)
      ik_grid    =zeros(Int,n_kx,n_ky)
-     ik_grid_inv=zeros(Int,s_dim,nk)
+     ik_grid_inv=zeros(Int,lattice.dim,nk)
 
-     vec_crystal=zeros(Float64,s_dim)
+     vec_crystal=zeros(Float64,lattice.dim)
      dx=1.0/n_kx
      dy=1.0/n_ky
 
@@ -49,7 +48,7 @@ function generate_circuit(points, n_steps)
            ik_grid_inv[:,ik]   =[ix+1,iy+1]
 	   vec_crystal[1]=dx*ix
 	   vec_crystal[2]=dy*iy
-	   k_grid[:,ik]=b_mat*vec_crystal
+	   k_grid[:,ik]=lattice.rvectors[1]*vec_crystal[1]+lattice.rvectors[2]*vec_crystal[2]
 	   ik=ik+1
      end
      return k_grid,ik_grid,ik_grid_inv

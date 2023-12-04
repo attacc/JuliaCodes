@@ -14,8 +14,6 @@ using .Units
 #
 # In this program the lattice constant is equal to 1
 #
-# Distance between neighbor 
-tau=2.732  # a.u.
 #
 # Default TB paramters from PRB 94, 125303 
 t_0 = 2.30/ha2ev  # eV
@@ -24,10 +22,11 @@ E_gap=3.625*2.0/ha2ev  # eV
 s_dim=2 # space dimension
 h_dim=2 # hamiltonian dimension
 #
+# Distance between neighbor 
+a_cc=2.632 # a.u.
 # Lattice vectors:
-#
-a_1=[    sqrt(3.0)     , 0.0]
-a_2=[ sqrt(3.0)/2.0, 3.0/2.0]
+a_1=a_cc/2.0*[3.0,  sqrt(3.0)]
+a_2=a_cc/2.0*[3.0, -sqrt(3.0)]
 
 b_1=2*pi/3.0*[ sqrt(3.0),  -1.0 ]
 b_2=2*pi/3.0*[ 0.0,         2.0 ]
@@ -36,7 +35,7 @@ b_mat=zeros(Float64,s_dim,s_dim)
 b_mat[:,1]=b_1
 b_mat[:,2]=b_2
 
-export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,b_1,b_2,b_mat,s_dim,h_dim
+export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,b_1,b_2,b_mat,s_dim,h_dim
   #
   global ndim=2
   #
@@ -67,8 +66,8 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,b_1,b_2,b_mat,s_dim,h_d
         #
 	A=zeros(Complex{Float64},2,2,ndim)
         A[1,1,1]=0
-        A[2,2,1]=2.0*tau
-	A[1,1,2]=0.0 #sqrt(3)/2.0*tau
+        A[2,2,1]=2.0*a_cc
+	A[1,1,2]=0.0 #sqrt(3)/2.0*a_cc
 	A[2,2,2]=0.0
 	return A
    end
@@ -89,7 +88,7 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,b_1,b_2,b_mat,s_dim,h_d
            k_minus[id]=k[id]-dk
            H_plus =Hamiltonian(k_plus)
            H_minus=Hamiltonian(k_minus)
-           dH[:,:,id]=(H_plus-H_minus)/(2.0*dk)*tau
+           dH[:,:,id]=(H_plus-H_minus)/(2.0*dk)*a_cc
            k_plus[id] =k[id]
            k_minus[id]=k[id]
        end
@@ -102,7 +101,7 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,b_1,b_2,b_mat,s_dim,h_d
    end
    #
    function Coordinates_transform(M,KIND)
-      if KIND == "crys_to_cart":
+      if KIND == "crys_to_cart"
       elseif KIND == "cart_to_crys"
       else
         println("Wrong call to the function 'Coordinates_transform'")
@@ -132,7 +131,7 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,b_1,b_2,b_mat,s_dim,h_d
 	   eigenvec_m = data_minus.vectors
 	   eigenvec_m= fix_eigenvec_phase(eigenvec_m)
 	   
-	   dU=(eigenvec_p-eigenvec_m)/(2.0*dk)*tau
+	   dU=(eigenvec_p-eigenvec_m)/(2.0*dk)*a_cc
 	   UdU[:,:,id]=(U')*dU
 
            k_plus[id] =k[id]

@@ -17,6 +17,11 @@ using .TB_tools
 
 include("units.jl")
 using .Units
+
+include("lattice.jl")
+using .LatticeTools
+
+lattice=set_Lattice(2,[a_1,a_2])
 # 
 # Code This code is in Hamiltonian space
 # in dipole approximation only at the K-point
@@ -39,7 +44,7 @@ off_diag=.~I(h_dim)
 n_k1=5
 n_k2=5
 
-k_list,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, b_mat)
+k_list,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, lattice)
 
 nk=n_k1*n_k2
 
