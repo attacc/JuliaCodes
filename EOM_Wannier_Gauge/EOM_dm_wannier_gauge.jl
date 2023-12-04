@@ -15,6 +15,12 @@ using .TB_tools
 
 include("units.jl")
 using .Units
+
+include("lattice.jl")
+using .LatticeTools
+
+lattice=set_Lattice(2,[a_1,a_2])
+
 # 
 # Code This code is in Hamiltonian space
 
@@ -22,10 +28,10 @@ using .Units
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=24
-n_k2=24
+n_k1=5
+n_k2=5
 
-k_grid,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, b_mat)
+k_grid,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, lattice)
 
 nk=n_k1*n_k2
 
@@ -55,7 +61,7 @@ damping=true
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
 #use_Dipoles=true
-use_Dipoles=false
+use_Dipoles=true
 
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
@@ -94,7 +100,7 @@ Grad_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 println("Building Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
-  Dip_w=Grad_H(k_grid[:,ik])
+  Dip_w=k_deriv_to_cart(Grad_H(k_grid[:,ik]),lattice)
   for id in 1:s_dim
         Grad_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
@@ -146,7 +152,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   #
   # Calculate U^+ \d/dk U
   #
-  UdU=Calculate_UdU(k_grid[:,ik], eigenvec[:,:,ik])
+  UdU=k_deriv_to_cart(Calculate_UdU(k_grid[:,ik], eigenvec[:,:,ik]),lattice)
   #
   #
   A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU
@@ -263,7 +269,7 @@ function deriv_rho(rho, t)
              # 
              # Add d_rho/dk
              #
-             Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
+#             Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
              #
              for id in 1:s_dim
                d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
