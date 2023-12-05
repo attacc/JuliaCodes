@@ -106,10 +106,29 @@ matrix that diagonalizes $H^{(W)}\left(\boldsymbol{k}\right)$,
 \begin{equation}
 U^{\dagger}\text{\ensuremath{\left(\boldsymbol{k}\right)}}H^{(W)}\left(\boldsymbol{k}\right)U\text{\ensuremath{\left(\boldsymbol{k}\right)}}=H^{(H)}\left(\boldsymbol{k}\right).
 \end{equation}
+Operators that transfor as the Hamiltonian are called gauge covariant. Operator that contains k-derivative are not gauge covariant and require a more complex transformation.\\
+Infact consider the transformation:
+\begin{equation}
+\ket{u_{n\boldsymbol{k}}^{\left(H\right)}}=\sum_{m}U_{mn}\left(\boldsymbol{k}\right)\ket{u_{m\boldsymbol{k}}^{\left(W\right)}}
+\end{equation}
+if we derive respect to $\kk$ we get:
+\begin{equation}
+	\ket{ \partial_{\kk} u_{n\boldsymbol{k}}^{\left(H\right)}}=\sum_{m}U_{mn}\left(\boldsymbol{k}\right)\ket{\partial_{\kk} u_{m\boldsymbol{k}}^{\left(W\right)}} + \sum_{m}\ket{u_{m\boldsymbol{k}}^{\left(W\right)}} \partial_\kk U_{mn}\left(\boldsymbol{k}\right)
+\end{equation}
+the derivative of quantities in Wannier gauges as $\ket{u_{m\boldsymbol{k}}^{\left(W\right)}}$ are not a problem because they are continous functions in $\kk$. We can work out the second term using perturbation theory.\cite{wang2006ab} 
+Notice that in the perturbation theory we made a gauge choice, and in particular we choose the "parallel transport" gauge see Sec.~$3.7$ in Ref.~\onlinecite{resta}. \\
+We consider an Hamiltonian:
+\be
+H^{(W)} (\kk + \Delta \kk_\alpha) = H^{(W)} (\kk)  + \Delta \kk_\alpha \partial_\alpha  H^{(W)} (\kk)
+\ee
+where $\partial_\alpha = \partial/\partial_{\kk_\alpha}$. We consider the second term as a perturbation and write the perturbation theory in the Hamiltonian gauge.
+\be
+	\ket{ u_{n,\boldsymbol{k}+\Delta \kk}^{\left(H\right)}}=\ket{ u_{n,\boldsymbol{k}}^{\left(H\right)}}+\sum_{m} \frac{\bra{u_{m,\boldsymbol{k} }} H^{(W)}_\alpha   \ket{u_{n,\boldsymbol{k} }}}{\epsilon_{m\kk}-\epsilon_{n\kk}} \ket{u_{m,\boldsymbol{k} }}
+\ee
+where $ H^{(W)}_\alpha =\partial_\alpha  H^{(W)}$.
 
 
 
-\subsection{Gauge transformation}
 \section{Position operator in periodic system}
 \appendix
 \section{Derivatives in k-space}
