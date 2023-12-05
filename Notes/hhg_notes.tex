@@ -90,7 +90,25 @@ b_3&=&\frac{2\pi}{V} a_2 \times a_3 = 2\pi \left( 0, 0, 1\right) \\
 \eea
 
 \section{Tight binding model}
+As simple model consider a two-band tight-binding model with only the first neigboar hopping, and parameters $t_0=2.92~eV$ and $\epsilon_B = -\epsilon_N = 2.81~eV$. The Hamiltonian reads:
+\bea
+H_{11}(\kk)&=&\epsilon_B\\
+H_{22}(\kk)&=&\epsilon_N\\
+H_{21}(\kk)&=&H^*_{12}(\kk) = t_0 \cdot e^{-i \kk_y a}\cdot \left(1+2 \cdot e^{i \kk_y \frac{3 a}{2}} \right)\cdot \cos{ \left( \frac{\sqrt{3} a}{2}\kk_x \right) }
+\eea 
 \section{Wannier and Hamiltonian gauge}
+The tight-binding Hamiltonian $H(\kk)$ is a analitic and continous function of $\kk$, therefore I can define all the derivatives respect to $\kk$ without problems. When we diagonalize $H(\kk)$ on a discrete k-point grid, there is a generic phase attached to the eigenvectors that make complicated the derivative respect to $\kk$. We call Wannier gauge the space before the diagonalization  $H^{W}(\kk)$ and Hamiltonian gauge the space after the diagonalization $H^{H}(\kk)$. Wave-function in the two gauges are related by an unitary transformation:
+\begin{equation}
+\ket{\psi_{n\boldsymbol{k}}^{\left(H\right)}}=\sum_{m}U_{mn}\left(\boldsymbol{k}\right)\ket{\psi_{m\boldsymbol{k}}^{\left(W\right)}}
+\end{equation}
+where $U\text{\ensuremath{\left(\boldsymbol{k}\right)}}$ is a unitary
+matrix that diagonalizes $H^{(W)}\left(\boldsymbol{k}\right)$,
+\begin{equation}
+U^{\dagger}\text{\ensuremath{\left(\boldsymbol{k}\right)}}H^{(W)}\left(\boldsymbol{k}\right)U\text{\ensuremath{\left(\boldsymbol{k}\right)}}=H^{(H)}\left(\boldsymbol{k}\right).
+\end{equation}
+
+
+
 \subsection{Gauge transformation}
 \section{Position operator in periodic system}
 \appendix

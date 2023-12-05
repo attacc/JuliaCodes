@@ -271,7 +271,7 @@ function deriv_rho(rho, t)
              # 
              # Add d_rho/dk
              #
-#             Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
+             Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec, lattice)
              #
              for id in 1:s_dim
                d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]

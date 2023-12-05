@@ -159,36 +159,31 @@ function fix_eigenvec_phase(eigenvec)
 	return eigenvec
 end
 
-function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, b_mat, eigenvec)
-  s_dim=2
-  h_dim=2
-  tau=2.732  # a.u.
+function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec, lattice)
 
   dk_rho=zeros(Complex{Float64},h_dim,h_dim,s_dim)
   for id in 1:s_dim
     #  
-    ik_plus =get_k_neighbor(ik,id,1,ik_grid,ik_grid_inv)
-    ik_minus=get_k_neighbor(ik,id,-1,   ik_grid,ik_grid_inv)
-#    #
+    ik_plus =get_k_neighbor(ik,id, 1,ik_grid,ik_grid_inv)
+    ik_minus=get_k_neighbor(ik,id,-1,ik_grid,ik_grid_inv)
+    #
     rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
     rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
-#    #
+    #
     dk=norm(k_grid[:,ik_plus]-k_grid[:,ik_minus])/2.0
-#    # 
+    # 
     dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)*tau
     #
     dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
+    #
   end
   #
   # From crystal to cartesian coordinated
   #
-#  for i1 in 1:h_dim
-#    for i2 in 1:h_bim
-#        dk_rho[i1,i2,:]=b_mat*dk_rho[i1,i2,:]
-#    end
-#  end
+  dk_rho=K_crys_to_cart(dk_rho,lattice)
   #
   return dk_rho
+  #
 end
 
 function BerryConnection_by_Finite_Diff(ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
