@@ -2,7 +2,7 @@ module LatticeTools
 
 using LinearAlgebra
 
-export Lattice,set_Lattice,k_deriv_to_cart
+export Lattice,set_Lattice,K_cart_to_crys,K_crys_to_cart
 
 mutable struct Lattice
     dim::Int8
@@ -117,14 +117,24 @@ function set_Lattice(dim, vectors)
     return lattice
 end
 
-function k_deriv_to_cart(M_crys,lattice)
+function K_crys_to_cart(M_crys,lattice)
   M_cart=similar(M_crys)
   M_cart.=0.0
-  for iv in lattice.dim,id in lattice.dim
+  for iv in 1:lattice.dim,id in 1:lattice.dim
      M_cart[:,:,id]=M_cart[:,:,id]+lattice.vectors[iv][id]*M_crys[:,:,iv]*lattice.rv_norm[iv]
   end
   M_cart./=(2.0*pi)
   return M_cart
 end
+
+function K_cart_to_crys(M_cart,lattice)
+  M_crys=similar(M_cart)
+  M_crys.=0.0
+  for iv in 1:lattice.dim,id in 1:lattice.dim
+     M_crys[:,:,id]=M_crys[:,:,id]+lattice.rvectors[iv][id]*M_cart[:,:,id]/lattice.rv_norm[iv]
+  end
+  return M_crys
+end
+
 
 end 

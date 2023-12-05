@@ -28,8 +28,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=5
-n_k2=5
+n_k1=96
+n_k2=96
 
 k_grid,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, lattice)
 
@@ -100,7 +100,9 @@ Grad_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 println("Building Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
-  Dip_w=k_deriv_to_cart(Grad_H(k_grid[:,ik]),lattice)
+  #Gradient of the Hamiltonian along the cartesian directions
+  Dip_w=Grad_H(k_grid[:,ik])
+
   for id in 1:s_dim
         Grad_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
@@ -152,7 +154,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   #
   # Calculate U^+ \d/dk U
   #
-  UdU=k_deriv_to_cart(Calculate_UdU(k_grid[:,ik], eigenvec[:,:,ik]),lattice)
+  UdU=Calculate_UdU(k_grid[:,ik], eigenvec[:,:,ik])
   #
   #
   A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU

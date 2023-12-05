@@ -28,7 +28,7 @@ a_cc=2.632 # a.u.
 a_1=a_cc/2.0*[3.0,  sqrt(3.0)]
 a_2=a_cc/2.0*[3.0, -sqrt(3.0)]
 
-export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim
+export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_cc
   #
   global ndim=2
   #
@@ -68,37 +68,27 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim
    # Based on perturbation theory
    # Eq. 24 of https://arxiv.org/pdf/cond-mat/0608257.pdf
    #
-   function Grad_H(k; dk=0.01)
+   function Grad_H(k;  dk=0.01)
        #
        # calculate dH/dk in the Wannier Gauge
+       # derivatives are in cartesian coordinates
        #
        k_plus =copy(k)
        k_minus=copy(k)
        dH=zeros(Complex{Float64},2,2,ndim)
        #
-       for id in 1:ndim
-           k_plus[id] =k[id]+dk
-           k_minus[id]=k[id]-dk
+       for iv in 1:ndim
+	   k_plus     =copy(k)
+	   k_minus    =copy(k)
+	   k_plus[iv] =k[iv]+dk
+	   k_minus[iv]=k[iv]-dk
            H_plus =Hamiltonian(k_plus)
            H_minus=Hamiltonian(k_minus)
-           dH[:,:,id]=(H_plus-H_minus)/(2.0*dk)
-           k_plus[id] =k[id]
-           k_minus[id]=k[id]
+           dH[:,:,iv]=(H_plus-H_minus)/(2.0*dk)
        end
        #
        return dH
    end
-   #
-   function k_deriv_to_cart(M_crys,lattice)
-	M_cart=zeros(M_crys)
-        for iv in lattice.dim,iv in lattice.dim
-	  for id in lattice.dim
-      	     M_cart[:,:,id]=M_cart[:,:,id]+lattice.vectors[iv][id]*M_crys[:,:,iv]*lattice.rb_norm[iv]
-	  end
-	end
-        M_cart=M_cart/(2.0*pi)
-      return M_cart
-   end 
    #
    # Calculate derivatives along the rvectors directions
    #
