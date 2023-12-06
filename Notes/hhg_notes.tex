@@ -192,7 +192,11 @@ where $\tau_n$ is the center of the n-Wannier function.
 \end{equation}
 %
 where $\bb$ are the vectors connecting $\kk$ to its nearest
-neighbors on the {\it ab-initio} mesh, and $w_b$ are the coefficent for the finite difference derivatives. \\
+		neighbors on the {\it ab-initio} mesh, and $w_b$ are the coefficent for the finite difference derivatives. The overlaps in the Wannier gauge can be calculated starting from the ones in the Hamiltonian gauge. We define $S\pw_{nm}(\kk;\kk+\bb) =  \langle u_{n\kk}\pw|u_{m,\kk+\bb}\pw \rangle$ and $S\ph_{ij}(\kk;\kk+\bb) =  \langle u_{i\kk}\ph|u_{j,\kk+\bb}\ph \rangle$. Using Eq.~\ref{u_transf} and its inverse we can write down the transformation between the two overlap matrices as:
+\be
+		S\pw(\kk;\kk+\bb) = U(\kk) S\ph(\kk;\kk+\bb) U^\dagger(\kk+\bb)
+\ee
+ 
 Finally the term  $i {\partial}/{\partial \kk}$ can be calculated directly as a finite difference k-point mesh of the density matrix in the Wannier guage.
 \end{itemize}
 
