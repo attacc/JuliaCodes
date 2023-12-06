@@ -28,7 +28,7 @@ a_cc=2.632 # a.u.
 a_1=a_cc/2.0*[3.0,  sqrt(3.0)]
 a_2=a_cc/2.0*[3.0, -sqrt(3.0)]
 
-export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_cc
+export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_cc,Calculate_Berry_Conc_FD
   #
   global ndim=2
   #
@@ -119,6 +119,36 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_c
        end
        #
        return UdU
+   end
+   #
+   function Calculate_Berry_Conc_FD(k, U; dk=0.01)
+       #
+       k_plus =copy(k)
+       k_minus=copy(k)
+       A_w=zeros(Complex{Float64},2,2,ndim)
+       #
+       for id in 1:ndim
+           k_plus[id] =k[id]+dk
+           k_minus[id]=k[id]-dk
+           H_plus =Hamiltonian(k_plus)
+	   data_plus= eigen(H_plus)
+	   eigenvec_p = data_plus.vectors
+	   eigenvec_p= fix_eigenvec_phase(eigenvec_p)
+
+           H_minus=Hamiltonian(k_minus)
+	   data_minus= eigen(H_minus)
+	   eigenvec_m = data_minus.vectors
+	   eigenvec_m= fix_eigenvec_phase(eigenvec_m)
+	   
+	   dS=(U*eigenvec_p-U*eigenvec_m)/(2.0*dk)
+	   A_w[:,:,id]=1im*dS  
+	   #Rotation to Hamiltonian gauge is performed outside
+
+           k_plus[id] =k[id]
+           k_minus[id]=k[id]
+       end
+       #
+       return A_w
    end
    #
 end

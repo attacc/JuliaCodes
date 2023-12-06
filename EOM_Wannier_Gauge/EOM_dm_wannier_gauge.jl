@@ -28,8 +28,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=96
-n_k2=96
+n_k1=6
+n_k2=6
 
 k_grid,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, lattice)
 
@@ -61,7 +61,13 @@ damping=true
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
 #use_Dipoles=true
-use_Dipoles=true
+use_Dipoles=false
+
+# Include drho/dk in the dynamics
+include_drho_dk=false
+
+# Include A_w in the calculation of A_h
+include_A_w=false
 
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
@@ -133,6 +139,8 @@ Threads.@threads for ik in ProgressBar(1:nk)
   end
 end
 #
+# Calculate Overlaps in the Wannier Gauge
+#
 # Calculate A^H(k) 
 #
 println("Calculate A^H(k) : ")
@@ -140,18 +148,24 @@ A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 A_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 Threads.@threads for ik in ProgressBar(1:nk)
   #
-  # Calculate A(W) and rotate in H-gauge
-  # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
-  # Notice that in TB-approxamation the Berry Connection is independent from k
-  #
-  A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
-  #
-  # Now I rotate from W -> H
-  #
-  for id in 1:s_dim
-     A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
+  if include_A_w
+    #
+    # Calculate A(W) and rotate in H-gauge
+    # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
+    # Notice that in TB-approxamation the Berry Connection is independent from k
+    # A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
+    #
+    # Calculate Berry Connection using Eq. 44 of PRB 74, 195118 (2006) 
+    A_w[:,:,:,ik]=Calculate_Berry_Conc_FD(k_grid[:,ik], eigenvec[:,:,ik])
+    #
+    # Then I rotate from W -> H
+    #
+    for id in 1:s_dim
+       A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
+    end
+    #
+    #
   end
-  #
   # Calculate U^+ \d/dk U
   #
   UdU=Calculate_UdU(k_grid[:,ik], eigenvec[:,:,ik])
@@ -271,11 +285,15 @@ function deriv_rho(rho, t)
              # 
              # Add d_rho/dk
              #
-             Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec, lattice)
-             #
-             for id in 1:s_dim
-               d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
-             end
+	     if include_drho_dk
+                Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec, lattice)
+               #
+	       #
+               for id in 1:s_dim
+                 d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
+               end
+	       #
+	     end
              #
            end
            #
