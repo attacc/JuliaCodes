@@ -150,10 +150,51 @@ in matrix notation it becomes $ \partial_\alpha U_{mn} = \sum_l U_{ml} D^{(H)}_{
 If we insert this result in Eq.~\ref{deriv_u} and together with Eq.~\ref{u_transf} we get:
 \begin{equation}
 	\ket{ \partial_{\kk} u_{n\boldsymbol{k}}^{\left(H\right)}}=\sum_{m}U_{mn}\left(\boldsymbol{k}\right)\ket{\partial_{\kk} u_{m\boldsymbol{k}}^{\left(W\right)}} + \sum_{m}\ket{u_{m\boldsymbol{k}}\ph} \D_{mn,\alpha}
+	\label{deriv_uh}
 \end{equation}
 we will use this result to define the position operator.
 
 \section{Position operator in periodic system}
+The position operator in periodic system is defined as:\cite{blount1962solid}
+\be
+\hat \rr = i \frac{\partial}{\partial \kk} + \hat A
+\ee
+where $\hat A$ is the transition dipole moment or a generalization of the Berry connection:\cite{silva2019high,wang2006ab}
+\be
+\boldsymbol{A}\pw_{nm}\left(\boldsymbol{k}\right)=i\int_{V_{C}}d^{D}\boldsymbol{r}\left(u_{n\boldsymbol{k}}\left(\boldsymbol{r}\right)\right)^{*}\frac{\partial}{\partial\boldsymbol{k}}u_{m\boldsymbol{k}}\left(\boldsymbol{r}\right).
+\ee
+using Eq.~\ref{deriv_uh} this term can be rewritten the Hamiltonian gauge as:
+\begin{equation}
+\boldsymbol{A}^{\left(H\right)}\left(\boldsymbol{k}\right)=U^{\dagger}\text{\ensuremath{\left(\boldsymbol{k}\right)}}\boldsymbol{A}^{\left(W\right)}\left(\boldsymbol{k}\right)U\text{\ensuremath{\left(\boldsymbol{k}\right)}}+iU^{\dagger}\text{\ensuremath{\left(\boldsymbol{k}\right)}}\frac{\partial}{\partial\boldsymbol{k}}U\left(\boldsymbol{k}\right).
+\end{equation}
+The term $(U^{\dagger}\partial_{\alpha}U)_{nm}$ can be calculated using perturbation theory as deriving directly the eigenvectors if the phase has been fixed. For example in Ref.~\onlinecite{silva2019high} they fix the phase of the eigenvectors by rotating U such that the diagonal of U is real and positive. Notice the this procedure works only if you do not have degenerate states as in their work.\\
+The other therm $\boldsymbol{A}^{\left(W\right)}$ can be calculated in different ways: 
+\begin{itemize}
+\item
+Using matrix elements of the position operator in a Wannier basis:
+\be
+\boldsymbol{A}_{nm}^{(W)}\left(\boldsymbol{k}\right)  \equiv\sum_{\boldsymbol{R}}e^{i\boldsymbol{k}.\boldsymbol{R}}\left\langle \boldsymbol{0}n\left|\hat{\boldsymbol{r}}\right|\boldsymbol{R}m\right\rangle .\label{eq:Berry_connection_Wannier}
+\ee
+\item In tight-binding using the approximation:\cite{silva2019high}
+\be
+		\left\langle \boldsymbol{0}n\left|\hat{\boldsymbol{r}}\right|\boldsymbol{R}m\right\rangle=\delta_{nm}\delta_{\boldsymbol{0} \boldsymbol{R}} = \tau_n
+\ee
+where $\tau_n$ is the center of the n-Wannier function.
+\item 
+	From the overlaps of the eigenfunctions:\cite{wang2006ab}
+	\begin{equation}
+        A_{nm,\alpha}\pw(\kk)\simeq
+        i\sum_\bb\,
+        w_b b_{\alpha}\Big ( \langle u_{n\kk}\pw|u_{m,\kk+\bb}\pw
+        \rangle
+        - \delta_{nm}\Big )\;,
+\label{eq:A_dis}
+\end{equation}
+%
+where $\bb$ are the vectors connecting $\kk$ to its nearest
+neighbors on the {\it ab-initio} mesh, and $w_b$ are the coefficent for the finite difference derivatives. \\
+Finally the term  $i {\partial}/{\partial \kk}$ can be calculated directly as a finite difference k-point mesh of the density matrix in the Wannier guage.
+\end{itemize}
 \appendix
 \section{Derivatives in k-space}
 In general to perform derivative in k-space we define quantities as:
