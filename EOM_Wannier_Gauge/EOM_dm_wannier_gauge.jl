@@ -64,10 +64,10 @@ damping=true
 use_Dipoles=false
 
 # Include drho/dk in the dynamics
-include_drho_dk=false
+include_drho_dk=true
 
 # Include A_w in the calculation of A_h
-include_A_w=false
+include_A_w=true
 
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
@@ -156,7 +156,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
     # A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
     #
     # Calculate Berry Connection using Eq. 44 of PRB 74, 195118 (2006) 
-    A_w[:,:,:,ik]=Calculate_Berry_Conc_FD(k_grid[:,ik], eigenvec[:,:,ik])
+    A_w[:,:,:,ik]=-Calculate_Berry_Conc_FD(k_grid[:,ik], eigenvec[:,:,ik])
     #
     # Then I rotate from W -> H
     #
@@ -171,7 +171,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   UdU=Calculate_UdU(k_grid[:,ik], eigenvec[:,:,ik])
   #
   #
-  A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU
+  A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU #.*off_diag
   #
 end
 #

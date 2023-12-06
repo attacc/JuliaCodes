@@ -32,6 +32,8 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_c
   #
   global ndim=2
   #
+  global off_diag=.~I(h_dim)
+  #
   function Hamiltonian(k)::Matrix{Complex{Float64}}
         #
 	H=zeros(Complex{Float64},2,2)
@@ -112,7 +114,8 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_c
 	   eigenvec_m= fix_eigenvec_phase(eigenvec_m)
 	   
 	   dU=(eigenvec_p-eigenvec_m)/(2.0*dk)
-	   UdU[:,:,id]=(U')*dU
+	   # I remove the identity, parallel guage
+	   UdU[:,:,id]=((U')*dU) #.*off_diag
 
            k_plus[id] =k[id]
            k_minus[id]=k[id]

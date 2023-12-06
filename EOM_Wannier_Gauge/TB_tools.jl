@@ -170,6 +170,8 @@ function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec, lattic
     rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
     rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
     #
+#    println(" k-grid ",ik_grid,ik_plus,ik_minus)
+    #
     dk=norm(k_grid[:,ik_plus]-k_grid[:,ik_minus])/2.0
     # 
     dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)
