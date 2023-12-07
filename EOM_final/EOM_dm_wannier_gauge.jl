@@ -28,11 +28,11 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=3
-n_k2=3
+n_k1=1
+n_k2=48
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
-print_k_grid(k_grid)
+# print_k_grid(k_grid)
 
 nk=n_k1*n_k2
 
@@ -53,7 +53,7 @@ println(" nk = ",nk)
 # Hamiltonian gauge:  h_space = true  
 # Wannier gauge    :  h_space = false
 #
-h_space=true 
+h_space=false 
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -61,14 +61,17 @@ damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-#use_Dipoles=true
 use_Dipoles=false
+#use_Dipoles=false
 
 # Include drho/dk in the dynamics
 include_drho_dk=true
 
 # Include A_w in the calculation of A_h
 include_A_w=true
+
+eval_current=true
+eval_polarization=true
 
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
@@ -154,10 +157,10 @@ Threads.@threads for ik in ProgressBar(1:nk)
     # Calculate A(W) and rotate in H-gauge
     # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
     # Notice that in TB-approxamation the Berry Connection is independent from k
-    # A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
+    A_w[:,:,:,ik]=Berry_Connection(k_grid.kpt[:,ik])
     #
     # Calculate Berry Connection using Eq. 44 of PRB 74, 195118 (2006) 
-    A_w[:,:,:,ik]=-Calculate_Berry_Conc_FD(k_grid.kpt[:,ik], eigenvec[:,:,ik])
+#    A_w[:,:,:,ik]=Calculate_Berry_Conec_FD(ik, k_grid, eigenvec[:,:,ik])
     #
     # Then I rotate from W -> H
     #
@@ -169,10 +172,17 @@ Threads.@threads for ik in ProgressBar(1:nk)
   end
   # Calculate U^+ \d/dk U
   #
-  UdU=Calculate_UdU(k_grid.kpt[:,ik], eigenvec[:,:,ik])
+  #  Using the fixing of the guage
+  UdU=Calculate_UdU(ik,k_grid, eigenvec, lattice)
+  UdU=UdU #.*off_diag
   #
+  #  Using the parallel transport gauge
+  #UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim)
+  #for id in 1:s_dim
+  #   UdU[:,:,id]=-1im*Dip_h[:,:,ik,id]
+  #end
   #
-  A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU #.*off_diag
+  A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU
   #
 end
 #
@@ -181,8 +191,8 @@ end
 #
 T_2=6.0*fs2aut   # fs
 t_start=0.0
-dt =0.005*fs2aut  # fs
-t_end  =T_2*10.0
+dt =0.01*fs2aut  # fs
+t_end  =T_2*12.0
 E_vec=[1.0,0.0]
 #
 t_range = t_start:dt:t_end
@@ -214,14 +224,25 @@ println("External field versor :",E_vec)
 #
 itstart = 3 # start of the external field
 
-function get_Efield(t ; itstart=3)
+function get_Efield(t, ftype; itstart=3)
 	#
 	# Field in direction y
 	#
-        if t>=(itstart-1)*dt && t<itstart*dt 
-		a_t=1.0/dt
-	else
+	if ftype=="delta":
+  	  #
+          if t>=(itstart-1)*dt && t<itstart*dt 
+  		a_t=1.0/dt
+  	  else
 		a_t=0.0
+	  end
+	  #
+ 	elseif ftype=="PHHG"
+	  w    =0.77/ha2ev
+	  sigma=30.0*fs2au
+	  T_0  =3*sigma
+	  I    = 2.64E10*kWCMm22AU
+          E    =sqrt(I*4.*pi/SPEED)
+	  a_t =E*sin(pi*(T-T_0)/sigma)*cos(w*t)
 	end
 	#
 	Efield=a_t*E_vec
@@ -258,7 +279,7 @@ function deriv_rho(rho, t)
 	#
 	# Electrinc field
 	#
-	E_field=get_Efield(t, itstart=itstart)
+	E_field=get_Efield(t, "delta",itstart=itstart)
 	#
 	Threads.@threads for ik in 1:nk
 	  #
@@ -268,16 +289,16 @@ function deriv_rho(rho, t)
 	  #
           if use_Dipoles
             for id in 1:s_dim
-                E_dot_DIP+=-E_field[id]*Dip_h[:,:,ik,id]
+                E_dot_DIP+=E_field[id]*Dip_h[:,:,ik,id]
              end
           else
    	    if h_space
               for id in 1:s_dim
-                 E_dot_DIP+=-E_field[id]*A_h[:,:,id,ik]
+                 E_dot_DIP+=E_field[id]*A_h[:,:,id,ik]
               end
 	    else
               for id in 1:s_dim
-                 E_dot_DIP+=-E_field[id]*A_w[:,:,id,ik]
+                 E_dot_DIP+=E_field[id]*A_w[:,:,id,ik]
               end
 	    end
           end
@@ -287,11 +308,11 @@ function deriv_rho(rho, t)
              # Add d_rho/dk
              #
 	     if include_drho_dk
-                Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
+               Dk_rho=Evaluate_Dk_rho(rho, h_space, ik, k_grid, eigenvec, lattice)
                #
 	       #
                for id in 1:s_dim
-                 d_rho[:,:,ik]+=-1im*E_field[id]*Dk_rho[:,:,id]
+                 d_rho[:,:,ik]+=1im*E_field[id]*Dk_rho[:,:,id]
                end
 	       #
 	     end
@@ -300,7 +321,7 @@ function deriv_rho(rho, t)
            #
            # Commutator D*rho-rho*D
            # 
-	   d_rho[:,:,ik]=d_rho[:,:,ik]-(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
+	   d_rho[:,:,ik]=d_rho[:,:,ik]+(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
            #
            # 
 	end
@@ -335,7 +356,7 @@ function get_polarization(rho_s)
 	      if use_Dipoles
        	        pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
 	      else
-       	        pol[it,id]=pol[it,id]+real.(sum(A_h[:,:,id,ik].*transpose(rho_s[it,:,:,ik])))
+      	        pol[it,id]=pol[it,id]+real.(sum(A_h[:,:,id,ik].*transpose(rho_s[it,:,:,ik])))
 	      end
 	   end
         end
@@ -352,9 +373,18 @@ function get_current(rho_s)
     Threads.@threads for it in ProgressBar(1:nsteps)
         for id in 1:s_dim
            for ik in 1:nk
-  	      j_intra[it,id]=j_intra[it,id]-real.(sum(Grad_h[:,:,ik,id].* transpose(rho_s[it,:,:,ik])))
-	      commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
-	      j_inter[it,id]=j_inter[it,id]-imag.(sum(commutator.* transpose(rho_s[it,:,:,ik])))
+		if !h_space
+           	   rho_H=HW_rotate(rho_s[it,:,:,ik],eigenvec[:,:,ik],"W_to_H")
+		else
+		   rho_H=rho_s[it,:,:,ik]
+		end
+     	        j_intra[it,id]=j_intra[it,id]-real.(sum(Grad_h[:,:,ik,id].* transpose(rho_H)))
+	      if h_space
+	         commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
+	      else
+	         commutator=A_w[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_w[:,:,id,ik]
+	      end
+	      j_inter[it,id]=j_inter[it,id]-imag.(sum(commutator.*transpose(rho_s[it,:,:,ik])))
 	   end
         end
     end
@@ -367,12 +397,16 @@ end
 
 solution = rungekutta2_dm(deriv_rho, rho0, t_range)
 
-# Calculate the polarization in time and frequency
 
-pol=get_polarization(solution)
-j_intra,j_inter=get_current(solution)
+if eval_polarization
+  # Calculate the polarization in time and frequency
+  pol=get_polarization(solution)
+end
+if eval_current
+  j_intra,j_inter=get_current(solution)
+end
 
-# Write polarization and external field on disk
+  # Write polarization and external field on disk
 
 t_and_E=zeros(Float64,n_steps,3)
 Threads.@threads for it in 1:n_steps
@@ -381,23 +415,26 @@ Threads.@threads for it in 1:n_steps
  t_and_E[it,:]=[t/fs2aut,E_field_t[1],E_field_t[2]]
 end
 
-
-df = DataFrame(time  = t_and_E[:,1], 
+if eval_polarization
+  df = DataFrame(time  = t_and_E[:,1], 
                pol_x = pol[:,1], 
                pol_y = pol[:,2],
                )
-f = open("polarization.csv","w") 
-CSV.write(f, df; quotechar=' ', delim=' ')
+  f = open("polarization.csv","w") 
+  CSV.write(f, df; quotechar=' ', delim=' ')
+end
 
 
-df = DataFrame(time  = t_and_E[:,1], 
+if eval_current
+  df = DataFrame(time  = t_and_E[:,1], 
                j_intra_x = j_intra[:,1], 
                j_intra_y = j_intra[:,2],
                j_inter_x = j_inter[:,1], 
                j_inter_y = j_inter[:,2],
                )
-f = open("current.csv","w") 
-CSV.write(f, df; quotechar=' ', delim=' ')
+  f = open("current.csv","w") 
+  CSV.write(f, df; quotechar=' ', delim=' ')
+end
 
 header2=["time [fs]", "efield_x","efield_y"] 
 CSV.write("external_field.csv", delim=' ', Tables.table(t_and_E), header=header2, quotechar=' ')

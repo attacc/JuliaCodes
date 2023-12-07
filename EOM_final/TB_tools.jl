@@ -3,7 +3,7 @@ module TB_tools
 using Printf
 using ProgressBars
 
-export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,print_k_grid,ProgressBar
+export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,print_k_grid,ProgressBar,K_crys_to_cart
 
 mutable struct K_Grid
 	kpt::Array{Float64,2}
@@ -62,7 +62,7 @@ function generate_circuit(points, n_steps)
 
      k_grid = K_Grid(
 		kpt,
-		[n_ky,n_ky,1],
+		[n_kx,n_ky,1],
 		ik_grid,
 		ik_grid_inv
 	       )
@@ -180,24 +180,35 @@ function fix_eigenvec_phase(eigenvec)
 	return eigenvec
 end
 
-function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
+function Evaluate_Dk_rho(rho, h_space, ik, k_grid, eigenvec, lattice)
 
   dk_rho=zeros(Complex{Float64},h_dim,h_dim,s_dim)
   for id in 1:s_dim
-    #  
+    #
+    if k_grid.nk_dir[id]==1
+	    continue
+    end
+    #
     ik_plus =get_k_neighbor(ik,id, 1,k_grid)
     ik_minus=get_k_neighbor(ik,id,-1,k_grid)
     #
-    rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
-    rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
-    #
-#    println(" k-grid ",ik_grid,ik_plus,ik_minus)
+    if h_space
+      rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
+      rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
+    else
+      rho_plus =rho[:,:,ik_plus]
+      rho_minus=rho[:,:,ik_minus]
+    end
     #
     dk=norm(k_grid.kpt[:,ik_plus]-k_grid.kpt[:,ik_minus])/2.0
     # 
     dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)
     #
-    dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
+    if h_space
+      dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
+    end
+    #
+    #println(dk_rho)
     #
   end
   #
@@ -207,15 +218,5 @@ function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
   #
   return dk_rho
   #
-end
-
-function BerryConnection_by_Finite_Diff(ik, k_grid, ik_grid, ik_grid_inv, eigenvec)
-    #
-    # We used the formula Eq. 44 of PRB 74 195118 to
-    # calculate the BerryConnection by finite difference
-    #
-    BerryCon=zeros(Complex{Float64},h_dim,h_dim,s_dim)
-    #
-    return BerryConnection
 end
 
