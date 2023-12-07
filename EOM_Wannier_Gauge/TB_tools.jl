@@ -69,16 +69,16 @@ function generate_circuit(points, n_steps)
      return k_grid
  end
  #
- function get_k_neighbor(ik,id,istep,ik_grid,ik_grid_inv)
+ function get_k_neighbor(ik,id,istep,k_grid)
      s_dim=2
      ik_n =0
 
-     k_xyz   =ik_grid_inv[:,ik]
+     k_xyz   =k_grid.ik_map_inv[:,ik]
      k_n     =k_xyz
      k_n[id] =k_n[id] 
 #
      for id in 1:s_dim
-        d_size=size(ik_grid)[id]
+        d_size=k_grid.nk_dir[id]
         if k_n[id] > d_size
             k_n[id]=k_n[id]-d_size
         elseif k_n[id]<=0
@@ -86,14 +86,11 @@ function generate_circuit(points, n_steps)
         end
      end
 #
-     if s_dim==1
-             ik_n=ik_grid[k_n[1]]
-     elseif s_dim ==2
-             ik_n=ik_grid[k_n[1],k_n[2]]
-     elseif s_dim ==3
-             ik_n=ik_grid[k_n[1],k_n[2],k_n[3]]
+     ik_xyz=[1,1,1]
+     for id in s_dim
+        ik_xyz[id]=k_n[id]
      end
-
+     ik_n=k_grid.ik_map[ik_xyz[1],ik_xyz[2],ik_xyz[3]]
      return ik_n
  end
  #
@@ -174,20 +171,20 @@ function fix_eigenvec_phase(eigenvec)
 	return eigenvec
 end
 
-function Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec, lattice)
+function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
 
   dk_rho=zeros(Complex{Float64},h_dim,h_dim,s_dim)
   for id in 1:s_dim
     #  
-    ik_plus =get_k_neighbor(ik,id, 1,ik_grid,ik_grid_inv)
-    ik_minus=get_k_neighbor(ik,id,-1,ik_grid,ik_grid_inv)
+    ik_plus =get_k_neighbor(ik,id, 1,k_grid)
+    ik_minus=get_k_neighbor(ik,id,-1,k_grid)
     #
     rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
     rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
     #
 #    println(" k-grid ",ik_grid,ik_plus,ik_minus)
     #
-    dk=norm(k_grid[:,ik_plus]-k_grid[:,ik_minus])/2.0
+    dk=norm(k_grid.kpt[:,ik_plus]-k_grid.kpt[:,ik_minus])/2.0
     # 
     dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)
     #

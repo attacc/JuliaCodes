@@ -75,7 +75,7 @@ if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else printl
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
 Threads.@threads for ik in ProgressBar(1:nk)
-    H_w=Hamiltonian(k_grid[:,ik])
+    H_w=Hamiltonian(k_grid.kpt[:,ik])
     data= eigen(H_w)      # Diagonalize the matrix
     eigenval[:,ik]   = data.values
     eigenvec[:,:,ik] = data.vectors
@@ -107,7 +107,7 @@ println("Building Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
   #Gradient of the Hamiltonian along the cartesian directions
-  Dip_w=Grad_H(k_grid[:,ik])
+  Dip_w=Grad_H(k_grid.kpt[:,ik])
 
   for id in 1:s_dim
         Grad_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
@@ -156,7 +156,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
     # A_w[:,:,:,ik]=Berry_Connection(k_grid[:,ik])
     #
     # Calculate Berry Connection using Eq. 44 of PRB 74, 195118 (2006) 
-    A_w[:,:,:,ik]=-Calculate_Berry_Conc_FD(k_grid[:,ik], eigenvec[:,:,ik])
+    A_w[:,:,:,ik]=-Calculate_Berry_Conc_FD(k_grid.kpt[:,ik], eigenvec[:,:,ik])
     #
     # Then I rotate from W -> H
     #
@@ -168,7 +168,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   end
   # Calculate U^+ \d/dk U
   #
-  UdU=Calculate_UdU(k_grid[:,ik], eigenvec[:,:,ik])
+  UdU=Calculate_UdU(k_grid.kpt[:,ik], eigenvec[:,:,ik])
   #
   #
   A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU #.*off_diag
@@ -286,7 +286,7 @@ function deriv_rho(rho, t)
              # Add d_rho/dk
              #
 	     if include_drho_dk
-                Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, ik_grid, ik_grid_inv, eigenvec, lattice)
+                Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
                #
 	       #
                for id in 1:s_dim
