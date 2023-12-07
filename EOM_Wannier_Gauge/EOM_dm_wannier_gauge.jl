@@ -31,7 +31,7 @@ off_diag=.~I(h_dim)
 n_k1=6
 n_k2=6
 
-k_grid,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, lattice)
+k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
 nk=n_k1*n_k2
 

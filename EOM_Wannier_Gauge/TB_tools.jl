@@ -5,6 +5,14 @@ using ProgressBars
 
 export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,ProgressBar
 
+mutable struct K_Grid
+	kpt::Array{Float64,2}
+	nk_dir::Array{Int,1}
+	ik_map::Array{Int,3}
+	ik_map_inv::Array{Int,2}
+end
+
+
 function generate_circuit(points, n_steps)
 	println("Generate k-path ")
 	n_points=length(points)
@@ -34,8 +42,8 @@ function generate_circuit(points, n_steps)
  #
  function generate_unif_grid(n_kx, n_ky, lattice)
      nk   =n_kx*n_ky
-     k_grid=zeros(Float64,lattice.dim,nk)
-     ik_grid    =zeros(Int,n_kx,n_ky)
+     kpt  =zeros(Float64,lattice.dim,nk)
+     ik_grid    =zeros(Int,n_kx,n_ky,1)
      ik_grid_inv=zeros(Int,lattice.dim,nk)
 
      vec_crystal=zeros(Float64,lattice.dim)
@@ -44,14 +52,21 @@ function generate_circuit(points, n_steps)
 
      ik=1
      for ix in 0:(n_kx-1),iy in 0:(n_ky-1)
-           ik_grid[ix+1,iy+1]=ik
+           ik_grid[ix+1,iy+1,1]=ik
            ik_grid_inv[:,ik]   =[ix+1,iy+1]
 	   vec_crystal[1]=dx*ix
 	   vec_crystal[2]=dy*iy
-	   k_grid[:,ik]=lattice.rvectors[1]*vec_crystal[1]+lattice.rvectors[2]*vec_crystal[2]
+	   kpt[:,ik]=lattice.rvectors[1]*vec_crystal[1]+lattice.rvectors[2]*vec_crystal[2]
 	   ik=ik+1
      end
-     return k_grid,ik_grid,ik_grid_inv
+
+     k_grid = K_Grid(
+		kpt,
+		[n_ky,n_ky,1],
+		ik_grid,
+		ik_grid_inv
+	       )
+     return k_grid
  end
  #
  function get_k_neighbor(ik,id,istep,ik_grid,ik_grid_inv)

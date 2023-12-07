@@ -44,7 +44,7 @@ off_diag=.~I(h_dim)
 n_k1=96
 n_k2=96
 
-k_list,ik_grid,ik_grid_inv=generate_unif_grid(n_k1, n_k2, lattice)
+k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
 nk=n_k1*n_k2
 #nk=1
@@ -60,7 +60,7 @@ println(" nk = ",nk)
 
 println("Building Hamiltonian: ")
 Threads.@threads for ik in ProgressBar(1:nk)
-        H_w=Hamiltonian(k_list[:,ik])
+        H_w=Hamiltonian(k_grid.kpt[:,ik])
 	data= eigen(H_w)      # Diagonalize the matrix
 	eigenval[:,ik]   = data.values
 	eigenvec[:,:,ik] = data.vectors
@@ -80,7 +80,7 @@ if use_Dipoles
   println("Building Dipoles using dH/dk:")
   Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
-    Dip_w=Grad_H(k_list[:,ik])
+    Dip_w=Grad_H(k_grid.kpt[:,ik])
     for id in 1:s_dim
           Dip_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
