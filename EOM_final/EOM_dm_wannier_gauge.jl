@@ -228,7 +228,7 @@ function get_Efield(t, ftype; itstart=3)
 	#
 	# Field in direction y
 	#
-	if ftype=="delta":
+	if ftype=="delta"
   	  #
           if t>=(itstart-1)*dt && t<itstart*dt 
   		a_t=1.0/dt
@@ -241,7 +241,7 @@ function get_Efield(t, ftype; itstart=3)
 	  sigma=30.0*fs2au
 	  T_0  =3*sigma
 	  I    = 2.64E10*kWCMm22AU
-          E    =sqrt(I*4.*pi/SPEED)
+          E    =sqrt(I*4.0*pi/SPEED)
 	  a_t =E*sin(pi*(T-T_0)/sigma)*cos(w*t)
 	end
 	#
