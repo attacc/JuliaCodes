@@ -158,12 +158,13 @@ we will use this result to define the position operator.
 The position operator in periodic system is defined as:\cite{blount1962solid}
 \be
 \hat \rr = i \frac{\partial}{\partial \kk} + \hat A
+\label{rperiodic}
 \ee
-where $\hat A$ is the transition dipole moment or a generalization of the Berry connection:\cite{silva2019high,wang2006ab}
+where $\hat A$ is the transition dipole moment or a generalization of the Berry connection:\cite{silva2019high,wang2006ab}. This operator is well defined in the Wannier gauge.
 \be
-\boldsymbol{A}\pw_{nm}\left(\boldsymbol{k}\right)=i\int_{V_{C}}d^{D}\boldsymbol{r}\left(u_{n\boldsymbol{k}}\left(\boldsymbol{r}\right)\right)^{*}\frac{\partial}{\partial\boldsymbol{k}}u_{m\boldsymbol{k}}\left(\boldsymbol{r}\right).
+\boldsymbol{A}\pw_{nm}\left(\boldsymbol{k}\right)=i\int_{V_{C}}d\boldsymbol{r}~u^{*}_{n\boldsymbol{k}}\left(\boldsymbol{r}\right)\frac{\partial}{\partial\boldsymbol{k}}u_{m\boldsymbol{k}}\left(\boldsymbol{r}\right).
 \ee
-using Eq.~\ref{deriv_uh} this term can be rewritten the Hamiltonian gauge as:
+Notice that the presence of the k-derivative in Eq.~\ref{rperiodic} generate an additional term when we rotate it in the Hamiltonian gauge. Using Eq.~\ref{deriv_uh} this term can be rewritten the Hamiltonian gauge as:
 \begin{equation}
 \boldsymbol{A}^{\left(H\right)}\left(\boldsymbol{k}\right)=U^{\dagger}\text{\ensuremath{\left(\boldsymbol{k}\right)}}\boldsymbol{A}^{\left(W\right)}\left(\boldsymbol{k}\right)U\text{\ensuremath{\left(\boldsymbol{k}\right)}}+iU^{\dagger}\text{\ensuremath{\left(\boldsymbol{k}\right)}}\frac{\partial}{\partial\boldsymbol{k}}U\left(\boldsymbol{k}\right).
 \end{equation}
