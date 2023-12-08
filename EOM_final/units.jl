@@ -22,6 +22,6 @@ SEC2AU =1.0/AU2SEC           # sec = SEC2AU Tau
 kWCMm22AU=1e7*J2AU/(M2AU^2*SEC2AU)  # kW/cm^2 = kWCMm22AU * AU
 AU2KWCMm2=1.0/kWCMm22AU                   # AU      = AU2KWCMm2 kW/cm^2
 
-export ha2ev,fs2aut,kWCMm22AU,AU2KWCMm2
+export ha2ev,fs2aut,kWCMm22AU,AU2KWCMm2,SPEED_of_LIGHT
 
 end

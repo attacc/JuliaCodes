@@ -28,8 +28,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=24
-n_k2=24
+n_k1=12
+n_k2=12
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -73,8 +73,11 @@ include_A_w=true
 eval_current=true
 eval_polarization=true
 
+field_name="PHHG"
+
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
+println(" Field name : ",field_name)
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
@@ -238,11 +241,18 @@ function get_Efield(t, ftype; itstart=3)
 	  #
  	elseif ftype=="PHHG"
 	  w    =0.77/ha2ev
-	  sigma=30.0*fs2au
-	  T_0  =3*sigma
+	  sigma=30.0*fs2aut
+	  T_0  = itstart*dt
 	  I    = 2.64E10*kWCMm22AU
-          E    =sqrt(I*4.0*pi/SPEED)
-	  a_t =E*sin(pi*(T-T_0)/sigma)*cos(w*t)
+          E    =sqrt(I*4.0*pi/SPEED_of_LIGHT)
+	  if (t-T_0)>=sigma || (t-T_0)<-sigma
+	    a_t=0.0
+	  else
+		  a_t =E*(sin(pi*(t-T_0)/sigma))^2*cos(w*t)
+	  end
+	else
+	  println("Field unknown!! ")	
+	  exit()
 	end
 	#
 	Efield=a_t*E_vec
@@ -279,7 +289,7 @@ function deriv_rho(rho, t)
 	#
 	# Electrinc field
 	#
-	E_field=get_Efield(t, "delta",itstart=itstart)
+	E_field=get_Efield(t, field_name,itstart=itstart)
 	#
 	Threads.@threads for ik in 1:nk
 	  #
@@ -411,7 +421,7 @@ end
 t_and_E=zeros(Float64,n_steps,3)
 Threads.@threads for it in 1:n_steps
  t=it*dt
- E_field_t=get_Efield(t,"delta",itstart=itstart)
+ E_field_t=get_Efield(t,field_name,itstart=itstart)
  t_and_E[it,:]=[t/fs2aut,E_field_t[1],E_field_t[2]]
 end
 
