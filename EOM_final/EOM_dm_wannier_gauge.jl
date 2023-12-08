@@ -78,6 +78,7 @@ field_name="PHHG"
 if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
 if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
 println(" Field name : ",field_name)
+println(" Number of threads: ",Threads.nthreads())
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
