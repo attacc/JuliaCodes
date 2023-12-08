@@ -192,21 +192,21 @@ function Evaluate_Dk_rho(rho, h_space, ik, k_grid, eigenvec, lattice)
     ik_plus =get_k_neighbor(ik,id, 1,k_grid)
     ik_minus=get_k_neighbor(ik,id,-1,k_grid)
     #
-    if h_space
-      rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
-      rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
-    else
+#    if h_space
+#      rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
+#      rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
+#    else
       rho_plus =rho[:,:,ik_plus]
       rho_minus=rho[:,:,ik_minus]
-    end
+#    end
     #
     dk=norm(k_grid.kpt[:,ik_plus]-k_grid.kpt[:,ik_minus])/2.0
     # 
     dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)
     #
-    if h_space
-      dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
-    end
+#    if h_space
+#      dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
+#    end
     #
     #println(dk_rho)
     #

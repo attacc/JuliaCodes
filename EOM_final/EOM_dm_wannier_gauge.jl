@@ -28,8 +28,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=1
-n_k2=48
+n_k1=24
+n_k2=24
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -53,7 +53,7 @@ println(" nk = ",nk)
 # Hamiltonian gauge:  h_space = true  
 # Wannier gauge    :  h_space = false
 #
-h_space=false 
+h_space=true
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -173,14 +173,14 @@ Threads.@threads for ik in ProgressBar(1:nk)
   # Calculate U^+ \d/dk U
   #
   #  Using the fixing of the guage
-  UdU=Calculate_UdU(ik,k_grid, eigenvec, lattice)
-  UdU=UdU #.*off_diag
+#  UdU=Calculate_UdU(ik,k_grid, eigenvec, lattice)
+#  UdU=UdU #.*off_diag
   #
   #  Using the parallel transport gauge
-  #UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim)
-  #for id in 1:s_dim
-  #   UdU[:,:,id]=-1im*Dip_h[:,:,ik,id]
-  #end
+  UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim)
+  for id in 1:s_dim
+     UdU[:,:,id]=-1im*Dip_h[:,:,ik,id]
+  end
   #
   A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU
   #
@@ -333,7 +333,7 @@ function deriv_rho(rho, t)
 	     if h_space
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*(rho[:,:,ik]-rho0[:,:,ik])
        	     else
-	       rho_s=rho[:,:,ik] # -rho0[:,:,ik]
+	       rho_s=rho[:,:,ik]-rho0[:,:,ik]
 	       rho_s=off_diag.*HW_rotate(rho_s,eigenvec[:,:,ik],"W_to_H")
 	       damp_mat=HW_rotate(rho_s,eigenvec[:,:,ik],"H_to_W")
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*damp_mat
@@ -371,22 +371,22 @@ function get_current(rho_s)
     j_inter=zeros(Float64,nsteps,s_dim)
     println("Calculate current: ")
     Threads.@threads for it in ProgressBar(1:nsteps)
+      for ik in 1:nk
+	if !h_space
+	    rho_t_H=transpose(HW_rotate(rho_s[it,:,:,ik],eigenvec[:,:,ik],"W_to_H"))
+	else
+	    rho_t_H=transpose(rho_s[it,:,:,ik])
+	end
         for id in 1:s_dim
-           for ik in 1:nk
-		if !h_space
-           	   rho_H=HW_rotate(rho_s[it,:,:,ik],eigenvec[:,:,ik],"W_to_H")
-		else
-		   rho_H=rho_s[it,:,:,ik]
-		end
-     	        j_intra[it,id]=j_intra[it,id]-real.(sum(Grad_h[:,:,ik,id].* transpose(rho_H)))
+     	   j_intra[it,id]=j_intra[it,id]-real.(sum(Grad_h[:,:,ik,id].*rho_t_H))
 	      if h_space
 	         commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
 	      else
 	         commutator=A_w[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_w[:,:,id,ik]
 	      end
-	      j_inter[it,id]=j_inter[it,id]-imag.(sum(commutator.*transpose(rho_s[it,:,:,ik])))
-	   end
-        end
+	   j_inter[it,id]=j_inter[it,id]-imag(sum(commutator.*transpose(rho_s[it,:,:,ik])))
+	end
+      end
     end
     j_intra=j_intra/nk
     j_inter=j_inter/nk
@@ -411,7 +411,7 @@ end
 t_and_E=zeros(Float64,n_steps,3)
 Threads.@threads for it in 1:n_steps
  t=it*dt
- E_field_t=get_Efield(t,itstart=itstart)
+ E_field_t=get_Efield(t,"delta",itstart=itstart)
  t_and_E[it,:]=[t/fs2aut,E_field_t[1],E_field_t[2]]
 end
 
