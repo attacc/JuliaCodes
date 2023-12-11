@@ -79,14 +79,14 @@ As simple system I consider a two-dimensional hexagonal boron nitride as shown i
   \caption{Hexagonal BN direct and reciprocal lattice.}
   \label{fig:hbn_lattice}
 \end{figure}
-Lattice vectors are defined as\footnote{I always define quantities in 3D for pratical implementation in the code}:
+Lattice vectors are defined as\footnote{I always define quantities in 3D for practical implementation in the code}:
 \bea
 a_1&=&\frac{a}{2}\left ( 3, \sqrt{3}, 0 \right)  \\
 a_2&=&\frac{a}{2}\left ( 3, -\sqrt{3}, 0 \right)  \\
 a_3&=& \left( 0, 0, 1 \right)  \\
 \eea
 and the volume is $V=a_3 \cdot (a_1 \times a_2) = 3\sqrt{3} a^2/2$ 
-and reciprocal lattice vectores are defined as:
+and reciprocal lattice vectors are defined as:
 \bea
 b_1&=&\frac{2\pi}{V} a_2 \times a_3 = \frac{2\pi}{a} \left( 1,  \sqrt{3}, 0\right) \\
 b_2&=&\frac{2\pi}{V} a_3 \times a_1 = \frac{2\pi}{a} \left( 1, -\sqrt{3}, 0\right) \\
@@ -94,14 +94,14 @@ b_3&=&\frac{2\pi}{V} a_2 \times a_3 = 2\pi \left( 0, 0, 1\right) \\
 \eea
 
 \section{Tight binding model}
-As simple model consider a two-band tight-binding model with only the first neigboar hopping, and parameters $t_0=2.92~eV$ and $\epsilon_B = -\epsilon_N = 2.81~eV$. The Hamiltonian reads:
+As simple model consider a two-band tight-binding model with only the first neighbor hopping, and parameters $t_0=2.92~eV$ and $\epsilon_B = -\epsilon_N = 2.81~eV$. The Hamiltonian reads:
 \bea
 H_{11}(\kk)&=&\epsilon_B\\
 H_{22}(\kk)&=&\epsilon_N\\
 H_{21}(\kk)&=&H^*_{12}(\kk) = t_0 \cdot e^{-i \kk_y a}\cdot \left(1+2 \cdot e^{i \kk_y \frac{3 a}{2}} \right)\cdot \cos{ \left( \frac{\sqrt{3} a}{2}\kk_x \right) }
 \eea 
 \section{Wannier and Hamiltonian gauge}
-The tight-binding Hamiltonian $H(\kk)$ is a analitic and continous function of $\kk$, therefore I can define all the derivatives respect to $\kk$ without problems. When we diagonalize $H(\kk)$ on a discrete k-point grid, there is a generic phase attached to the eigenvectors that make complicated the derivative respect to $\kk$. We call Wannier gauge the space before the diagonalization  $H^{W}(\kk)$ and Hamiltonian gauge the space after the diagonalization $H^{H}(\kk)$. Wave-function in the two gauges are related by an unitary transformation:
+The tight-binding Hamiltonian $H(\kk)$ is a analytic and continuous function of $\kk$, therefore I can define all the derivatives respect to $\kk$ without problems. When we diagonalize $H(\kk)$ on a discrete k-point grid, there is a generic phase attached to the eigenvectors that make complicated the derivative respect to $\kk$. We call Wannier gauge the space before the diagonalization  $H^{W}(\kk)$ and Hamiltonian gauge the space after the diagonalization $H^{H}(\kk)$. Wave-function in the two gauges are related by an unitary transformation:
 \begin{equation}
 \ket{\psi_{n\boldsymbol{k}}^{\left(H\right)}}=\sum_{m}U_{mn}\left(\boldsymbol{k}\right)\ket{\psi_{m\boldsymbol{k}}^{\left(W\right)}}
 \end{equation}
@@ -110,8 +110,8 @@ matrix that diagonalizes $H^{(W)}\left(\boldsymbol{k}\right)$,
 \begin{equation}
 U^{\dagger}\text{\ensuremath{\left(\boldsymbol{k}\right)}}H^{(W)}\left(\boldsymbol{k}\right)U\text{\ensuremath{\left(\boldsymbol{k}\right)}}=H^{(H)}\left(\boldsymbol{k}\right).
 \end{equation}
-Operators that transfor as the Hamiltonian are called gauge covariant. Operator that contains k-derivative are not gauge covariant and require a more complex transformation.\\
-Infact consider the transformation:
+Operators that transforms as the Hamiltonian are called gauge covariant. Operator that contains k-derivative are not gauge covariant and require a more complex transformation.\\
+In fact consider the transformation:
 \begin{equation}
 \ket{u_{n\boldsymbol{k}}^{\left(H\right)}}=\sum_{m}U_{mn}\left(\boldsymbol{k}\right)\ket{u_{m\boldsymbol{k}}^{\left(W\right)}}
 	\label{u_transf}
@@ -121,7 +121,7 @@ if we derive respect to $\kk$ we get:
 	\ket{ \partial_{\kk} u_{n\boldsymbol{k}}^{\left(H\right)}}=\sum_{m}U_{mn}\left(\boldsymbol{k}\right)\ket{\partial_{\kk} u_{m\boldsymbol{k}}^{\left(W\right)}} + \sum_{m}\ket{u_{m\boldsymbol{k}}^{\left(W\right)}} \partial_\kk U_{mn}\left(\boldsymbol{k}\right)
 	\label{deriv_u}
 \end{equation}
-the derivative of quantities in Wannier gauges as $\ket{u_{m\boldsymbol{k}}^{\left(W\right)}}$ are not a problem because they are continous functions in $\kk$. We can work out the second term using perturbation theory.\cite{wang2006ab} 
+the derivative of quantities in Wannier gauges as $\ket{u_{m\boldsymbol{k}}^{\left(W\right)}}$ are not a problem because they are continuous functions in $\kk$. We can work out the second term using perturbation theory.\cite{wang2006ab} 
 Notice that in the perturbation theory we made a gauge choice, and in particular we choose the "parallel transport" gauge see Sec.~$3.7$ in Ref.~\onlinecite{resta}. \\
 We consider an Hamiltonian:
 \be
@@ -193,7 +193,7 @@ where $\tau_n$ is the center of the n-Wannier function.
 \end{equation}
 %
 where $\bb$ are the vectors connecting $\kk$ to its nearest
-		neighbors on the {\it ab-initio} mesh, and $w_b$ are the coefficent for the finite difference derivatives. The overlaps in the Wannier gauge can be calculated starting from the ones in the Hamiltonian gauge. We define $S\pw_{nm}(\kk;\kk+\bb) =  \langle u_{n\kk}\pw|u_{m,\kk+\bb}\pw \rangle$ and $S\ph_{ij}(\kk;\kk+\bb) =  \langle u_{i\kk}\ph|u_{j,\kk+\bb}\ph \rangle$. Using Eq.~\ref{u_transf} and its inverse we can write down the transformation between the two overlap matrices as:
+		neighbors on the {\it ab-initio} mesh, and $w_b$ are the coefficients for the finite difference derivatives. The overlaps in the Wannier gauge can be calculated starting from the ones in the Hamiltonian gauge. We define $S\pw_{nm}(\kk;\kk+\bb) =  \langle u_{n\kk}\pw|u_{m,\kk+\bb}\pw \rangle$ and $S\ph_{ij}(\kk;\kk+\bb) =  \langle u_{i\kk}\ph|u_{j,\kk+\bb}\ph \rangle$. Using Eq.~\ref{u_transf} and its inverse we can write down the transformation between the two overlap matrices as:
 \be
 		S\pw(\kk;\kk+\bb) = U(\kk) S\ph(\kk;\kk+\bb) U^\dagger(\kk+\bb)
 \ee
@@ -219,7 +219,7 @@ i\hbar\frac{\partial}{\partial t}\rho_{nm}^{\left(H\right)}\left(\boldsymbol{k},
  & +i\left|e\right|\boldsymbol{E}\left(t\right).\frac{\partial}{\partial\boldsymbol{k}}\rho_{nm}^{\left(H\right)}\left(\boldsymbol{k},t\right)\nonumber \\
  & +\left|e\right|\boldsymbol{E}\left(t\right).\left[\boldsymbol{A}^{\left(H\right)}\left(\boldsymbol{k}\right),\rho^{\left(H\right)}\left(\boldsymbol{k},t\right)\right]_{nm}
 \end{align}
-Notice that in this gauge $A\ph(\kk)$ is composed of two terms, the rotation of $A\pw(\kk)$ and a term that is generated by the derivative in $\kk$ applied to the rotation matrices. In this gauge we can safetly include dephasing or self-energies.
+Notice that in this gauge $A\ph(\kk)$ is composed of two terms, the rotation of $A\pw(\kk)$ and a term that is generated by the derivative in $\kk$ applied to the rotation matrices. In this gauge we can safely include dephasing or self-energies.
 
 \appendix
 \section{Derivatives in k-space}
@@ -231,7 +231,7 @@ where $\bb_i$ are reciprocal lattice vectors and $\ab_i$ direct lattice vectors 
 \be
 \ab_i \cdot \bb_j = 2\pi\delta_{ij}
 \ee
-then the derivative along a $\bb_i$ vector can be rewritten in cartesian coordinates as:
+then the derivative along a $\bb_i$ vector can be rewritten in Cartesian coordinates as:
 \be
 \nabla \PP = \frac{1}{2\pi} \sum_{i=1,3} \ab_i \left( \frac{\partial \PP_i}{\partial \kk_i} |\bb_i| \right)
 \ee 
