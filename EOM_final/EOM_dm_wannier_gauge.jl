@@ -28,8 +28,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=12
-n_k2=12
+n_k1=36
+n_k2=1
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -69,6 +69,9 @@ include_drho_dk=true
 
 # Include A_w in the calculation of A_h
 include_A_w=true
+
+# Print density matrix
+print_dm=true
 
 eval_current=true
 eval_polarization=true
@@ -246,7 +249,7 @@ function get_Efield(t, ftype; itstart=3)
 	  T_0  = itstart*dt
 	  I    = 2.64E10*kWCMm22AU
           E    =sqrt(I*4.0*pi/SPEED_of_LIGHT)
-	  if (t-T_0)>=sigma || (t-T_0)<-sigma
+	  if (t-T_0)>=sigma || (t-T_0)<0.0
 	    a_t=0.0
 	  else
 		  a_t =E*(sin(pi*(t-T_0)/sigma))^2*cos(w*t)
@@ -406,7 +409,7 @@ end
 
 # Solve EOM
 
-solution = rungekutta2_dm(deriv_rho, rho0, t_range)
+solution = rungekutta2_dm(deriv_rho, rho0, t_range, print_dm=true)
 
 
 if eval_polarization

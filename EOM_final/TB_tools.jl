@@ -139,16 +139,26 @@ function HW_rotate(M,eigenvec,mode)
 	return rot_M
 end 
 
-function rungekutta2_dm(d_rho, rho_0, t)
+function rungekutta2_dm(d_rho, rho_0, t; print_dm=false)
     n     = length(t)
     nk    = size(rho_0)[3]
     h_dim = size(rho_0)[1]
     rho_t = zeros(Complex{Float64},n, h_dim, h_dim, nk)
     rho_t[1,:,:,:] = rho_0
-	println("Real-time equation integration: ")
+    if print_dm
+      println("Write density matrix on disk for k=1")
+      dm = open("dm.txt","w")
+    end
+    println("Real-time equation integration: ")
     for i in ProgressBar(1:n-1)
         h = t[i+1] - t[i]
 	rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
+        if print_dm
+            write(dm," $(rho_t[i,1,1,1])  $(rho_t[i,1,2,1]) \n")
+        end
+    end
+    if print_dm
+       close(dm)
     end
     return rho_t
 end
