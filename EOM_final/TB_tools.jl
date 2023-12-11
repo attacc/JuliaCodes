@@ -154,7 +154,8 @@ function rungekutta2_dm(d_rho, rho_0, t; print_dm=false)
         h = t[i+1] - t[i]
 	rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
         if print_dm
-            write(dm," $(rho_t[i,1,1,1])  $(rho_t[i,1,2,1]) \n")
+            write(dm," $(real(rho_t[i,1,1,1]))  $(imag(rho_t[i,1,1,1])) $(real(rho_t[i,1,2,1]))  $(imag(rho_t[i,1,2,1])) ")
+            write(dm," $(real(rho_t[i,2,1,1]))  $(imag(rho_t[i,2,1,1])) $(real(rho_t[i,2,2,1]))  $(imag(rho_t[i,2,2,1])) \n")
         end
     end
     if print_dm
