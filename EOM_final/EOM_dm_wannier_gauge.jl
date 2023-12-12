@@ -28,16 +28,16 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=36
-n_k2=1
+n_k1=96
+n_k2=96
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
 
 nk=n_k1*n_k2
 
-eigenval=zeros(Float64,s_dim,nk)
-eigenvec=zeros(Complex{Float64},s_dim,s_dim,nk)
+TB_sol.eigenval=zeros(Float64,s_dim,nk)
+TB_sol.eigenvec=zeros(Complex{Float64},s_dim,s_dim,nk)
 
 println(" K-point list ")
 println(" nk = ",nk)
@@ -53,7 +53,7 @@ println(" nk = ",nk)
 # Hamiltonian gauge:  h_gauge = true  
 # Wannier gauge    :  h_gauge = false
 #
-dyn_props.h_gauge=true
+dyn_props.h_gauge=false
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -68,7 +68,7 @@ dyn_props.use_dipoles=false
 dyn_props.include_drho_dk=true
 
 # Include A_w in the calculation of A_h
-dyn_props.include_A_w=true
+dyn_props.include_A_w=false
 
 # Print properties on disk
 props.print_dm =true
@@ -92,29 +92,31 @@ println(" Number of threads: ",Threads.nthreads())
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
+TB_sol.H_w=zeros(Complex{Float64},h_dim,h_dim,nk)
 Threads.@threads for ik in ProgressBar(1:nk)
     H_w=Hamiltonian(k_grid.kpt[:,ik])
     data= eigen(H_w)      # Diagonalize the matrix
-    eigenval[:,ik]   = data.values
-    eigenvec[:,:,ik] = data.vectors
+    TB_sol.eigenval[:,ik]   = data.values
+    TB_sol.eigenvec[:,:,ik] = data.vectors
     if dyn_props.h_gauge
        for i in 1:h_dim
-          H_h[i,i,ik]=eigenval[i,ik]
+          H_h[i,i,ik]=TB_sol.eigenval[i,ik]
         end
     else
         H_h[:,:,ik]=H_w
     end
+    TB_sol.H_w[:,:,ik]=H_w
     #
     # Fix phase of eigenvectors
     #
-    eigenvec[:,:,ik]=fix_eigenvec_phase(eigenvec[:,:,ik])
+    TB_sol.eigenvec[:,:,ik]=fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik])
     #
 end
 
 #Hamiltonian info
-dir_gap=minimum(eigenval[2,:]-eigenval[1,:])
+dir_gap=minimum(TB_sol.eigenval[2,:]-TB_sol.eigenval[1,:])
 println("Direct gap : ",dir_gap*ha2ev," [eV] ")
-ind_gap=minimum(eigenval[2,:])-maximum(eigenval[1,:])
+ind_gap=minimum(TB_sol.eigenval[2,:])-maximum(TB_sol.eigenval[1,:])
 println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 
 # rotate in the Hamiltonian guage
@@ -128,7 +130,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   Dip_w=Grad_H(k_grid.kpt[:,ik])
 
   for id in 1:s_dim
-        Grad_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],eigenvec[:,:,ik],"W_to_H")
+        Grad_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],TB_sol.eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
 	Grad_h[:,:,ik,id]=Grad_h[:,:,ik,id].*off_diag
   end
@@ -143,7 +145,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
 #
   for i in 1:h_dim
       for j in i+1:h_dim
-          Dip_h[i,j,ik,:]= 1im*Grad_h[i,j,ik,:]/(eigenval[j,ik]-eigenval[i,ik])
+          Dip_h[i,j,ik,:]= 1im*Grad_h[i,j,ik,:]/(TB_sol.eigenval[j,ik]-TB_sol.eigenval[i,ik])
           Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
       end
   end
@@ -152,7 +154,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   #
   if !dyn_props.h_gauge
     for id in 1:s_dim
-        Dip_h[:,:,ik,id]=HW_rotate(Dip_h[:,:,ik,id],eigenvec[:,:,ik],"H_to_W")
+        Dip_h[:,:,ik,id]=HW_rotate(Dip_h[:,:,ik,id],TB_sol.eigenvec[:,:,ik],"H_to_W")
      end
   end
 end
@@ -179,7 +181,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
     # Then I rotate from W -> H
     #
     for id in 1:s_dim
-       A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],eigenvec[:,:,ik],"W_to_H")
+       A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
     end
     #
     #
@@ -221,7 +223,7 @@ rho0[1,1,:].=1.0
 #
 if !dyn_props.h_gauge
   Threads.@threads for ik in 1:nk
-     rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],eigenvec[:,:,ik],"H_to_W")
+     rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
   end
 end
 #
@@ -236,7 +238,7 @@ end
 println("External field versor :",E_vec)
 
 #
-itstart = 3 # start of the external field
+itstart = 10 # start of the external field
 
 function get_Efield(t, ftype; itstart=3)
 	#
@@ -287,14 +289,14 @@ function deriv_rho(rho, t)
 	  Threads.@threads for ik in 1:nk
              for ib in 1:h_dim
                 for ic in 1:h_dim
- 	          d_rho[ib,ic,ik] =H_h[ib,ib,ik]*rho[ib,ic,ik]-rho[ib,ic,ik]*H_h[ic,ic,ik]
+  		   d_rho[ib,ic,ik] =TB_sol.eigenval[ib,ik]*rho[ib,ic,ik]-rho[ib,ic,ik]*TB_sol.eigenval[ic,ik]
                 end
              end
 	  end
         else
           # in the w-space the Hamiltonian is not diagonal
 	  Threads.@threads for ik in 1:nk
- 	     d_rho[:,:,ik]=H_h[:,:,ik]*rho[:,:,ik]-rho[:,:,ik]*H_h[:,:,ik]
+ 	     d_rho[:,:,ik]=TB_sol.H_w[:,:,ik]*rho[:,:,ik]-rho[:,:,ik]*TB_sol.H_w[:,:,ik]
 	  end
         end
 	#
@@ -329,7 +331,7 @@ function deriv_rho(rho, t)
              # Add d_rho/dk
              #
 	     if dyn_props.include_drho_dk
-               Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
+               Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, TB_sol.eigenvec, lattice)
                #
 	       #
                for id in 1:s_dim
@@ -355,8 +357,8 @@ function deriv_rho(rho, t)
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*(rho[:,:,ik]-rho0[:,:,ik])
        	     else
 	       rho_s=rho[:,:,ik]-rho0[:,:,ik]
-	       rho_s=off_diag.*HW_rotate(rho_s,eigenvec[:,:,ik],"W_to_H")
-	       damp_mat=HW_rotate(rho_s,eigenvec[:,:,ik],"H_to_W")
+	       rho_s=off_diag.*HW_rotate(rho_s,TB_sol.eigenvec[:,:,ik],"W_to_H")
+	       damp_mat=HW_rotate(rho_s,TB_sol.eigenvec[:,:,ik],"H_to_W")
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*damp_mat
 	     end
 	   end
@@ -394,7 +396,7 @@ function get_current(rho_s)
     Threads.@threads for it in ProgressBar(1:nsteps)
       for ik in 1:nk
 	if !dyn_props.h_gauge
-	    rho_t_H=transpose(HW_rotate(rho_s[it,:,:,ik],eigenvec[:,:,ik],"W_to_H"))
+	    rho_t_H=transpose(HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H"))
 	else
 	    rho_t_H=transpose(rho_s[it,:,:,ik])
 	end
@@ -403,7 +405,7 @@ function get_current(rho_s)
 	      if dyn_props.h_gauge
 	         commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
 	      else
-	         commutator=A_w[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_w[:,:,id,ik]
+	         commutator=A_w[:,:,id,ik]*TB_sol.H_w[:,:,ik]-TB_sol.H_w[:,:,ik]*A_w[:,:,id,ik]
 	      end
 	   j_inter[it,id]=j_inter[it,id]-imag(sum(commutator.*transpose(rho_s[it,:,:,ik])))
 	end

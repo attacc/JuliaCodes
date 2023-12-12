@@ -3,7 +3,7 @@ module TB_tools
 using Printf
 using ProgressBars
 
-export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,print_k_grid,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props
+export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,print_k_grid,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol
 
 mutable struct K_Grid
 	kpt::Array{Float64,2}
@@ -25,6 +25,15 @@ mutable struct Dynamics_Properties
 	include_drho_dk :: Bool
 	include_A_w	:: Bool
 end
+
+mutable struct TB_Solution
+	eigenval::Array{Float64,2}
+	eigenvec::Array{Complex{Float64},3}
+	H_w::Array{Complex{Float64},3}
+	TB_Solution() = new()
+end
+
+TB_sol=TB_Solution()
 
 dyn_props = Dynamics_Properties(true,true,false,true,true)
 
@@ -170,10 +179,17 @@ function init_output()
 	end
 end
 
-function print_density_matrix(time,rho)
+function print_density_matrix(time,rho_i)
+	if dyn_props.h_gauge
+		rho=rho_i[:,:,1]
+	else
+		rho=HW_rotate(rho_i[:,:,1],TB_sol.eigenvec[:,:,1],"W_to_H")
+	end
 	write(IO_output.dm_file," $(time) ")
-	write(IO_output.dm_file," $(real(rho[1,1,1])) $(imag(rho[1,1,1])) ")
-	write(IO_output.dm_file," $(real(rho[1,2,1])) $(imag(rho[1,2,1])) \n")
+	write(IO_output.dm_file," $(real(rho[1,1])) $(imag(rho[1,1])) ")
+	write(IO_output.dm_file," $(real(rho[1,2])) $(imag(rho[1,2])) ")
+	write(IO_output.dm_file," $(real(rho[2,1])) $(imag(rho[2,1])) ")
+	write(IO_output.dm_file," $(real(rho[2,2])) $(imag(rho[2,2])) \n")
 end
 
 function finalize_output()
@@ -245,17 +261,19 @@ function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
     ik_plus =get_k_neighbor(ik,id, 1,k_grid)
     ik_minus=get_k_neighbor(ik,id,-1,k_grid)
     #
-#    if h_space
-#      rho_plus =HW_rotate(rho[:,:,ik_plus],eigenvec[:,:,ik_plus],"H_to_W")
-#      rho_minus=HW_rotate(rho[:,:,ik_minus],eigenvec[:,:,ik_minus],"H_to_W")
-#    else
-      rho_plus =rho[:,:,ik_plus]
-      rho_minus=rho[:,:,ik_minus]
-#    end
+    dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id]
     #
-    dk=norm(k_grid.kpt[:,ik_plus]-k_grid.kpt[:,ik_minus])/2.0
+    rho_plus =rho[:,:,ik_plus]
+    rho_minus=rho[:,:,ik_minus]
     # 
-    dk_rho[:,:,id]=(rho[:,:,ik_plus]-rho[:,:,ik_minus])/(2.0*dk)
+    dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
+    if ik==1
+	    println(rho_plus[1,1]," for k-point ",ik_plus," and id ",id)
+	    println("k-point ",k_grid.kpt[:,ik_plus])
+	    println(rho_minus[1,1]," for k-point ",ik_minus," and id ",id)
+	    println("k-point ",k_grid.kpt[:,ik_minus])
+	    println(dk_rho[1,1,1])
+    end
     #
 #    if h_space
 #      dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")

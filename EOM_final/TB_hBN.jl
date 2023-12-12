@@ -112,7 +112,7 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_c
        ik_plus =get_k_neighbor(ik,id, 1,k_grid)
        ik_minus=get_k_neighbor(ik,id,-1,k_grid)
        #
-       dk=norm(k_grid.kpt[:,ik_plus]-k_grid.kpt[:,ik_minus])/2.0
+       dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id]/2.0
        #
        eigenvec_p = eigenvecs[:,:,ik_plus]
        eigenvec_m = eigenvecs[:,:,ik_minus]
