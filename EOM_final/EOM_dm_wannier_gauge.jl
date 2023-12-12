@@ -70,11 +70,10 @@ include_drho_dk=true
 # Include A_w in the calculation of A_h
 include_A_w=true
 
-# Print density matrix
-print_dm=true
-
-eval_current=true
-eval_polarization=true
+# Print properties on disk
+props.print_dm =true
+props.eval_curr=true
+props.eval_pol =true
 
 field_name="PHHG"
 
@@ -409,14 +408,14 @@ end
 
 # Solve EOM
 
-solution = rungekutta2_dm(deriv_rho, rho0, t_range, print_dm=true)
+solution = rungekutta2_dm(deriv_rho, rho0, t_range)
 
 
-if eval_polarization
+if props.eval_pol
   # Calculate the polarization in time and frequency
   pol=get_polarization(solution)
 end
-if eval_current
+if props.eval_curr
   j_intra,j_inter=get_current(solution)
 end
 
@@ -429,7 +428,7 @@ Threads.@threads for it in 1:n_steps
  t_and_E[it,:]=[t/fs2aut,E_field_t[1],E_field_t[2]]
 end
 
-if eval_polarization
+if props.eval_pol
   df = DataFrame(time  = t_and_E[:,1], 
                pol_x = pol[:,1], 
                pol_y = pol[:,2],
@@ -439,7 +438,7 @@ if eval_polarization
 end
 
 
-if eval_current
+if props.eval_curr
   df = DataFrame(time  = t_and_E[:,1], 
                j_intra_x = j_intra[:,1], 
                j_intra_y = j_intra[:,2],

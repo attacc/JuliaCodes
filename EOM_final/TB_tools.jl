@@ -3,7 +3,7 @@ module TB_tools
 using Printf
 using ProgressBars
 
-export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,print_k_grid,ProgressBar,K_crys_to_cart
+export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,print_k_grid,ProgressBar,K_crys_to_cart,props,IO_output
 
 mutable struct K_Grid
 	kpt::Array{Float64,2}
@@ -12,6 +12,20 @@ mutable struct K_Grid
 	ik_map_inv::Array{Int,2}
 end
 
+mutable struct Properties
+	eval_curr   ::Bool
+	eval_pol    ::Bool
+	print_dm    ::Bool
+end
+
+props = Properties(true, true, false)
+
+mutable struct IO_Output
+	dm_file  ::Union{IOStream, Nothing}
+	IO_Output(dm_file=nothing) =new(dm_file)
+end
+
+IO_output=IO_Output()
 
 function generate_circuit(points, n_steps)
 	println("Generate k-path ")
@@ -139,28 +153,41 @@ function HW_rotate(M,eigenvec,mode)
 	return rot_M
 end 
 
-function rungekutta2_dm(d_rho, rho_0, t; print_dm=false)
+function init_output()
+	if props.print_dm    
+      		println("Write density matrix on disk for k=1")
+		IO_output.dm_file  =open("density_matrix.txt","w")	
+	end
+end
+
+function finalize_output()
+	if IO_output.dm_file != nothing  
+		close(IO_output.dm_file)	
+	end
+end 
+
+function rungekutta2_dm(d_rho, rho_0, t)
     n     = length(t)
     nk    = size(rho_0)[3]
     h_dim = size(rho_0)[1]
     rho_t = zeros(Complex{Float64},n, h_dim, h_dim, nk)
     rho_t[1,:,:,:] = rho_0
-    if print_dm
-      println("Write density matrix on disk for k=1")
-      dm = open("dm.txt","w")
-    end
+
+    init_output()
+
     println("Real-time equation integration: ")
     for i in ProgressBar(1:n-1)
         h = t[i+1] - t[i]
 	rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
-        if print_dm
-            write(dm," $(real(rho_t[i,1,1,1]))  $(imag(rho_t[i,1,1,1])) $(real(rho_t[i,1,2,1]))  $(imag(rho_t[i,1,2,1])) ")
-            write(dm," $(real(rho_t[i,2,1,1]))  $(imag(rho_t[i,2,1,1])) $(real(rho_t[i,2,2,1]))  $(imag(rho_t[i,2,2,1])) \n")
-        end
+	if props.print_dm
+		write(IO_output.dm_file," $(t[i]) ")
+		write(IO_output.dm_file," $(real(rho_t[i,1,1,1])) $(imag(rho_t[i,1,1,1])) ")
+		write(IO_output.dm_file," $(real(rho_t[i,1,2,1])) $(imag(rho_t[i,1,2,1])) \n")
+	end
     end
-    if print_dm
-       close(dm)
-    end
+
+    finalize_output()
+
     return rho_t
 end
 #
@@ -231,3 +258,16 @@ function Evaluate_Dk_rho(rho, h_space, ik, k_grid, eigenvec, lattice)
   #
 end
 
+function get_polarization(rho)
+    pol=zeros(Float64,_dim)
+    Threads.@threads for ik in 1:nk
+        for id in 1:s_dim
+	      if use_Dipoles
+       	        pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
+	      else
+      	        pol[it,id]=pol[it,id]+real.(sum(A_h[:,:,id,ik].*transpose(rho_s[it,:,:,ik])))
+	      end
+	   end
+    end
+    return pol
+end
