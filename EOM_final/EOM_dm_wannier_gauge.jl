@@ -28,11 +28,11 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=96
-n_k2=96
+n_k1=36
+n_k2=36
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
-# print_k_grid(k_grid)
+#print_k_grid(k_grid)
 
 nk=n_k1*n_k2
 
