@@ -3,7 +3,7 @@ module TB_tools
 using Printf
 using ProgressBars
 
-export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,print_k_grid,ProgressBar,K_crys_to_cart,props,IO_output
+export generate_circuit,generate_unif_grid,evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,get_k_neighbor,print_k_grid,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props
 
 mutable struct K_Grid
 	kpt::Array{Float64,2}
@@ -17,6 +17,16 @@ mutable struct Properties
 	eval_pol    ::Bool
 	print_dm    ::Bool
 end
+
+mutable struct Dynamics_Properties
+	h_gauge      :: Bool
+	damping	     :: Bool
+	use_dipoles  :: Bool
+	include_drho_dk :: Bool
+	include_A_w	:: Bool
+end
+
+dyn_props = Dynamics_Properties(true,true,false,true,true)
 
 props = Properties(true, true, false)
 
@@ -160,6 +170,12 @@ function init_output()
 	end
 end
 
+function print_density_matrix(time,rho)
+	write(IO_output.dm_file," $(time) ")
+	write(IO_output.dm_file," $(real(rho[1,1,1])) $(imag(rho[1,1,1])) ")
+	write(IO_output.dm_file," $(real(rho[1,2,1])) $(imag(rho[1,2,1])) \n")
+end
+
 function finalize_output()
 	if IO_output.dm_file != nothing  
 		close(IO_output.dm_file)	
@@ -179,10 +195,9 @@ function rungekutta2_dm(d_rho, rho_0, t)
     for i in ProgressBar(1:n-1)
         h = t[i+1] - t[i]
 	rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
+
 	if props.print_dm
-		write(IO_output.dm_file," $(t[i]) ")
-		write(IO_output.dm_file," $(real(rho_t[i,1,1,1])) $(imag(rho_t[i,1,1,1])) ")
-		write(IO_output.dm_file," $(real(rho_t[i,1,2,1])) $(imag(rho_t[i,1,2,1])) \n")
+	   print_density_matrix(t[i],rho_t[i,:,:,:])
 	end
     end
 
@@ -218,7 +233,7 @@ function fix_eigenvec_phase(eigenvec)
 	return eigenvec
 end
 
-function Evaluate_Dk_rho(rho, h_space, ik, k_grid, eigenvec, lattice)
+function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
 
   dk_rho=zeros(Complex{Float64},h_dim,h_dim,s_dim)
   for id in 1:s_dim

@@ -50,25 +50,25 @@ println(" nk = ",nk)
 #
 # Select the space of the dynamics:
 #
-# Hamiltonian gauge:  h_space = true  
-# Wannier gauge    :  h_space = false
+# Hamiltonian gauge:  h_gauge = true  
+# Wannier gauge    :  h_gauge = false
 #
-h_space=true
+dyn_props.h_gauge=true
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
-damping=true
+dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-use_Dipoles=false
-#use_Dipoles=false
+dyn_props.use_dipoles=false
+#use_dipoles=false
 
 # Include drho/dk in the dynamics
-include_drho_dk=true
+dyn_props.include_drho_dk=true
 
 # Include A_w in the calculation of A_h
-include_A_w=true
+dyn_props.include_A_w=true
 
 # Print properties on disk
 props.print_dm =true
@@ -77,8 +77,16 @@ props.eval_pol =true
 
 field_name="PHHG"
 
-if h_space     println("* * * Hamiltonian gauge * * * ")             else println("* * * Wannier gauge * * * ") end
-if use_Dipoles println("* * * Dipole approximation dk=dH/dk * * * ") else println("* * * Full coupling with r = id/dk + A_w * * * ") end
+if dyn_props.h_gauge     
+	println("* * * Hamiltonian gauge * * * ")             
+else 
+	println("* * * Wannier gauge * * * ") 
+end
+if dyn_props.use_dipoles 
+	println("* * * Dipole approximation dk=dH/dk * * * ") 
+else 
+println("* * * Full coupling with r = id/dk + A_w * * * ") 
+	end
 println(" Field name : ",field_name)
 println(" Number of threads: ",Threads.nthreads())
 
@@ -89,7 +97,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
     data= eigen(H_w)      # Diagonalize the matrix
     eigenval[:,ik]   = data.values
     eigenvec[:,:,ik] = data.vectors
-    if h_space
+    if dyn_props.h_gauge
        for i in 1:h_dim
           H_h[i,i,ik]=eigenval[i,ik]
         end
@@ -142,7 +150,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   #
   # I bring them back in Wannier gauge
   #
-  if !h_space
+  if !dyn_props.h_gauge
     for id in 1:s_dim
         Dip_h[:,:,ik,id]=HW_rotate(Dip_h[:,:,ik,id],eigenvec[:,:,ik],"H_to_W")
      end
@@ -158,7 +166,7 @@ A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 A_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 Threads.@threads for ik in ProgressBar(1:nk)
   #
-  if include_A_w
+  if dyn_props.include_A_w
     #
     # Calculate A(W) and rotate in H-gauge
     # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
@@ -211,7 +219,7 @@ rho0[1,1,:].=1.0
 #
 # Transform in Wannier Gauge
 #
-if !h_space
+if !dyn_props.h_gauge
   Threads.@threads for ik in 1:nk
      rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],eigenvec[:,:,ik],"H_to_W")
   end
@@ -222,7 +230,7 @@ end
 println(" * * * Linear response from density matrix EOM within dipole approx. * * *")
 println("Time rage ",t_start/fs2aut," - ",t_end/fs2aut)
 println("Number of steps ",n_steps)
-if damping
+if dyn_props.damping
    println("Dephasing time ",T_2/fs2aut," [fs] ")
 end
 println("External field versor :",E_vec)
@@ -274,7 +282,7 @@ function deriv_rho(rho, t)
 	#
 	# Hamiltonian term
 	#
-        if h_space
+        if dyn_props.h_gauge
           # in h-space the Hamiltonian is diagonal
 	  Threads.@threads for ik in 1:nk
              for ib in 1:h_dim
@@ -300,12 +308,12 @@ function deriv_rho(rho, t)
 	  #
           E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim)
 	  #
-          if use_Dipoles
+          if dyn_props.use_dipoles
             for id in 1:s_dim
                 E_dot_DIP+=E_field[id]*Dip_h[:,:,ik,id]
              end
           else
-   	    if h_space
+   	    if dyn_props.h_gauge
               for id in 1:s_dim
                  E_dot_DIP+=E_field[id]*A_h[:,:,id,ik]
               end
@@ -316,12 +324,12 @@ function deriv_rho(rho, t)
 	    end
           end
           #
-          if !use_Dipoles
+          if !dyn_props.use_dipoles
              # 
              # Add d_rho/dk
              #
-	     if include_drho_dk
-               Dk_rho=Evaluate_Dk_rho(rho, h_space, ik, k_grid, eigenvec, lattice)
+	     if dyn_props.include_drho_dk
+               Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
                #
 	       #
                for id in 1:s_dim
@@ -341,9 +349,9 @@ function deriv_rho(rho, t)
 	#
 	# Damping
 	#
-	if T_2!=0.0 && damping==true
+	if T_2!=0.0 && dyn_props.damping==true
 	   Threads.@threads for ik in 1:nk
-	     if h_space
+	     if dyn_props.h_gauge
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*(rho[:,:,ik]-rho0[:,:,ik])
        	     else
 	       rho_s=rho[:,:,ik]-rho0[:,:,ik]
@@ -366,7 +374,7 @@ function get_polarization(rho_s)
     Threads.@threads for it in ProgressBar(1:nsteps)
         for id in 1:s_dim
            for ik in 1:nk
-	      if use_Dipoles
+	      if dyn_props.use_dipoles
        	        pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
 	      else
       	        pol[it,id]=pol[it,id]+real.(sum(A_h[:,:,id,ik].*transpose(rho_s[it,:,:,ik])))
@@ -385,14 +393,14 @@ function get_current(rho_s)
     println("Calculate current: ")
     Threads.@threads for it in ProgressBar(1:nsteps)
       for ik in 1:nk
-	if !h_space
+	if !dyn_props.h_gauge
 	    rho_t_H=transpose(HW_rotate(rho_s[it,:,:,ik],eigenvec[:,:,ik],"W_to_H"))
 	else
 	    rho_t_H=transpose(rho_s[it,:,:,ik])
 	end
         for id in 1:s_dim
      	   j_intra[it,id]=j_intra[it,id]-real.(sum(Grad_h[:,:,ik,id].*rho_t_H))
-	      if h_space
+	      if dyn_props.h_gauge
 	         commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
 	      else
 	         commutator=A_w[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_w[:,:,id,ik]
