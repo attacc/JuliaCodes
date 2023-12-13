@@ -53,7 +53,7 @@ println(" nk = ",nk)
 # Hamiltonian gauge:  h_gauge = true  
 # Wannier gauge    :  h_gauge = false
 #
-dyn_props.h_gauge=true
+dyn_props.h_gauge=false
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
