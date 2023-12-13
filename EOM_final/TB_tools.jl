@@ -267,14 +267,14 @@ function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
     rho_minus=rho[:,:,ik_minus]
     # 
     dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
-    if ik==1
-	    println(rho[1,1,ik]," for Gamma ")
-	    println(rho_plus[1,1]," for k-point ",ik_plus," and id ",id)
-	    println("k-point plus ",k_grid.kpt[:,ik_plus])
-	    println(rho_minus[1,1]," for k-point ",ik_minus," and id ",id)
-	    println("k-point minus ",k_grid.kpt[:,ik_minus])
-	    println(dk_rho[1,1,1])
-    end
+#    if ik==1
+	    println(rho[1,1,ik]," for ik ",ik)
+#	    println(rho_plus[1,1]," for k-point ",ik_plus," and id ",id)
+#	    println("k-point plus ",k_grid.kpt[:,ik_plus])
+#	    println(rho_minus[1,1]," for k-point ",ik_minus," and id ",id)
+#	    println("k-point minus ",k_grid.kpt[:,ik_minus])
+#	    println(dk_rho[1,1,1])
+#    end
     #
 #    if h_space
 #      dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
