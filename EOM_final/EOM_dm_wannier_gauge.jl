@@ -29,10 +29,10 @@ off_diag=.~I(h_dim)
 
 # K-points
 n_k1=24
-n_k2=1
+n_k2=24
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
-print_k_grid(k_grid)
+# print_k_grid(k_grid)
 
 nk=n_k1*n_k2
 
@@ -53,7 +53,7 @@ println(" nk = ",nk)
 # Hamiltonian gauge:  h_gauge = true  
 # Wannier gauge    :  h_gauge = false
 #
-dyn_props.h_gauge=false
+dyn_props.h_gauge=true
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -93,9 +93,7 @@ println(" Number of threads: ",Threads.nthreads())
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
 TB_sol.H_w=zeros(Complex{Float64},h_dim,h_dim,nk)
-#Threads.@threads for ik in ProgressBar(1:nk)
-out_file=open("test.txt","w")
-for ik in 1:nk
+Threads.@threads for ik in ProgressBar(1:nk)
     H_w=Hamiltonian(k_grid.kpt[:,ik])
     data= eigen(H_w)      # Diagonalize the matrix
     TB_sol.eigenval[:,ik]   = data.values
@@ -113,11 +111,7 @@ for ik in 1:nk
     #
     TB_sol.eigenvec[:,:,ik]=fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik])
     #
-    write(out_file,"eigenv $(real(TB_sol.eigenvec[1,1,ik]))  eigenv $(TB_sol.eigenval[1,ik])   for ik $ik \n") 
-    #
 end
-close(out_file)
-exit()
 
 #Hamiltonian info
 dir_gap=minimum(TB_sol.eigenval[2,:]-TB_sol.eigenval[1,:])
@@ -195,12 +189,13 @@ Threads.@threads for ik in ProgressBar(1:nk)
   # Calculate U^+ \d/dk U
   #
   #  Using the fixing of the guage
-#  UdU=Calculate_UdU(ik,k_grid, eigenvec, lattice)
-#  UdU=UdU #.*off_diag
+#  UdU=Calculate_UdU(ik,k_grid, TB_sol.eigenvec, lattice)
+#  UdU=UdU.*off_diag
   #
   #  Using the parallel transport gauge
-  UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim)
-  for id in 1:s_dim
+ UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim)
+ for id in 1:s_dim
+     if k_grid.nk_dir[id]==1; continue end
      UdU[:,:,id]=-1im*Dip_h[:,:,ik,id]
   end
   #

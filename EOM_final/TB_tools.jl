@@ -253,9 +253,7 @@ function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
   dk_rho=zeros(Complex{Float64},h_dim,h_dim,s_dim)
   for id in 1:s_dim
     #
-    if k_grid.nk_dir[id]==1
-	    continue
-    end
+    if k_grid.nk_dir[id]==1; continue end
     #
     ik_plus =get_k_neighbor(ik,id, 1,k_grid)
     ik_minus=get_k_neighbor(ik,id,-1,k_grid)
@@ -274,12 +272,6 @@ function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
 #	    println("k-point minus ",k_grid.kpt[:,ik_minus])
 #	    println(dk_rho[1,1,1])
 #    end
-    #
-#    if h_space
-#      dk_rho[:,:,id]=HW_rotate(dk_rho[:,:,id],eigenvec[:,:,ik],"W_to_H")
-#    end
-    #
-    #println(dk_rho)
     #
   end
   #
