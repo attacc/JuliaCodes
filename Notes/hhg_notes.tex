@@ -81,16 +81,14 @@ As simple system I consider a two-dimensional hexagonal boron nitride as shown i
 \end{figure}
 Lattice vectors are defined as\footnote{I always define quantities in 3D for practical implementation in the code}:
 \bea
-a_1&=&\frac{a}{2}\left ( 3, \sqrt{3}, 0 \right)  \\
-a_2&=&\frac{a}{2}\left ( 3, -\sqrt{3}, 0 \right)  \\
-a_3&=& \left( 0, 0, 1 \right)  \\
+a_1&=&\frac{a}{2}\left ( 3, \sqrt{3} \right)  \\
+a_2&=&\frac{a}{2}\left ( 3, -\sqrt{3} \right)  \\
 \eea
 and the volume is $V=a_3 \cdot (a_1 \times a_2) = 3\sqrt{3} a^2/2$ 
 and reciprocal lattice vectors are defined as:
 \bea
-b_1&=&\frac{2\pi}{V} a_2 \times a_3 = \frac{2\pi}{a} \left( 1,  \sqrt{3}, 0\right) \\
-b_2&=&\frac{2\pi}{V} a_3 \times a_1 = \frac{2\pi}{a} \left( 1, -\sqrt{3}, 0\right) \\
-b_3&=&\frac{2\pi}{V} a_2 \times a_3 = 2\pi \left( 0, 0, 1\right) \\
+b_1&=&\frac{2\pi}{V} a_2 \times a_3 = \frac{2\pi}{a} \left( \frac{1}{3},  \frac{1}{\sqrt{3}}\right) \\
+b_2&=&\frac{2\pi}{V} a_3 \times a_1 = \frac{2\pi}{a} \left( \frac{1}{3},  -\frac{1}{\sqrt{3}}\right) \\
 \eea
 
 \section{Tight binding model}
@@ -98,7 +96,7 @@ As simple model consider a two-band tight-binding model with only the first neig
 \bea
 H_{11}(\kk)&=&\epsilon_B\\
 H_{22}(\kk)&=&\epsilon_N\\
-H_{21}(\kk)&=&H^*_{12}(\kk) = t_0 \cdot e^{-i \kk_y a}\cdot \left(1+2 \cdot e^{i \kk_y \frac{3 a}{2}} \right)\cdot \cos{ \left( \frac{\sqrt{3} a}{2}\kk_x \right) }
+H_{21}(\kk)&=&H^*_{12}(\kk) = t_0 \cdot e^{-i \kk_x a}\cdot \left(1+2 \cdot e^{i \kk_x \frac{3 a}{2}} \right)\cdot \cos{ \left( \frac{\sqrt{3} a}{2}\kk_y \right) }
 \eea 
 \section{Wannier and Hamiltonian gauge}
 The tight-binding Hamiltonian $H(\kk)$ is a analytic and continuous function of $\kk$, therefore I can define all the derivatives respect to $\kk$ without problems. When we diagonalize $H(\kk)$ on a discrete k-point grid, there is a generic phase attached to the eigenvectors that make complicated the derivative respect to $\kk$. We call Wannier gauge the space before the diagonalization  $H^{W}(\kk)$ and Hamiltonian gauge the space after the diagonalization $H^{H}(\kk)$. Wave-function in the two gauges are related by an unitary transformation:

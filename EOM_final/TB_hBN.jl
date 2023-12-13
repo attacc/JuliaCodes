@@ -27,7 +27,7 @@ s_dim=2 # space dimension
 h_dim=2 # hamiltonian dimension
 #
 # Distance between neighbor 
-a_cc=2.632 # a.u.
+a_cc=1.0 #2.632 # a.u.
 # Lattice vectors:
 a_1=a_cc/2.0*[3.0,  sqrt(3.0)]
 a_2=a_cc/2.0*[3.0, -sqrt(3.0)]

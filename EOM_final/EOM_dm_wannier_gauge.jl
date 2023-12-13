@@ -32,7 +32,7 @@ n_k1=24
 n_k2=1
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
-#print_k_grid(k_grid)
+print_k_grid(k_grid)
 
 nk=n_k1*n_k2
 
@@ -93,7 +93,9 @@ println(" Number of threads: ",Threads.nthreads())
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
 TB_sol.H_w=zeros(Complex{Float64},h_dim,h_dim,nk)
-Threads.@threads for ik in ProgressBar(1:nk)
+#Threads.@threads for ik in ProgressBar(1:nk)
+out_file=open("test.txt","w")
+for ik in 1:nk
     H_w=Hamiltonian(k_grid.kpt[:,ik])
     data= eigen(H_w)      # Diagonalize the matrix
     TB_sol.eigenval[:,ik]   = data.values
@@ -111,7 +113,11 @@ Threads.@threads for ik in ProgressBar(1:nk)
     #
     TB_sol.eigenvec[:,:,ik]=fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik])
     #
+    write(out_file,"eigenv $(real(TB_sol.eigenvec[1,1,ik]))  eigenv $(TB_sol.eigenval[1,ik])   for ik $ik \n") 
+    #
 end
+close(out_file)
+exit()
 
 #Hamiltonian info
 dir_gap=minimum(TB_sol.eigenval[2,:]-TB_sol.eigenval[1,:])

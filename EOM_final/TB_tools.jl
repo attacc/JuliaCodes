@@ -111,7 +111,6 @@ function generate_circuit(points, n_steps)
        ik_right=get_k_neighbor(ik,1,-1,k_grid)
        println("x-neighboar ",ik_left," - ",ik_right)
     end
-    exit()
  end
  #
  function get_k_neighbor(ik,id,istep,k_grid)
@@ -268,7 +267,7 @@ function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
     # 
     dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
 #    if ik==1
-	    println(rho[1,1,ik]," for ik ",ik)
+#	    println(rho[1,1,ik]," for ik ",ik)
 #	    println(rho_plus[1,1]," for k-point ",ik_plus," and id ",id)
 #	    println("k-point plus ",k_grid.kpt[:,ik_plus])
 #	    println(rho_minus[1,1]," for k-point ",ik_minus," and id ",id)
