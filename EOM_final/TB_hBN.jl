@@ -83,26 +83,63 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_c
    # Based on perturbation theory
    # Eq. 24 of https://arxiv.org/pdf/cond-mat/0608257.pdf
    #
-   function Grad_H(k;  dk=0.01)
+   function Grad_H_and_U(ik, k_grid, use_k_grid;  dk=0.01)
        #
        # calculate dH/dk in the Wannier Gauge
        # derivatives are in cartesian coordinates
        #
-       k_plus =copy(k)
-       k_minus=copy(k)
-       dH=zeros(Complex{Float64},2,2,ndim)
+       dH_W=zeros(Complex{Float64},2,2,ndim)
+       dH_eigenval=zeros(Complex{Float64},2,ndim)
        #
-       for iv in 1:ndim
-	   k_plus     =copy(k)
-	   k_minus    =copy(k)
-	   k_plus[iv] =k[iv]+dk
-	   k_minus[iv]=k[iv]-dk
-           H_plus =Hamiltonian(k_plus)
-           H_minus=Hamiltonian(k_minus)
-           dH[:,:,iv]=(H_plus-H_minus)/(2.0*dk)
+       for id in 1:ndim
+           k_plus     =copy(k_grid.kpt[:,ik])
+           k_minus    =copy(k_grid.kpt[:,ik])
+           #
+           if use_k_grid
+             #
+             # Derivatives using the k-grid in input
+             # along the reciprocal lattice vectors
+             # dk is the distance between the nearest 
+             # k-points dk=k[i]-k[j]
+             #
+             ik_plus =get_k_neighbor(ik,id, 1,k_grid)
+             ik_minus=get_k_neighbor(ik,id,-1,k_grid)
+             #
+             eigenvec_p = eigenvecs[:,:,ik_plus]
+             eigenvec_m = eigenvecs[:,:,ik_minus]
+             eigenval_p = eigenval[:,ik_plus]
+             eigenval_m = eigenval[:,ik_minus]
+             H_plus  =
+             H_minus =
+             #
+             dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id]/2.0
+             #
+           else
+             #
+             # Derivatives along the cartesian direction
+             # the Hamiltonian is recalculated
+             # dk is provided in input
+             #
+	     k_plus[id] =k_grid.kpt[id,ik]+dk
+	     k_minus[id]=k_grid.kpt[id,ik]-dk
+             H_plus =Hamiltonian(k_plus)
+             H_minus=Hamiltonian(k_minus)
+             #
+             data_p=eigen(H_plus)
+             data_m=eigen(H_minus)
+             eigenvec_p=data_p.vectors
+             eigenvec_m=data_m.vectors
+             eigenval_p=data_p.values
+             eigenval_m=data_m.values
+             #
+           end
+           #
+           dH_W[:,:,id]=(H_plus-H_minus)/(2.0*dk)
+           #
+           dH_eigenval[:,id]=(data_p.values-data_m.values)/(2.0*dk)
        end
        #
-       return dH
+       return dH_W,dH_eigenval
    end
    #
    # Calculate derivatives along the rvectors directions
