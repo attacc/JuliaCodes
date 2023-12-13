@@ -28,7 +28,7 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=48
+n_k1=24
 n_k2=1
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
@@ -53,7 +53,7 @@ println(" nk = ",nk)
 # Hamiltonian gauge:  h_gauge = true  
 # Wannier gauge    :  h_gauge = false
 #
-dyn_props.h_gauge=false #true
+dyn_props.h_gauge=true
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -61,7 +61,7 @@ dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-dyn_props.use_dipoles=false
+dyn_props.use_dipoles=true
 
 # Include drho/dk in the dynamics
 dyn_props.include_drho_dk=false
@@ -376,7 +376,14 @@ function get_polarization(rho_s)
     Threads.@threads for it in ProgressBar(1:nsteps)
         for id in 1:s_dim
            for ik in 1:nk
-       	     pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
+             if !dyn_props.h_gauge
+               dip=HW_rotate(Dip_h[:,:,ik,id],TB_sol.eigenvec[:,:,ik],"W_to_H")
+               rho=HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
+             else
+               dip=Dip_h[:,:,ik,id]
+               rho=rho_s[it,:,:,ik]
+             end
+       	       pol[it,id]=pol[it,id]+real.(sum(dip.*transpose(rho)))
 	   end
         end
     end
@@ -439,7 +446,11 @@ if props.eval_pol
                pol_x = pol[:,1], 
                pol_y = pol[:,2],
                )
-  f = open("polarization.csv","w") 
+  if dyn_props.h_gauge
+    f = open("polarization.csv_H","w") 
+  else
+    f = open("polarization.csv_W","w") 
+  end
   CSV.write(f, df; quotechar=' ', delim=' ')
 end
 
@@ -451,7 +462,11 @@ if props.eval_curr
                j_inter_x = j_inter[:,1], 
                j_inter_y = j_inter[:,2],
                )
-  f = open("current.csv","w") 
+  if dyn_props.h_gauge
+    f = open("current.csv_H","w") 
+  else
+    f = open("current.csv_W","w") 
+  end
   CSV.write(f, df; quotechar=' ', delim=' ')
 end
 

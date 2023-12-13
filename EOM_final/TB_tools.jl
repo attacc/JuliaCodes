@@ -179,10 +179,11 @@ function init_output()
 end
 
 function print_density_matrix(time,rho_i)
+        ik=1
 	if dyn_props.h_gauge
-		rho=rho_i[:,:,1]
+		rho=rho_i[:,:,2]
 	else
-		rho=HW_rotate(rho_i[:,:,1],TB_sol.eigenvec[:,:,1],"W_to_H")
+		rho=HW_rotate(rho_i[:,:,2],TB_sol.eigenvec[:,:,2],"W_to_H")
 	end
 	write(IO_output.dm_file," $(time) ")
 	write(IO_output.dm_file," $(real(rho[1,1])) $(imag(rho[1,1])) ")
