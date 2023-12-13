@@ -53,7 +53,7 @@ println(" nk = ",nk)
 # Hamiltonian gauge:  h_gauge = true  
 # Wannier gauge    :  h_gauge = false
 #
-dyn_props.h_gauge=false
+dyn_props.h_gauge=false #true
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -62,13 +62,12 @@ dyn_props.damping=true
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
 dyn_props.use_dipoles=false
-#use_dipoles=false
 
 # Include drho/dk in the dynamics
-dyn_props.include_drho_dk=true
+dyn_props.include_drho_dk=false
 
 # Include A_w in the calculation of A_h
-dyn_props.include_A_w=false
+dyn_props.include_A_w=true
 
 # Print properties on disk
 props.print_dm =true
@@ -377,11 +376,7 @@ function get_polarization(rho_s)
     Threads.@threads for it in ProgressBar(1:nsteps)
         for id in 1:s_dim
            for ik in 1:nk
-	      if dyn_props.use_dipoles
-       	        pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
-	      else
-      	        pol[it,id]=pol[it,id]+real.(sum(A_h[:,:,id,ik].*transpose(rho_s[it,:,:,ik])))
-	      end
+       	     pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
 	   end
         end
     end
