@@ -32,6 +32,11 @@ a_cc=2.632 # a.u.
 a_1=a_cc/2.0*[3.0,  sqrt(3.0)]
 a_2=a_cc/2.0*[3.0, -sqrt(3.0)]
 
+d_1= a_cc/2.0*[1.0,  sqrt(3.0)]
+d_2= a_cc/2.0*[1.0, -sqrt(3.0)]
+d_3=-a_cc*[1.0,0.0]
+
+
 export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_cc,Calculate_Berry_Conec_FD
   #
   global ndim=2
@@ -63,11 +68,15 @@ export Hamiltonian,Berry_Connection,Grad_H,Calculate_UdU,a_1,a_2,s_dim,h_dim,a_c
         # the Berry connect does not depend from k
         # but if we start from Wannier function it does
         #
+        # I choose the atom 1 at the centrer of the axis
+        # therefore in the cell I have only a second atom at t_n=-d_3
+        # all the others are connected by a vector R but \delta_{R,0}
+        #
 	A=zeros(Complex{Float64},2,2,ndim)
         A[1,1,1]=0
-        A[2,2,1]=a_cc/2.0
+        A[2,2,1]=-d_3[1]
 	A[1,1,2]=0.0 #sqrt(3)/2.0*a_cc
-	A[2,2,2]=sqrt(3.0)/2.0*a_cc
+        A[2,2,2]=-d_3[2]
 	return A
    end
    #
