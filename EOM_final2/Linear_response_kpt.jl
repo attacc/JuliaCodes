@@ -59,6 +59,7 @@ TB_sol.H_w     =zeros(Complex{Float64},h_dim,h_dim,nk)
 
 println(" K-point list ")
 println(" nk = ",nk)
+print_k_grid(k_grid, lattice)
 
 println("Building Hamiltonian: ")
 Threads.@threads for ik in ProgressBar(1:nk)

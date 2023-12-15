@@ -11,6 +11,7 @@ mutable struct Lattice
     rv_norm::Array{Float64,1}  # norm of the reciprocal lattice vectors
     vol::Float64
     r_vol::Float64
+    b_mat_inv::Array{Float64,2}
 end
 
 
@@ -103,6 +104,12 @@ function set_Lattice(dim, vectors)
        println(rvectors[id][1:dim])
     end
 
+    b_mat_inv=zeros(Float64,dim,dim)
+    for id in 1:dim
+        b_mat_inv[:,id]=rvectors[id][1:dim]
+    end
+    b_mat_inv=inv(b_mat_inv)
+
     println("Direct lattice volume     : ",vol, " [a.u.]")
     println("Reciprocal lattice volume : ",r_vol, " [a.u.]")
 
@@ -112,7 +119,8 @@ function set_Lattice(dim, vectors)
 	rvectors,
 	rv_norm,
 	vol,
-	r_vol
+	r_vol,
+        b_mat_inv
     )
     return lattice
 end

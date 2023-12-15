@@ -103,11 +103,12 @@ function generate_circuit(points, n_steps)
      return k_grid
  end
  #
- function print_k_grid(k_grid)
+ function print_k_grid(k_grid, lattice)
     println("K-points grid ")
     println("grid dimensions : ",k_grid.nk_dir, "\n\n")
     for ik in 1:size(k_grid.kpt, 2)
-       println("ik ",ik," kpt ",k_grid.kpt[:,ik]," ik_grid ",k_grid.ik_map_inv[:,ik])
+       k_crystal=lattice.b_mat_inv*k_grid.kpt[:,ik]
+       println("ik ",ik," kpt ",k_crystal," ik_grid ",k_grid.ik_map_inv[:,ik])
        ik_left =get_k_neighbor(ik,1,1,k_grid)
        ik_right=get_k_neighbor(ik,1,-1,k_grid)
        println("x-neighboar ",ik_left," - ",ik_right)
@@ -325,7 +326,6 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
           eigenvec_m = TB_sol.eigenvec[:,:,ik_minus]
           eigenval_m = TB_sol.eigenval[:,ik_minus]
           H_minus =TB_sol.H_w[:,:,ik_minus]
-          #
           #
           dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id]/2.0
           #
