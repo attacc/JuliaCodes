@@ -117,7 +117,7 @@ function set_Lattice(dim, vectors)
     return lattice
 end
 
-function K_crys_to_cart(M_crys::Array{Complex{Float64},3},lattice)
+function K_crys_to_cart(M_crys::Array{T,3},lattice)  where {T<:Union{Complex{Float64},Float64}}
   M_cart=similar(M_crys)
   M_cart.=0.0
   for iv in 1:lattice.dim,id in 1:lattice.dim
@@ -127,7 +127,7 @@ function K_crys_to_cart(M_crys::Array{Complex{Float64},3},lattice)
   return M_cart
 end
 
-function K_crys_to_cart(M_crys::Array{Complex{Float64},2},lattice)
+function K_crys_to_cart(M_crys::Array{T,2},lattice) where {T<:Union{Complex{Float64},Float64}}
   M_cart=similar(M_crys)
   M_cart.=0.0
   for iv in 1:lattice.dim,id in 1:lattice.dim

@@ -36,9 +36,10 @@ k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
 nk=n_k1*n_k2
 
-TB_sol.h_dim=2 # Hamiltonian dimension
-TB_sol.eigenval=zeros(Float64,s_dim,nk)
-TB_sol.eigenvec=zeros(Complex{Float64},s_dim,s_dim,nk)
+h_dimr=2
+TB_sol.h_dim=h_dim # Hamiltonian dimension
+TB_sol.eigenval=zeros(Float64,h_dim,nk)
+TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,nk)
 
 println(" K-point list ")
 println(" nk = ",nk)
@@ -132,9 +133,9 @@ Threads.@threads for ik in ProgressBar(1:nk)
   ∇H_w[:,:,:,ik],∇U[:,:,:,ik],∇eigenvec[:,:,ik]=Grad_H_and_U(ik, k_grid, TB_sol)
 
   for id in 1:s_dim
-        ∇H_h[:,:,ik,id]=HW_rotate(∇H_w[:,:,ik,id],TB_sol.eigenvec[:,:,ik],"W_to_H")
+        ∇H_h[:,:,id,ik]=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
-	∇H_h[:,:,ik,id]=∇H_h[:,:,ik,id].*off_diag
+	∇H_h[:,:,id,ik]=∇H_h[:,:,id,ik].*off_diag
   end
 
 # Now I have to divide for the energies
