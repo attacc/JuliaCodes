@@ -129,7 +129,7 @@ function K_crys_to_cart(M_crys::Array{T,3},lattice)  where {T<:Union{Complex{Flo
   M_cart=similar(M_crys)
   M_cart.=0.0
   for iv in 1:lattice.dim,id in 1:lattice.dim
-     M_cart[:,:,id]=M_cart[:,:,id]+lattice.vectors[iv][id]*M_crys[:,:,iv]*lattice.rv_norm[iv]
+     M_cart[:,:,id]+=lattice.vectors[iv][id]*M_crys[:,:,iv]*lattice.rv_norm[iv]
   end
   M_cart./=(2.0*pi)
   return M_cart
@@ -139,21 +139,20 @@ function K_crys_to_cart(M_crys::Array{T,2},lattice) where {T<:Union{Complex{Floa
   M_cart=similar(M_crys)
   M_cart.=0.0
   for iv in 1:lattice.dim,id in 1:lattice.dim
-     M_cart[:,id]=M_cart[:,id]+lattice.vectors[iv][id]*M_crys[:,iv]*lattice.rv_norm[iv]
+     M_cart[:,id]+=lattice.vectors[iv][id]*M_crys[:,iv]*lattice.rv_norm[iv]
   end
   M_cart./=(2.0*pi)
   return M_cart
 end
 
 
-function K_cart_to_crys(M_cart,lattice)
+function K_cart_to_crys(M_cart::Array{T,3},lattice) where {T<:Union{Complex{Float64},Float64}}
   M_crys=similar(M_cart)
   M_crys.=0.0
   for iv in 1:lattice.dim,id in 1:lattice.dim
-     M_crys[:,:,id]=M_crys[:,:,id]+lattice.rvectors[iv][id]*M_cart[:,:,id]/lattice.rv_norm[iv]
+     M_crys[:,:,id]+=lattice.rvectors[iv][id]*M_cart[:,:,id]/lattice.rv_norm[iv]
   end
   return M_crys
 end
-
 
 end 

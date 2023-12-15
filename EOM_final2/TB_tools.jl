@@ -275,8 +275,11 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
       k_minus=copy(k_grid.kpt[:,ik])
       #
       for id in 1:s_dim
-        k_plus[id] =k_grid.kpt[id,ik]+dk
-        k_minus[id]=k_grid.kpt[id,ik]-dk
+#        k_plus[id] =k_grid.kpt[id,ik]+dk
+#        k_minus[id]=k_grid.kpt[id,ik]-dk
+#       # 
+        k_plus +=lattice.rvectors[id]/k_grid.rv_norm[id]*dk
+        k_minus-=lattice.rvectors[id]/k_grid.rv_norm[id]*dk
         #
         H_plus =Hamiltonian(k_plus)
 	data_plus= eigen(H_plus)
@@ -290,8 +293,8 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
 	eigenvec_m = data_minus.vectors
 	eigenvec_m= fix_eigenvec_phase(eigenvec_m)
         #
-        k_plus[id] =k_grid.kpt[id,ik]
-        k_minus[id]=k_grid.kpt[id,ik]
+        k_plus =copy(k_grid.kpt[:,ik])
+        k_minus=copy(k_grid.kpt[:,ik])
         #     
         dH_W[:,:,id]=(H_plus-H_minus)/(2.0*dk)
         #
@@ -299,6 +302,12 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
         #
         dH_eigenval[:,id]=(eigenval_p-eigenval_m)/(2.0*dk)
       end
+      #
+      # Convert from crystal to cartesian
+      #
+      dH_W       =K_crys_to_cart(dH_W,lattice)
+      dU         =K_crys_to_cart(dU,lattice)
+      dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
       #
     else
       #
