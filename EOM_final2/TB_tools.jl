@@ -275,11 +275,16 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
       k_minus=copy(k_grid.kpt[:,ik])
       #
       for id in 1:s_dim
-#        k_plus[id] =k_grid.kpt[id,ik]+dk
-#        k_minus[id]=k_grid.kpt[id,ik]-dk
+        #  
+#       k_plus[id] =k_grid.kpt[id,ik]+dk
+#       k_minus[id]=k_grid.kpt[id,ik]-dk
+#       #
+        if k_grid.nk_dir[id]==1
+           continue
+        end
 #       # 
-        k_plus +=lattice.rvectors[id]/k_grid.rv_norm[id]*dk
-        k_minus-=lattice.rvectors[id]/k_grid.rv_norm[id]*dk
+        k_plus +=lattice.rvectors[id]/lattice.rv_norm[id]*dk
+        k_minus-=lattice.rvectors[id]/lattice.rv_norm[id]*dk
         #
         H_plus =Hamiltonian(k_plus)
 	data_plus= eigen(H_plus)
@@ -315,11 +320,10 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
       # using the regular k-grid 
       #
       for id in 1:s_dim
+          #
           if k_grid.nk_dir[id]==1
                continue
           end
-          k_plus     =copy(k_grid.kpt[:,ik])
-          k_minus    =copy(k_grid.kpt[:,ik])
           #
           # Derivatives using the k-grid in input
           # along the reciprocal lattice vectors
@@ -336,7 +340,7 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
           eigenval_m = TB_sol.eigenval[:,ik_minus]
           H_minus =TB_sol.H_w[:,:,ik_minus]
           #
-          dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id]/2.0
+          dk=lattice.rv_norm[id]/k_grid.nk_dir[id]/2.0
           #
           dH_W[:,:,id]=(H_plus-H_minus)/(2.0*dk)
           #
