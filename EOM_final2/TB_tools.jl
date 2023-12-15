@@ -317,15 +317,15 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
           # k-points dk=k[i]-k[j]
           #
           ik_plus =get_k_neighbor(ik,id, 1,k_grid)
-          ik_minus=get_k_neighbor(ik,id,-1,k_grid)
-          #
           eigenvec_p = TB_sol.eigenvec[:,:,ik_plus]
-          eigenvec_m = TB_sol.eigenvec[:,:,ik_minus]
           eigenval_p = TB_sol.eigenval[:,ik_plus]
-          eigenval_m = TB_sol.eigenval[:,ik_minus]
-          #
           H_plus  =TB_sol.H_w[:,:,ik_plus]
+          #
+          ik_minus=get_k_neighbor(ik,id,-1,k_grid)
+          eigenvec_m = TB_sol.eigenvec[:,:,ik_minus]
+          eigenval_m = TB_sol.eigenval[:,ik_minus]
           H_minus =TB_sol.H_w[:,:,ik_minus]
+          #
           #
           dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id]/2.0
           #
