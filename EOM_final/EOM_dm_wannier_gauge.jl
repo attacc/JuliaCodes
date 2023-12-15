@@ -120,19 +120,18 @@ println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 
 # rotate in the Hamiltonian guage
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
-∇H_w=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
-∇H_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
+Grad_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 
-println("Building ∇H and Dipoles: ")
+println("Building Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
   #Gradient of the Hamiltonian along the cartesian directions
-  Grad_H_w,Grad_eigv=Grad_H_and_U(ik, k_grid, use_k_grid=false)
+  Dip_w=Grad_H(k_grid.kpt[:,ik])
 
   for id in 1:s_dim
-        ∇H_h[:,:,ik,id]=HW_rotate(Grad_H_w[:,:,id],TB_sol.eigenvec[:,:,ik],"W_to_H")
+        Grad_h[:,:,ik,id]=HW_rotate(Dip_w[:,:,id],TB_sol.eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
-	∇H_h[:,:,ik,id]=∇H_h[:,:,ik,id].*off_diag
+	Grad_h[:,:,ik,id]=Grad_h[:,:,ik,id].*off_diag
   end
 
 # Now I have to divide for the energies
@@ -145,7 +144,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
 #
   for i in 1:h_dim
       for j in i+1:h_dim
-          Dip_h[i,j,ik,:]= 1im*∇H_h[i,j,ik,:]/(TB_sol.eigenval[j,ik]-TB_sol.eigenval[i,ik])
+          Dip_h[i,j,ik,:]= 1im*Grad_h[i,j,ik,:]/(TB_sol.eigenval[j,ik]-TB_sol.eigenval[i,ik])
           Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
       end
   end
@@ -166,8 +165,6 @@ end
 println("Calculate A^H(k) : ")
 A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 A_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-
 Threads.@threads for ik in ProgressBar(1:nk)
   #
   if dyn_props.include_A_w
@@ -191,14 +188,15 @@ Threads.@threads for ik in ProgressBar(1:nk)
   # Calculate U^+ \d/dk U
   #
   #  Using the fixing of the guage
-  UdU[:,:,:,ik]=Calculate_UdU(ik,k_grid, TB_sol.eigenvec, lattice)
-  UdU[:,:,:,ik]=UdU[:,:,:,ik].*off_diag
+#  UdU=Calculate_UdU(ik,k_grid, TB_sol.eigenvec, lattice)
+#  UdU=UdU.*off_diag
   #
   #  Using the parallel transport gauge
-# for id in 1:s_dim
-#     if k_grid.nk_dir[id]==1; continue end
-#     UdU[:,:,id]=-1im*Dip_h[:,:,ik,id]
-#  end
+ UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim)
+ for id in 1:s_dim
+     if k_grid.nk_dir[id]==1; continue end
+     UdU[:,:,id]=-1im*Dip_h[:,:,ik,id]
+  end
   #
   A_h[:,:,:,ik]=A_h[:,:,:,ik]+1im*UdU
   #
@@ -406,7 +404,7 @@ function get_current(rho_s)
 	    rho_t_H=transpose(rho_s[it,:,:,ik])
 	end
         for id in 1:s_dim
-     	   j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_h[:,:,ik,id].*rho_t_H))
+     	   j_intra[it,id]=j_intra[it,id]-real.(sum(Grad_h[:,:,ik,id].*rho_t_H))
 	      if dyn_props.h_gauge
 	         commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
 	      else
