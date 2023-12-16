@@ -262,7 +262,7 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
     h_dim=TB_sol.h_dim    # hamiltonian dimension
     s_dim=lattice.dim     # space dimension
     #
-    dH_W       =zeros(Complex{Float64},h_dim,h_dim,s_dim)
+    dH_w       =zeros(Complex{Float64},h_dim,h_dim,s_dim)
     dH_eigenval=zeros(Float64,h_dim,s_dim)
     dU         =zeros(Complex{Float64},h_dim,h_dim,s_dim)
     #
@@ -301,7 +301,7 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
         k_plus =copy(k_grid.kpt[:,ik])
         k_minus=copy(k_grid.kpt[:,ik])
         #     
-        dH_W[:,:,id]=(H_plus-H_minus)/(2.0*dk)
+        dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
         #
         dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
         #
@@ -310,7 +310,7 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
       #
       # Convert from crystal to cartesian
       #
-      dH_W       =K_crys_to_cart(dH_W,lattice)
+      dH_w       =K_crys_to_cart(dH_w,lattice)
       dU         =K_crys_to_cart(dU,lattice)
       dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
       #
@@ -342,7 +342,7 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
           #
           dk=lattice.rv_norm[id]/k_grid.nk_dir[id]/2.0
           #
-          dH_W[:,:,id]=(H_plus-H_minus)/(2.0*dk)
+          dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
           #
           dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
           #
@@ -352,13 +352,13 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
       #
       # Convert from crystal to cartesian
       #
-      dH_W       =K_crys_to_cart(dH_W,lattice)
+      dH_w       =K_crys_to_cart(dH_w,lattice)
       dU         =K_crys_to_cart(dU,lattice)
       dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
       #
     end
     #
-    return dH_W,dU,dH_eigenval
+    return dH_w,dU,dH_eigenval
 end
 
 
