@@ -19,6 +19,9 @@ using .Units
 include("lattice.jl")
 using .LatticeTools
 
+include("bz_sampling.jl")
+using .BZ_sampling
+
 lattice=set_Lattice(2,[a_1,a_2])
 
 # 

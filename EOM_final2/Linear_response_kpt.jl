@@ -21,6 +21,9 @@ using .Units
 include("lattice.jl")
 using .LatticeTools
 
+include("bz_sampling.jl")
+using .BZ_sampling
+
 lattice=set_Lattice(2,[a_1,a_2])
 # 
 # Code This code is in Hamiltonian space
@@ -59,7 +62,7 @@ TB_sol.H_w     =zeros(Complex{Float64},h_dim,h_dim,nk)
 
 println(" K-point list ")
 println(" nk = ",nk)
-print_k_grid(k_grid, lattice)
+# print_k_grid(k_grid, lattice)
 
 println("Building Hamiltonian: ")
 Threads.@threads for ik in ProgressBar(1:nk)
@@ -94,7 +97,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
 # I set to zero the diagonal part of dipoles
       Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
     end
-
+    
 # Now I have to divide for the energies
 #
 #  p = \grad_k H 
