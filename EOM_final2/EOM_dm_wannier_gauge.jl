@@ -125,15 +125,16 @@ println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 
 # k-gradients of Hmailtonian, eigenvalues and eigenvectors
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-∇H_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-∇H_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
+∇H_w =zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
+∇U   =zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
+∇H_h =zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 ∇eigenvec=zeros(Complex{Float64},h_dim,s_dim,nk)
 
 println("Building ∇H and Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:nk)
 # Dipoles
   #Gradient of the Hamiltonian along the cartesian directions
-  ∇H_w[:,:,:,ik],∇U[:,:,:,ik],∇eigenvec[:,:,ik]=Grad_H_and_U(ik, k_grid, TB_sol)
+  ∇H_w[:,:,:,ik],∇U[:,:,:,ik],∇eigenvec[:,:,ik]=Grad_H_and_U(ik, k_grid, lattice, TB_sol)
 
   for id in 1:s_dim
         ∇H_h[:,:,id,ik]=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
@@ -151,8 +152,8 @@ Threads.@threads for ik in ProgressBar(1:nk)
 #
   for i in 1:h_dim
       for j in i+1:h_dim
-          Dip_h[i,j,ik,:]= 1im*∇H_h[i,j,ik,:]/(TB_sol.eigenval[j,ik]-TB_sol.eigenval[i,ik])
-          Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
+          Dip_h[i,j,:,ik]= 1im*∇H_h[i,j,:,ik]/(TB_sol.eigenval[j,ik]-TB_sol.eigenval[i,ik])
+          Dip_h[j,i,:,ik]=conj(Dip_h[i,j,:,ik])
       end
   end
   #
@@ -160,7 +161,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   #
   if !dyn_props.h_gauge
     for id in 1:s_dim
-        Dip_h[:,:,ik,id]=HW_rotate(Dip_h[:,:,ik,id],TB_sol.eigenvec[:,:,ik],"H_to_W")
+        Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
      end
   end
 end
@@ -198,7 +199,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   #
   #  Using the fixing of the guage
   for ik in 1:nk
-    U=eigenvecs[:,:,ik]
+    U=TB_sol.eigenvecs[:,:,ik]
     for id in 1:s_dim
         UdU[:,:,id,ik]=(U')*∇U[:,:,id,ik]
     end
@@ -324,7 +325,7 @@ function deriv_rho(rho, t)
 	  #
           if dyn_props.use_dipoles
             for id in 1:s_dim
-                E_dot_DIP+=E_field[id]*Dip_h[:,:,ik,id]
+                E_dot_DIP+=E_field[id]*Dip_h[:,:,id,ik]
              end
           else
    	    if dyn_props.h_gauge
@@ -389,10 +390,10 @@ function get_polarization(rho_s)
         for id in 1:s_dim
            for ik in 1:nk
              if !dyn_props.h_gauge
-               dip=HW_rotate(Dip_h[:,:,ik,id],TB_sol.eigenvec[:,:,ik],"W_to_H")
+               dip=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
                rho=HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
              else
-               dip=Dip_h[:,:,ik,id]
+               dip=Dip_h[:,:,id,ik]
                rho=rho_s[it,:,:,ik]
              end
        	       pol[it,id]=pol[it,id]+real.(sum(dip.*transpose(rho)))

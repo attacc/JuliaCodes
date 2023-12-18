@@ -54,7 +54,6 @@ nk=n_k1*n_k2
 #k_vec=[1,1/sqrt(3)]
 #k_vec=k_vec*2*pi/(3*a_cc)
 #k_list=k_vec
-
 TB_sol.h_dim=2
 TB_sol.eigenval=zeros(Float64,h_dim,nk)
 TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,nk)
@@ -62,17 +61,17 @@ TB_sol.H_w     =zeros(Complex{Float64},h_dim,h_dim,nk)
 
 println(" K-point list ")
 println(" nk = ",nk)
-# print_k_grid(k_grid, lattice)
+print_k_grid(k_grid, lattice)
 
 println("Building Hamiltonian: ")
-Threads.@threads for ik in ProgressBar(1:nk)
+#Threads.@threads for ik in ProgressBar(1:nk)
+for ik in 1:nk
    TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik])
    data= eigen(TB_sol.H_w[:,:,ik])      # Diagonalize the matrix
    TB_sol.eigenval[:,ik]   = data.values
    TB_sol.eigenvec[:,:,ik] = data.vectors
    TB_sol.eigenvec[:,:,ik] = fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik])
 end
-
 #
 #Print Hamiltonian info
 #
@@ -90,7 +89,7 @@ end
 # Dipoles
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 Threads.@threads for ik in ProgressBar(1:nk)
-    ∇H_w,∇U,∇eigenval=Grad_H_and_U(ik,k_grid,lattice,TB_sol) #,0.01, Hamiltonian)
+    ∇H_w,∇U,∇eigenval=Grad_H_and_U(ik,k_grid,lattice,TB_sol,0.01, Hamiltonian)
   if use_Dipoles
     for id in 1:s_dim
       Dip_h[:,:,ik,id]=HW_rotate(∇H_w[:,:,id],TB_sol.eigenvec[:,:,ik],"W_to_H")

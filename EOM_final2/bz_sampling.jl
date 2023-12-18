@@ -76,8 +76,10 @@ function generate_circuit(points, n_steps)
  function get_k_neighbor(ik,id,istep,k_grid)
      s_dim=2
 
-     ik_xyz   =k_grid.ik_map_inv[:,ik]
-     ik_n     =ik_xyz
+     # position of k-point in the integer grid
+     ik_n  =k_grid.ik_map_inv[:,ik]
+
+     # shift the k-points by an integer step
      ik_n[id] =ik_n[id]+istep 
 #
      d_size=k_grid.nk_dir[id]

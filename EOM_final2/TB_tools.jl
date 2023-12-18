@@ -141,13 +141,14 @@ function fix_eigenvec_phase(eigenvec)
 	#
 	# Rotation phase matrix
 	#
-	phase_m=zeros(Complex{Float64},2,2)
-	phase_m[1,1]=exp(-1im*angle(eigenvec[1,1]))
-        phase_m[2,2]=exp(-1im*angle(eigenvec[2,2]))
+	phase_m=zeros(Complex{Float64},2)
+	phase_m[1]=exp(-1im*angle(eigenvec[1,1]))
+        phase_m[2]=exp(-1im*angle(eigenvec[2,2]))
 	#
 	# New eigenvectors
 	#
-	eigenvec=eigenvec*phase_m
+	eigenvec[:,1]=eigenvec[:,1]*phase_m[1]
+	eigenvec[:,2]=eigenvec[:,2]*phase_m[2]
 #	println("\nAfter phase fixed : ")
 #	show(stdout,"text/plain",eigenvec)
 	#
@@ -174,99 +175,51 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
     dH_eigenval=zeros(Float64,h_dim,s_dim)
     dU         =zeros(Complex{Float64},h_dim,h_dim,s_dim)
     #
-    if dk !=0 && Hamiltonian != nothing
-      #    
-      # Derivative by finite differences, 
-      # recalculating the Hamiltonian
+    # Derivative by finite differences, 
+    # recalculating the Hamiltonian
+    #
+    k_plus =copy(k_grid.kpt[:,ik])
+    k_minus=copy(k_grid.kpt[:,ik])
+    #
+    for id in 1:s_dim
+      #  
+      k_plus[id] =k_grid.kpt[id,ik]+dk
+      k_minus[id]=k_grid.kpt[id,ik]-dk
+      #
+      k_plus +=lattice.rvectors[id]/lattice.rv_norm[id]*dk
+      k_minus-=lattice.rvectors[id]/lattice.rv_norm[id]*dk
+      #
+      H_plus =Hamiltonian(k_plus)
+      data_plus= eigen(H_plus)
+      eigenval_p = data_plus.values
+      eigenvec_p = data_plus.vectors
+      eigenvec_p= fix_eigenvec_phase(eigenvec_p)
+      #
+      H_minus =Hamiltonian(k_minus)
+      data_minus= eigen(H_minus)
+      eigenval_m = data_minus.values
+      eigenvec_m = data_minus.vectors
+      eigenvec_m= fix_eigenvec_phase(eigenvec_m)
       #
       k_plus =copy(k_grid.kpt[:,ik])
       k_minus=copy(k_grid.kpt[:,ik])
+      #     
+      dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
       #
-      for id in 1:s_dim
-        #  
-#       k_plus[id] =k_grid.kpt[id,ik]+dk
-#       k_minus[id]=k_grid.kpt[id,ik]-dk
-#       #
-        if k_grid.nk_dir[id]==1
-           continue
-        end
-#       # 
-        k_plus +=lattice.rvectors[id]/lattice.rv_norm[id]*dk
-        k_minus-=lattice.rvectors[id]/lattice.rv_norm[id]*dk
-        #
-        H_plus =Hamiltonian(k_plus)
-	data_plus= eigen(H_plus)
-        eigenval_p = data_plus.values
-        eigenvec_p = data_plus.vectors
-	eigenvec_p= fix_eigenvec_phase(eigenvec_p)
-        #
-        H_minus=Hamiltonian(k_minus)
-	data_minus= eigen(H_minus)
-        eigenval_m = data_minus.values
-	eigenvec_m = data_minus.vectors
-	eigenvec_m= fix_eigenvec_phase(eigenvec_m)
-        #
-        k_plus =copy(k_grid.kpt[:,ik])
-        k_minus=copy(k_grid.kpt[:,ik])
-        #     
-        dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
-        #
-        dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
-        #
-        dH_eigenval[:,id]=(eigenval_p-eigenval_m)/(2.0*dk)
-      end
+      dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
       #
-      # Convert from crystal to cartesian
-      #
-      dH_w       =K_crys_to_cart(dH_w,lattice)
-      dU         =K_crys_to_cart(dU,lattice)
-      dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
-      #
-    else
-      #
-      # Derivative by finite differences, 
-      # using the regular k-grid 
-      #
-      for id in 1:s_dim
-          #
-          if k_grid.nk_dir[id]==1
-               continue
-          end
-          #
-          # Derivatives using the k-grid in input
-          # along the reciprocal lattice vectors
-          # dk is the distance between the nearest 
-          # k-points dk=k[i]-k[j]
-          #
-          ik_plus =get_k_neighbor(ik,id, 1,k_grid)
-          eigenvec_p = TB_sol.eigenvec[:,:,ik_plus]
-          eigenval_p = TB_sol.eigenval[:,ik_plus]
-          H_plus  =TB_sol.H_w[:,:,ik_plus]
-          #
-          ik_minus=get_k_neighbor(ik,id,-1,k_grid)
-          eigenvec_m = TB_sol.eigenvec[:,:,ik_minus]
-          eigenval_m = TB_sol.eigenval[:,ik_minus]
-          H_minus =TB_sol.H_w[:,:,ik_minus]
-          #
-          dk=lattice.rv_norm[id]/k_grid.nk_dir[id]/2.0
-          #
-          dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
-          #
-          dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
-          #
-          dH_eigenval[:,id]=(eigenval_p-eigenval_m)/(2.0*dk)
-          #
-      end
-      #
-      # Convert from crystal to cartesian
-      #
-      dH_w       =K_crys_to_cart(dH_w,lattice)
-      dU         =K_crys_to_cart(dU,lattice)
-      dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
+      dH_eigenval[:,id]=(eigenval_p-eigenval_m)/(2.0*dk)
       #
     end
     #
+    # Convert from crystal to cartesian
+    #
+    dH_w       =K_crys_to_cart(dH_w,lattice)
+    dU         =K_crys_to_cart(dU,lattice)
+    dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
+    #
     return dH_w,dU,dH_eigenval
+    #
 end
 
 
@@ -286,14 +239,6 @@ function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
     rho_minus=rho[:,:,ik_minus]
     # 
     dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
-#    if ik==1
-#	    println(rho[1,1,ik]," for ik ",ik)
-#	    println(rho_plus[1,1]," for k-point ",ik_plus," and id ",id)
-#	    println("k-point plus ",k_grid.kpt[:,ik_plus])
-#	    println(rho_minus[1,1]," for k-point ",ik_minus," and id ",id)
-#	    println("k-point minus ",k_grid.kpt[:,ik_minus])
-#	    println(dk_rho[1,1,1])
-#    end
     #
   end
   #
