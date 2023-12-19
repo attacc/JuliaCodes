@@ -2,7 +2,7 @@ module TB_tools
 
 using ProgressBars
 
-export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H_and_U
+export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U
 
 mutable struct Properties
 	eval_curr   ::Bool
@@ -16,6 +16,7 @@ mutable struct Dynamics_Properties
 	use_dipoles  :: Bool
 	include_drho_dk :: Bool
 	include_A_w	:: Bool
+        use_UdU_for_dipoles :: Bool
 end
 
 mutable struct TB_Solution
@@ -28,7 +29,7 @@ end
 
 TB_sol=TB_Solution()
 
-dyn_props = Dynamics_Properties(true,true,false,true,true)
+dyn_props = Dynamics_Properties(true,true,false,true,true,false)
 
 props = Properties(true, true, false)
 
@@ -71,9 +72,9 @@ end
 
 function HW_rotate(M,eigenvec,mode)
 	if mode=="W_to_H"
-		rot_M=(eigenvec\M)*eigenvec
+		rot_M=adjoint(eigenvec)*M*eigenvec
 	elseif mode=="H_to_W"
-		rot_M=(eigenvec*M)/eigenvec
+                rot_M=eigenvec*M*adjoint(eigenvec)
 	else
 		println("Wrong call to rotate_H_to_W")
 		exit()
@@ -163,7 +164,71 @@ end
 # Based on perturbation theory
 # Eq. 24 of https://arxiv.org/pdf/cond-mat/0608257.pdf
 #
-function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
+# In this subroutine I do not recalculate H because
+# I fix the phase
+#
+function Grad_U(ik, k_grid, lattice, TB_sol)
+    #
+    # calculate dH/dk in the Wannier Gauge
+    # derivatives are in cartesian coordinates
+    #
+    h_dim=TB_sol.h_dim    # hamiltonian dimension
+    s_dim=lattice.dim     # space dimension
+    #
+    dH_eigenval=zeros(Float64,h_dim,s_dim)
+    dU         =zeros(Complex{Float64},h_dim,h_dim,s_dim)
+    #
+    # Derivative by finite differences, 
+    # recalculating the Hamiltonian
+    #
+    k_plus =copy(k_grid.kpt[:,ik])
+    k_minus=copy(k_grid.kpt[:,ik])
+    #
+    for id in 1:s_dim
+      #  
+      if k_grid.nk_dir[id]==1; continue end
+      #
+      ik_plus  ,border_k_plus =get_k_neighbor(ik,id, 1,k_grid)
+      ik_minus ,border_k_minus=get_k_neighbor(ik,id,-1,k_grid)
+      #
+      dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id] 
+      #
+      eigenval_p=TB_sol.eigenval[:,ik_plus]
+      eigenvec_p=TB_sol.eigenvec[:,:,ik_plus]
+      #
+      eigenval_m=TB_sol.eigenval[:,ik_minus]
+      eigenvec_m=TB_sol.eigenvec[:,:,ik_minus]
+      #
+      eigenvec=TB_sol.eigenvec[:,:,ik]
+      #
+      if border_k_plus
+        dU[:,:,id]=(eigenvec-eigenvec_m)/(dk)
+      elseif border_k_minus
+        dU[:,:,id]=(eigenvec_p-eigenvec)/(dk)
+      else
+        dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
+      end
+      #
+      dH_eigenval[:,id]=(eigenval_p-eigenval_m)/(2.0*dk)
+      #
+      k_plus =copy(k_grid.kpt[:,ik])
+      k_minus=copy(k_grid.kpt[:,ik])
+      #     
+    end
+    #
+    # Convert from crystal to cartesian
+    #
+    dU         =K_crys_to_cart(dU,lattice)
+    dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
+    #
+    return dU,dH_eigenval
+    #
+end
+
+# For the derivative of the Hamiltonian
+# I recalcualte it because H(k+G)/=H(k)
+
+function Grad_H(ik, k_grid, lattice, Hamiltonian, dk=0.01)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
@@ -182,63 +247,52 @@ function Grad_H_and_U(ik, k_grid, lattice, TB_sol, dk=0.01, Hamiltonian=nothing)
     k_minus=copy(k_grid.kpt[:,ik])
     #
     for id in 1:s_dim
-      #  
+      #
+      # Just to be consistent, this line can be removed
+      if k_grid.nk_dir[id]==1; continue end
+      #
       k_plus[id] =k_grid.kpt[id,ik]+dk
       k_minus[id]=k_grid.kpt[id,ik]-dk
       #
-      k_plus +=lattice.rvectors[id]/lattice.rv_norm[id]*dk
-      k_minus-=lattice.rvectors[id]/lattice.rv_norm[id]*dk
-      #
       H_plus =Hamiltonian(k_plus)
-      data_plus= eigen(H_plus)
-      eigenval_p = data_plus.values
-      eigenvec_p = data_plus.vectors
-      eigenvec_p= fix_eigenvec_phase(eigenvec_p)
       #
-      H_minus =Hamiltonian(k_minus)
-      data_minus= eigen(H_minus)
-      eigenval_m = data_minus.values
-      eigenvec_m = data_minus.vectors
-      eigenvec_m= fix_eigenvec_phase(eigenvec_m)
+      H_minus=Hamiltonian(k_minus)
+      #
+      dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
       #
       k_plus =copy(k_grid.kpt[:,ik])
       k_minus=copy(k_grid.kpt[:,ik])
       #     
-      dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
-      #
-      dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
-      #
-      dH_eigenval[:,id]=(eigenval_p-eigenval_m)/(2.0*dk)
-      #
     end
     #
-    # Convert from crystal to cartesian
-    #
-    dH_w       =K_crys_to_cart(dH_w,lattice)
-    dU         =K_crys_to_cart(dU,lattice)
-    dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
-    #
-    return dH_w,dU,dH_eigenval
+    return dH_w
     #
 end
 
 
-function Evaluate_Dk_rho(rho, ik, k_grid, eigenvec, lattice)
+function Evaluate_Dk_rho(rho, ik, k_grid, U, lattice)
 
   dk_rho=zeros(Complex{Float64},h_dim,h_dim,s_dim)
   for id in 1:s_dim
     #
     if k_grid.nk_dir[id]==1; continue end
     #
-    ik_plus =get_k_neighbor(ik,id, 1,k_grid)
-    ik_minus=get_k_neighbor(ik,id,-1,k_grid)
+    ik_plus ,border_k_plus =get_k_neighbor(ik,id, 1,k_grid)
+    ik_minus,border_k_minus=get_k_neighbor(ik,id,-1,k_grid)
     #
     dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id]
     #
     rho_plus =rho[:,:,ik_plus]
     rho_minus=rho[:,:,ik_minus]
-    # 
-    dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
+    rho_k    =rho[:,:,ik]
+    #
+    if border_k_plus
+      dk_rho[:,:,id]=(rho_k-rho_minus)/(dk)
+    elseif border_k_minus
+      dk_rho[:,:,id]=(rho_plus-rho_k)/(dk)
+    else
+      dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
+    end
     #
   end
   #
