@@ -31,8 +31,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=24
-n_k2=24
+n_k1=128
+n_k2=1
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -70,7 +70,7 @@ dyn_props.use_dipoles=true
 #
 # Use UdU for dipoles
 #
-dyn_props.use_UdU_for_dipoles=true
+dyn_props.use_UdU_for_dipoles=false #true
 
 # Include drho/dk in the dynamics
 dyn_props.include_drho_dk=false
@@ -85,7 +85,8 @@ props.eval_pol =true
 
 check_dk_rho=false
 
-field_name="PHHG"
+#field_name="PHHG"
+field_name="delta"
 
 if dyn_props.h_gauge     
 	println("* * * Hamiltonian gauge * * * ")             

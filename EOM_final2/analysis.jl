@@ -69,7 +69,8 @@ function damp_it(times, pol,T2,itstart)
     return pol
 end
 
-df = CSV.read("polarization.csv",DataFrame)
+#df = CSV.read("polarization.csv",DataFrame)
+df = CSV.read("polarization.csv_H",DataFrame)
 pol_and_times=Matrix(df)
 e_vec=[1.0, 0.0]
 
@@ -87,7 +88,7 @@ freqs_nsteps =200
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 
 # These two paramters should be the same of the EOM_dm_dipoles.jl
-itstart=3 
+itstart=10 
 #T2     =6.0*fs2aut
 T2     =0.0
 #
@@ -97,7 +98,8 @@ if T2 !=0.0
    pol  =damp_it(times, pol, T2, itstart)
 end
 pol_w=FFT_1D(times, freqs, pol, e_vec)
-pol_w=Divide_by_the_field(pol_w,times,itstart)
+# I multiply for -1im lost somewhere
+pol_w=-1im*Divide_by_the_field(pol_w,times,itstart)
 #
 # Write data on file
 #
