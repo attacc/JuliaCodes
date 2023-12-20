@@ -44,8 +44,8 @@ use_Dipoles=true
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=48
-n_k2=48
+n_k1=128
+n_k2=1
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
@@ -89,7 +89,8 @@ end
 # Dipoles
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 Threads.@threads for ik in ProgressBar(1:nk)
-    ∇H_w,∇U,∇eigenval=Grad_H_and_U(ik,k_grid,lattice,TB_sol,0.01, Hamiltonian)
+    ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,0.01)
+    ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol)
   if use_Dipoles
     for id in 1:s_dim
       Dip_h[:,:,ik,id]=HW_rotate(∇H_w[:,:,id],TB_sol.eigenvec[:,:,ik],"W_to_H")
