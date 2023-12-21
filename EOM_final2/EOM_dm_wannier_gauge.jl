@@ -3,8 +3,6 @@
 # Claudio Attaccalite (2023)
 #
 using LinearAlgebra
-using CSV
-using DataFrames
 using Base.Threads
 
 include("TB_hBN.jl")
@@ -502,34 +500,27 @@ Threads.@threads for it in 1:n_steps
 end
 
 if props.eval_pol
-  df = DataFrame(time  = t_and_E[:,1], 
-               pol_x = pol[:,1], 
-               pol_y = pol[:,2],
-               )
-  if dyn_props.h_gauge
-    f = open("polarization.csv_H","w") 
-  else
-    f = open("polarization.csv_W","w") 
+  f = open("polarization.csv","w") 
+  write(f,"#time[fs] polarization_x  polarization_y") 
+  for it in 1:n_steps
+    write(f,"$(t_and_E[it,1]) $(pol[it,1])  $(pol[it,2]) ")
   end
-  CSV.write(f, df; quotechar=' ', delim=' ')
+  close(f)
 end
 
 
 if props.eval_curr
-  df = DataFrame(time  = t_and_E[:,1], 
-               j_intra_x = j_intra[:,1], 
-               j_intra_y = j_intra[:,2],
-               j_inter_x = j_inter[:,1], 
-               j_inter_y = j_inter[:,2],
-               )
-  if dyn_props.h_gauge
-    f = open("current.csv_H","w") 
-  else
-    f = open("current.csv_W","w") 
+  f = open("current.csv","w") 
+  write(f,"#time[fs] j_intra_x  j_intra_y  j_inter_x  j_inter_y") 
+  for it in 1:n_steps
+      write(f,"$(t_and_E[it,1]) $(j_intra[it,1])  $(j_intra[it,2])  $(j_inter[it,1])  $(j_inter[it,2]) \n")
   end
-  CSV.write(f, df; quotechar=' ', delim=' ')
+  close(f)
 end
 
-header2=["time [fs]", "efield_x","efield_y"] 
-CSV.write("external_field.csv", delim=' ', Tables.table(t_and_E), header=header2, quotechar=' ')
+f = open("external_field.csv","w") 
+write(f,"#time[fs]  efield_x efield_y") 
+for it in 1:n_steps
+  write(f,"$(t_and_E[it,1])  $(t_and_E[it,2])  $(t_and_E[it,3]) ")
+end
 
