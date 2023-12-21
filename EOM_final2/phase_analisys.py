@@ -3,6 +3,7 @@
 # Claudio Attaccalite (2023)
 #
 using LinearAlgebra
+using CSV
 using DataFrames
 using Base.Threads
 using PyPlot
@@ -60,7 +61,7 @@ TB_sol.H_w     =zeros(Complex{Float64},h_dim,h_dim,nk)
 
 println(" K-point list ")
 println(" nk = ",nk)
-#print_k_grid(k_grid, lattice)
+print_k_grid(k_grid, lattice)
 
 println("Building Hamiltonian: ")
 #Threads.@threads for ik in ProgressBar(1:nk)
@@ -122,66 +123,3 @@ Threads.@threads for ik in ProgressBar(1:nk)
   end
   #
 end
-
-#
-# External field and response parameters
-# 
-E_field_ver=[1.0,0.0]
-freqs_range  =[0.0/ha2ev, 15.0/ha2ev] # eV
-eta          =0.15/ha2ev
-freqs_nsteps =200
-freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
-
-#
-# Function that calculate the linear respone
-#
-function Linear_response(freqs,E_field_ver, eta)
-   nv=1
-   xhi=zeros(Complex{Float64},length(freqs))
-   Res=zeros(Complex{Float64},h_dim,h_dim,nk)
-
-   println("Residuals: ")
-   Threads.@threads for ik in ProgressBar(1:nk)
-     for iv in 1:nv,ic in nv+1:h_dim
-        Res[iv,ic,ik]=sum(Dip_h[iv,ic,ik,:].*E_field_ver[:])
-     end
-   end
-   print("Xhi: ")
-   Threads.@threads for ifreq in ProgressBar(1:length(freqs))
-     for ik in 1:nk,iv in 1:nv,ic in nv+1:h_dim
-         e_v=TB_sol.eigenval[iv,ik]
-         e_c=TB_sol.eigenval[ic,ik]
-         xhi[ifreq]=xhi[ifreq]+abs(Res[iv,ic,ik])^2/(e_c-e_v-freqs[ifreq]-eta*1im)
-     end
-   end
-   xhi.=xhi/nk
-   return xhi
-end
-
-function generate_header(k_grid,eta,Efield_ver,freqs)
-    header="#\n# * * * Linear response xhi(ω) * * * \n#\n" 
-    header*="# k-point grid: $(k_grid.nk_dir[1]) - $(k_grid.nk_dir[2]) \n"
-    header*="# E-field versor: $(Efield_ver) \n"
-    header*="# Frequencies range: $(freqs[1]*ha2ev) - $(freqs[end]*ha2ev) [eV]  \n"
-    header*="# Frequencies steps: $(length(freqs)) \n#\n"
-    return header
-end
-
-xhi = Linear_response(freqs, E_field_ver, eta)
-
-# 
-# Plot and write on disk
-#
-fig = figure("Linear response",figsize=(10,20))
-plot(freqs*ha2ev,real(xhi[:]))
-plot(freqs*ha2ev,imag(xhi[:]))
-PyPlot.show();
-
-
-f = open("xhi_w.csv","w")
-header=generate_header(k_grid,eta,E_field_ver,freqs)
-write(f,header)
-for iw in 1:freqs_nsteps
-    write(f," $(freqs[iw]*ha2ev) $(imag(xhi[iw])) $(real(xhi[iw])) \n")
-end         
-close(f)
