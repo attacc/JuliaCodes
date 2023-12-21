@@ -37,7 +37,6 @@ k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
 nk=n_k1*n_k2
 
-h_dimr=2
 TB_sol.h_dim=h_dim # Hamiltonian dimension
 TB_sol.eigenval=zeros(Float64,h_dim,nk)
 TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,nk)
@@ -477,6 +476,8 @@ function get_current(rho_s)
     return j_intra,j_inter
 end 
 
+
+
 # Solve EOM
 
 solution = rungekutta2_dm(deriv_rho, rho0, t_range)
@@ -490,7 +491,38 @@ if props.eval_curr
   j_intra,j_inter=get_current(solution)
 end
 
-  # Write polarization and external field on disk
+# Generate headers
+
+function generate_header(k_grid=nothing,dyn_props=nothing,props=nothing)
+   header="#\n# * * * EOM of the density matrix * * * \n#\n#"
+
+   if k_grid != nothing
+     header*="# k-point grid: $(k_grid.nk_dir[1]) - $(k_grid.nk_dir[2]) \n"
+   end
+   if dyn_props != nothing
+     if dyn_props.h_gauge
+         header*="# structure gauge : hamiltonian \n"
+     else
+         header*="# structure gauge : wannier \n"
+     end
+     header*="# include drho/dk in the dynamics: $(dyn_props.include_drho_dk) \n"
+     header*="# include A_w in the dynamics: $(dyn_props.include_A_w) \n"
+     header*="# use dipoles : $(dyn_props.use_dipoles) \n"
+     header*="# use damping : $(dyn_props.damping) \n"
+     header*="# use UdU for dipoles : $(dyn_props.use_UdU_for_dipoles) \n"
+   end
+
+   if props != nothing
+     header*="# calculate polarization : $(props.eval_pol)\n"
+     header*="# calculate current      : $(props.eval_curr)\n"
+     header*="# print dm               : $(props.print_dm)\n"
+   end
+   header*="#\n#\n"
+  return header
+end
+
+
+# Write polarization and external field on disk
 
 t_and_E=zeros(Float64,n_steps,3)
 Threads.@threads for it in 1:n_steps
@@ -499,11 +531,14 @@ Threads.@threads for it in 1:n_steps
  t_and_E[it,:]=[t/fs2aut,E_field_t[1],E_field_t[2]]
 end
 
+header=generate_header(k_grid,dyn_props,props)
+
 if props.eval_pol
   f = open("polarization.csv","w") 
-  write(f,"#time[fs] polarization_x  polarization_y") 
+  write(f,header)
+  write(f,"#time[fs] polarization_x  polarization_y\n") 
   for it in 1:n_steps
-    write(f,"$(t_and_E[it,1]) $(pol[it,1])  $(pol[it,2]) ")
+    write(f,"$(t_and_E[it,1]) $(pol[it,1])  $(pol[it,2]) \n")
   end
   close(f)
 end
@@ -511,7 +546,8 @@ end
 
 if props.eval_curr
   f = open("current.csv","w") 
-  write(f,"#time[fs] j_intra_x  j_intra_y  j_inter_x  j_inter_y") 
+  write(f,header)
+  write(f,"#time[fs] j_intra_x  j_intra_y  j_inter_x  j_inter_y\n") 
   for it in 1:n_steps
       write(f,"$(t_and_E[it,1]) $(j_intra[it,1])  $(j_intra[it,2])  $(j_inter[it,1])  $(j_inter[it,2]) \n")
   end
@@ -519,8 +555,9 @@ if props.eval_curr
 end
 
 f = open("external_field.csv","w") 
-write(f,"#time[fs]  efield_x efield_y") 
+write(f,header)
+write(f,"#time[fs]  efield_x efield_y\n") 
 for it in 1:n_steps
-  write(f,"$(t_and_E[it,1])  $(t_and_E[it,2])  $(t_and_E[it,3]) ")
+  write(f,"$(t_and_E[it,1])  $(t_and_E[it,2])  $(t_and_E[it,3]) \n")
 end
 
