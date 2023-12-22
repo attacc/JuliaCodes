@@ -7,6 +7,7 @@ export generate_circuit,generate_unif_grid,get_k_neighbor,print_k_grid
 mutable struct K_Grid
 	kpt::Array{Float64,2}
 	nk_dir::Array{Int,1}
+        nk::Int
 	ik_map::Array{Int,3}
 	ik_map_inv::Array{Int,2}
 end
@@ -55,6 +56,7 @@ function generate_circuit(points, n_steps)
      k_grid = K_Grid(
 		kpt,
 		[n_kx,n_ky,1],
+                nk,
 		ik_grid,
 		ik_grid_inv
 	       )

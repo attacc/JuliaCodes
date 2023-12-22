@@ -48,23 +48,22 @@ n_k2=1
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
-nk=n_k1*n_k2
 #nk=1
 #k_vec=[1,1/sqrt(3)]
 #k_vec=k_vec*2*pi/(3*a_cc)
 #k_list=k_vec
 TB_sol.h_dim=2
-TB_sol.eigenval=zeros(Float64,h_dim,nk)
-TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,nk)
-TB_sol.H_w     =zeros(Complex{Float64},h_dim,h_dim,nk)
+TB_sol.eigenval=zeros(Float64,h_dim,k_grid.nk)
+TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+TB_sol.H_w     =zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 
 println(" K-point list ")
-println(" nk = ",nk)
+println(" nk = ",k_grid.nk)
 #print_k_grid(k_grid, lattice)
 
 println("Building Hamiltonian: ")
 #Threads.@threads for ik in ProgressBar(1:nk)
-for ik in 1:nk
+for ik in 1:k_grid.nk
    TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik])
    data= eigen(TB_sol.H_w[:,:,ik])      # Diagonalize the matrix
    TB_sol.eigenval[:,ik]   = data.values
@@ -86,8 +85,8 @@ else
 end
 
 # Dipoles
-Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
-Threads.@threads for ik in ProgressBar(1:nk)
+Dip_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk,s_dim)
+Threads.@threads for ik in ProgressBar(1:k_grid.nk)
     ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,0.01)
     ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol)
   if use_Dipoles
@@ -138,23 +137,23 @@ freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 function Linear_response(freqs,E_field_ver, eta)
    nv=1
    xhi=zeros(Complex{Float64},length(freqs))
-   Res=zeros(Complex{Float64},h_dim,h_dim,nk)
+   Res=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 
    println("Residuals: ")
-   Threads.@threads for ik in ProgressBar(1:nk)
+   Threads.@threads for ik in ProgressBar(1:k_grid.nk)
      for iv in 1:nv,ic in nv+1:h_dim
         Res[iv,ic,ik]=sum(Dip_h[iv,ic,ik,:].*E_field_ver[:])
      end
    end
    print("Xhi: ")
    Threads.@threads for ifreq in ProgressBar(1:length(freqs))
-     for ik in 1:nk,iv in 1:nv,ic in nv+1:h_dim
+     for ik in 1:k_grid.nk,iv in 1:nv,ic in nv+1:h_dim
          e_v=TB_sol.eigenval[iv,ik]
          e_c=TB_sol.eigenval[ic,ik]
          xhi[ifreq]=xhi[ifreq]+abs(Res[iv,ic,ik])^2/(e_c-e_v-freqs[ifreq]-eta*1im)
      end
    end
-   xhi.=xhi/nk
+   xhi.=xhi/k_grid.nk
    return xhi
 end
 

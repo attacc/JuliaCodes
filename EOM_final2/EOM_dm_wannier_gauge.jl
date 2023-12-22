@@ -35,14 +35,12 @@ n_k2=1
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
 
-nk=n_k1*n_k2
-
 TB_sol.h_dim=h_dim # Hamiltonian dimension
-TB_sol.eigenval=zeros(Float64,h_dim,nk)
-TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,nk)
+TB_sol.eigenval=zeros(Float64,h_dim,k_grid.nk)
+TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 
 println(" K-point list ")
-println(" nk = ",nk)
+println(" nk = ",k_grid.nk)
 # for ik in 1:nk
 #  	println(k_grid[:,ik])
 # end
@@ -99,9 +97,9 @@ println(" Field name : ",field_name)
 println(" Number of threads: ",Threads.nthreads())
 
 println("Building Hamiltonian: ")
-H_h=zeros(Complex{Float64},h_dim,h_dim,nk)
-TB_sol.H_w=zeros(Complex{Float64},h_dim,h_dim,nk)
-Threads.@threads for ik in ProgressBar(1:nk)
+H_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+TB_sol.H_w=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+Threads.@threads for ik in ProgressBar(1:k_grid.nk)
     H_w=Hamiltonian(k_grid.kpt[:,ik])
     data= eigen(H_w)      # Diagonalize the matrix
     TB_sol.eigenval[:,ik]   = data.values
@@ -128,14 +126,14 @@ ind_gap=minimum(TB_sol.eigenval[2,:])-maximum(TB_sol.eigenval[1,:])
 println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 
 # k-gradients of Hmailtonian, eigenvalues and eigenvectors
-Dip_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-∇H_w =zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-∇U   =zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-∇H_h =zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-∇eigenval=zeros(Complex{Float64},h_dim,s_dim,nk)
+Dip_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
+∇H_w =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
+∇U   =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
+∇H_h =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
+∇eigenval=zeros(Complex{Float64},h_dim,s_dim,k_grid.nk)
 
 println("Building ∇H and Dipoles: ")
-Threads.@threads for ik in ProgressBar(1:nk)
+Threads.@threads for ik in ProgressBar(1:k_grid.nk)
 # Dipoles 
   #Gradient of the Hamiltonian by finite difference 
   ∇H_w[:,:,:,ik]=Grad_H(ik, k_grid, lattice, Hamiltonian, 0.01)
@@ -184,11 +182,11 @@ end
 # Calculate A^H(k) 
 #
 println("Calculate A^H(k) : ")
-A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-A_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
-UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
+A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
+A_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
+UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 
-Threads.@threads for ik in ProgressBar(1:nk)
+Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
   if dyn_props.include_A_w
     #
@@ -211,7 +209,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
   # Calculate U^+ \d/dk U
   #
   #  Using the fixing of the guage
-  for ik in 1:nk
+  for ik in 1:k_grid.nk
     U=TB_sol.eigenvec[:,:,ik]
     for id in 1:s_dim
         UdU[:,:,id,ik]=(U')*∇U[:,:,id,ik]
@@ -231,7 +229,7 @@ Threads.@threads for ik in ProgressBar(1:nk)
 end
 #
 if dyn_props.use_UdU_for_dipoles
-  for id in 1:s_dim,ik in 1:nk
+  for id in 1:s_dim,ik in 1:k_grid.nk
     Dip_h[:,:,id,ik]=UdU[:,:,id,ik]*off_diag
   end
 end
@@ -249,14 +247,14 @@ n_steps=size(t_range)[1]
 #
 # Buildo rho_0
 #
-rho0=zeros(Complex{Float64},h_dim,h_dim,nk)
-rho0_h=zeros(Complex{Float64},h_dim,h_dim,nk)
+rho0=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+rho0_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 rho0_h[1,1,:].=1.0
 #
 # Transform in Wannier Gauge
 #
 if !dyn_props.h_gauge
-  Threads.@threads for ik in 1:nk
+  Threads.@threads for ik in 1:k_grid.nk
      rho0[:,:,ik]=HW_rotate(rho0_h[:,:,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
   end
 else
@@ -316,20 +314,20 @@ function deriv_rho(rho, t)
 	h_dim=2
         #
 	#
-	d_rho=zeros(Complex{Float64},h_dim,h_dim,nk) #
+	d_rho=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk) #
 	#
 	# Hamiltonian term
 	#
         if dyn_props.h_gauge
           # in h-space the Hamiltonian is diagonal
-	  Threads.@threads for ik in 1:nk
+	  Threads.@threads for ik in 1:k_grid.nk
              for ib in 1:h_dim, ic in 1:h_dim
   		   d_rho[ib,ic,ik] =TB_sol.eigenval[ib,ik]*rho[ib,ic,ik]-rho[ib,ic,ik]*TB_sol.eigenval[ic,ik]
              end
 	  end
         else
           # in the w-space the Hamiltonian is not diagonal
-	  Threads.@threads for ik in 1:nk
+	  Threads.@threads for ik in 1:k_grid.nk
  	     d_rho[:,:,ik]=TB_sol.H_w[:,:,ik]*rho[:,:,ik]-rho[:,:,ik]*TB_sol.H_w[:,:,ik]
 	  end
         end
@@ -338,7 +336,7 @@ function deriv_rho(rho, t)
 	#
 	E_field=get_Efield(t, field_name,itstart=itstart)
 	#
-	Threads.@threads for ik in 1:nk
+	Threads.@threads for ik in 1:k_grid.nk
 	  #
 	  # Dipole dot field
 	  #
@@ -390,7 +388,7 @@ function deriv_rho(rho, t)
                        println("...OK ")
                    end
 
-                   if ik==nk; exit() end
+                   if ik==k_grid.nk; exit() end
                end
                #
              end
@@ -406,7 +404,7 @@ function deriv_rho(rho, t)
 	# Damping
 	#
 	if T_2!=0.0 && dyn_props.damping==true
-	   Threads.@threads for ik in 1:nk
+	   Threads.@threads for ik in 1:k_grid.nk
 	     if dyn_props.h_gauge
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*(rho[:,:,ik]-rho0[:,:,ik])
        	     else
@@ -429,7 +427,7 @@ function get_polarization(rho_s)
     println("Calculate polarization: ")
     Threads.@threads for it in ProgressBar(1:nsteps)
         for id in 1:s_dim
-           for ik in 1:nk
+           for ik in 1:k_grid.nk
              if !dyn_props.h_gauge
                dip=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
                rho=HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
@@ -441,7 +439,7 @@ function get_polarization(rho_s)
 	   end
         end
     end
-    pol=pol/nk
+    pol=pol/k_grid.nk
     return pol
 end 
 
@@ -452,7 +450,7 @@ function get_current(rho_s)
     println("Calculate current: ")
     Threads.@threads for it in ProgressBar(1:nsteps)
       if dyn_props.h_gauge
-        for ik in 1:nk
+        for ik in 1:k_grid.nk
 	   rho_t_H=transpose(rho_s[it,:,:,ik])
            for id in 1:s_dim
      	      j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_h[:,:,id,ik].*rho_t_H))
@@ -461,7 +459,7 @@ function get_current(rho_s)
 	   end
 	end
       else
-        for ik in 1:nk
+        for ik in 1:k_grid.nk
 	  rho_t_w=transpose(rho_s[it,:,:,ik])
            for id in 1:s_dim
      	      j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_w[:,:,id,ik].*rho_t_w))
@@ -471,8 +469,8 @@ function get_current(rho_s)
 	end
       end
     end
-    j_intra=j_intra/nk
-    j_inter=j_inter/nk
+    j_intra=j_intra/k_grid.nk
+    j_inter=j_inter/k_grid.nk
     return j_intra,j_inter
 end 
 

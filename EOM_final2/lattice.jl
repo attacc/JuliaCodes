@@ -2,7 +2,7 @@ module LatticeTools
 
 using LinearAlgebra
 
-export Lattice,set_Lattice,K_cart_to_crys,K_crys_to_cart
+export Lattice,set_Lattice,K_cart_to_crys,K_crys_to_cart,generate_R_grid
 
 mutable struct Lattice
     dim::Int8
@@ -12,6 +12,12 @@ mutable struct Lattice
     vol::Float64
     r_vol::Float64
     b_mat_inv::Array{Float64,2}
+end
+
+mutable struct R_grid
+    R_vec::Array{Float64,2}
+    nR_dir::Array{Int,1}
+    nR::Int
 end
 
 
@@ -124,6 +130,29 @@ function set_Lattice(dim, vectors)
     )
     return lattice
 end
+
+function generate_R_grid(lattice, k_grid=nothing, n_Rx=nothing, n_Ry=nothing)
+    if k_grid!=nothing && (n_Rx!=nothing && n_Ry!=nothing)
+       println("Error colling generate_R_grid function. Provide k_grid OR n_Rx/y")
+    end
+    if n_Rx==nothing && n_Ry==nothing
+       n_Rx=k_grid.nk_dir[1]
+       n_Ry=k_grid.nk_dir[2]
+    end
+    nR=n_Ry*n_Rx
+    R_vec=zeros(Float64,lattice.dim,nR)
+    iR=1
+    for ix in 1:n_Rx,iy in 1:n_Ry
+      R_vec[:,iR]=lattice.vectors[1][:]*(ix-1)+lattice.vectors[2][:]*(iy-1)
+      iR+=1
+    end
+    r_grid=R_grid(
+                  R_vec,
+                  [n_Rx,n_Ry],
+                  nR)
+    return r_grid
+end
+
 
 function K_crys_to_cart(M_crys::Array{T,3},lattice)  where {T<:Union{Complex{Float64},Float64}}
   M_cart=similar(M_crys)
