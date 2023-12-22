@@ -136,7 +136,7 @@ end
 # Fix phase of the eigenvectors in such a way
 # to have a positive definite diagonal
 #
-function fix_eigenvec_phase(eigenvec)
+function fix_eigenvec_phase(eigenvec,ik=nothing,k_grid=nothing)
 #	println("Before phase fixing : ")
 #	show(stdout,"text/plain",eigenvec)
 	#
@@ -148,6 +148,15 @@ function fix_eigenvec_phase(eigenvec)
 	#
 	# New eigenvectors
 	#
+#        if ik!=nothing
+#          k_xy=k_grid.ik_map_inv[:,ik]
+#          dk=zeros(Float64,2)
+#          dk[1]=2.0*pi*(k_xy[1]-1.0)/k_grid.nk_dir[1]
+#          dk[2]=2.0*pi*(k_xy[2]-1.0)/k_grid.nk_dir[2]
+#          phase_m[1]*=exp(-1im*(dk[1]+dk[2]))
+#          phase_m[2]*=exp(-1im*(dk[1]+dk[2]))
+#        end
+        #
 	eigenvec[:,1]=eigenvec[:,1]*phase_m[1]
 	eigenvec[:,2]=eigenvec[:,2]*phase_m[2]
 #	println("\nAfter phase fixed : ")

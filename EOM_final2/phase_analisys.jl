@@ -67,10 +67,16 @@ println("Building Hamiltonian: ")
 #Threads.@threads for ik in ProgressBar(1:nk)
 for ik in 1:nk
    TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik])
+   #
+   # Unitary transformation
+   #
+   TB_sol.H_w[1,2,ik]=TB_sol.H_w[1,2,ik]*exp(-1im*dot(k_grid.kpt[:,ik],d_3))
+   TB_sol.H_w[2,1,ik]=conj(TB_sol.H_w[1,2,ik])
+   #
    data= eigen(TB_sol.H_w[:,:,ik])      # Diagonalize the matrix
    TB_sol.eigenval[:,ik]   = data.values
    TB_sol.eigenvec[:,:,ik] = data.vectors
-   TB_sol.eigenvec[:,:,ik] = fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik])
+   TB_sol.eigenvec[:,:,ik] = fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik],ik,k_grid)
 end
 #
 # Write Hamiltonian on disk

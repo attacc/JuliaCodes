@@ -37,7 +37,7 @@ d_2= a_cc/2.0*[1.0, -sqrt(3.0)]
 d_3=-a_cc*[1.0,0.0]
 
 
-export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc
+export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,d_1,d_2,d_3
   #
   global ndim=2
   #

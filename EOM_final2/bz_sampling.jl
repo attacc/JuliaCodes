@@ -34,14 +34,15 @@ function generate_circuit(points, n_steps)
  end
  #
  function generate_unif_grid(n_kx, n_ky, lattice)
+     scale=1.0
      nk   =n_kx*n_ky
      kpt  =zeros(Float64,lattice.dim,nk)
      ik_grid    =zeros(Int,n_kx,n_ky,1)
      ik_grid_inv=zeros(Int,lattice.dim,nk)
 
      vec_crystal=zeros(Float64,lattice.dim)
-     dx=1.0/n_kx
-     dy=1.0/n_ky
+     dx=scale/n_kx
+     dy=scale/n_ky
 
      ik=1
      for ix in 0:(n_kx-1),iy in 0:(n_ky-1)
