@@ -73,6 +73,19 @@ for ik in 1:nk
    TB_sol.eigenvec[:,:,ik] = fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik])
 end
 #
+# Write Hamiltonian on disk
+#
+h_file=open("hamiltonian_k.dat","w")
+vec_file=open("eigenvec_k.dat","w")
+for ik in 1:nk
+    write(h_file," $(real(TB_sol.H_w[2,1,ik])) $(imag(TB_sol.H_w[2,1,ik])) ")
+    write(h_file," $(TB_sol.eigenval[1,ik]) $(TB_sol.eigenval[2,ik]) \n")
+    write(vec_file," $(real(TB_sol.eigenvec[1,1,ik])) $(imag(TB_sol.eigenvec[1,1,ik])) $(real(TB_sol.eigenvec[2,1,ik])) $(imag(TB_sol.eigenvec[2,1,ik]))  \n")
+#    write(vec_file," $(real(TB_sol.eigenvec[1,2,ik])) $(imag(TB_sol.eigenvec[1,2,ik])) $(real(TB_sol.eigenvec[2,2,ik])) $(imag(TB_sol.eigenvec[2,2,ik]))  \n")
+end
+close(vec_file)
+close(h_file)
+# 
 #Print Hamiltonian info
 #
 dir_gap=minimum(TB_sol.eigenval[2,:]-TB_sol.eigenval[1,:])
