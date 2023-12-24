@@ -18,6 +18,7 @@
 \newcommand{\rr}{{\bf r}}
 \newcommand{\pp}{{\bf p}}
 \newcommand{\PP}{{\bf P}}
+\newcommand{\RR}{{\bf R}}
 \newcommand{\kk}{{\bf k}}
 \newcommand{\HH}{{\bf H}}
 \newcommand{\GG}{{\bf G}}
@@ -94,10 +95,30 @@ b_2&=&\frac{2\pi}{V} a_3 \times a_1 = \frac{2\pi}{a} \left( \frac{1}{3},  -\frac
 \section{Tight binding model}
 As simple model consider a two-band tight-binding model with only the first neighbor hopping, and parameters $t_0=2.92~eV$ and $\epsilon_B = -\epsilon_N = 2.81~eV$. The Hamiltonian reads:
 \bea
-H_{11}(\kk)&=&\epsilon_B\\
-H_{22}(\kk)&=&\epsilon_N\\
-H_{21}(\kk)&=&H^*_{12}(\kk) = t_0 \cdot e^{-i \kk_x a}\cdot \left(1+2 \cdot e^{i \kk_x \frac{3 a}{2}} \right)\cdot \cos{ \left( \frac{\sqrt{3} a}{2}\kk_y \right) }
+\tilde H_{11}(\kk)&=&\epsilon_B\\
+\tilde H_{22}(\kk)&=&\epsilon_N\\
+\tilde H_{21}(\kk)&=&H^*_{12}(\kk) = t_0 \cdot e^{-i \kk_x a}\cdot \left(1+2 \cdot e^{i \kk_x \frac{3 a}{2}} \right)\cdot \cos{ \left( \frac{\sqrt{3} a}{2}\kk_y \right) }
 \eea 
+Solving these Hamiltonian for each $\kk$ point we get the Bloch wave-function in tight-binding approximation. However we are interested only in the cell-periodic part of the tight-binding wave-functions in such a way to calculate wave-function derivatives and Berry connect.\cite{PythTB} \\
+Therefore we define a new Hamiltonian as:
+\be
+H_{ij}(\kk)=e^{i \kk \cdot (\tau_j -\tau_i) } \tilde H_{ij}(\kk) 
+\ee
+These two hamiltonian have the same eigenvalus (this is a similarity transformation) but their eigenvectors are related by:
+\be
+ C_j^{n \kk} = e^{-i \kk \tau_j} \tilde C_j^{n \kk}
+\ee
+The basis set of the two Hamiltonian are related by:
+\bea
+|\chi_j^\kk \rangle &=& \sum_\RR e^{i \kk \cdot (\RR + \tau_j)} | \phi_{\RR j} \rangle  \\
+|\tilde \chi_j^\kk \rangle &=& \sum_\RR e^{i \kk \cdot \RR } | \phi_{\RR j} \rangle  \\
+\eea
+and finally Bloch wave-function can be written as:
+\bea
+|\psi_{n \kk} \rangle &=& \sum_{\RR} \sum_j C_{n \kk}^j e^{i\kk \cdot (\RR + \tau_j) }  | \phi_{\RR j} \rangle \\
+|\psi_{n \kk} \rangle &=& \sum_{\RR} \sum_j \tilde C_{n \kk}^j e^{i\kk \cdot \RR  }  | \phi_{\RR j} \rangle
+\eea
+These result show that $ C_{n \kk}^j$ correspond to the cell periodic solution of the tight-binding, while $\tilde C_{n \kk}^j $ contains also the phase factor. These last one is the most common convention in tight-binding but it is not pratical for the calculation of Berry phase related objects.
 \section{Wannier and Hamiltonian gauge}
 The tight-binding Hamiltonian $H(\kk)$ is a analytic and continuous function of $\kk$, therefore I can define all the derivatives respect to $\kk$ without problems. When we diagonalize $H(\kk)$ on a discrete k-point grid, there is a generic phase attached to the eigenvectors that make complicated the derivative respect to $\kk$. We call Wannier gauge the space before the diagonalization  $H^{W}(\kk)$ and Hamiltonian gauge the space after the diagonalization $H^{H}(\kk)$. Wave-function in the two gauges are related by an unitary transformation:
 \begin{equation}
