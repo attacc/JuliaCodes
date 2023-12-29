@@ -68,7 +68,7 @@ cedex 9 France}
 \affiliation{\grenoble}
 
 \begin{abstract}
-In these notes I consider a simple tight-binding model in Wannier guage and write down the equation of motion of the density matrix in such a way to study its non-linear response and in particular the high-harmonic generation. I discuss all steps for the implementation in a computational code. 
+In these notes I consider a simple tight-binding model in Wannier gauge and write down the equation of motion of the density matrix in such a way to study its non-linear response and in particular the high-harmonic generation. I discuss all steps for the implementation in a computational code. 
 \end{abstract}           
 
 \maketitle
@@ -104,7 +104,7 @@ Therefore we define a new Hamiltonian as:
 \be
 H_{ij}(\kk)=e^{i \kk \cdot (\tau_j -\tau_i) } \tilde H_{ij}(\kk) 
 \ee
-These two hamiltonian have the same eigenvalus (this is a similarity transformation) but their eigenvectors are related by:
+These two Hamiltonian have the same eigenvalues (this is a similarity transformation) but their eigenvectors are related by:
 \be
  C_j^{n \kk} = e^{-i \kk \tau_j} \tilde C_j^{n \kk}
 \ee
@@ -118,7 +118,9 @@ and finally Bloch wave-function can be written as:
 |\psi_{n \kk} \rangle &=& \sum_{\RR} \sum_j C_{n \kk}^j e^{i\kk \cdot (\RR + \tau_j) }  | \phi_{\RR j} \rangle \\
 |\psi_{n \kk} \rangle &=& \sum_{\RR} \sum_j \tilde C_{n \kk}^j e^{i\kk \cdot \RR  }  | \phi_{\RR j} \rangle
 \eea
-These result show that $ C_{n \kk}^j$ correspond to the cell periodic solution of the tight-binding, while $\tilde C_{n \kk}^j $ contains also the phase factor. These last one is the most common convention in tight-binding but it is not pratical for the calculation of Berry phase related objects.
+These result show that $ C_{n \kk}^j$ correspond to the cell periodic solution of the tight-binding, while $\tilde C_{n \kk}^j $ contains also the phase factor. These last one is the most common convention in tight-binding but it is not practical for the calculation of Berry phase related objects.
+\subsection{Fixing structural gauge in two a two band model}
+In the previsou section we saw how to get the periodic part of the Bloch function in tight-binding. However in order to calculate Berry connection we have to solve the problem of the structural gauge,\cite{yue2022introduction} namely the problem that due to the numerical diagonalization the wave-function aquires a generic phase factor at each $\kk$ point. We follow the idea of Ref.~\onlinecite{silva2019high} (from a privite discussion), we fix the phase in such a way that the first element of the lowest eigenvectors is real and positive. In this wave, for a system without degenerate state we fix the phase in all the  Brillouin zone.
 \section{Wannier and Hamiltonian gauge}
 The tight-binding Hamiltonian $H(\kk)$ is a analytic and continuous function of $\kk$, therefore I can define all the derivatives respect to $\kk$ without problems. When we diagonalize $H(\kk)$ on a discrete k-point grid, there is a generic phase attached to the eigenvectors that make complicated the derivative respect to $\kk$. We call Wannier gauge the space before the diagonalization  $H^{W}(\kk)$ and Hamiltonian gauge the space after the diagonalization $H^{H}(\kk)$. Wave-function in the two gauges are related by an unitary transformation:
 \begin{equation}
@@ -217,17 +219,17 @@ where $\bb$ are the vectors connecting $\kk$ to its nearest
 		S\pw(\kk;\kk+\bb) = U(\kk) S\ph(\kk;\kk+\bb) U^\dagger(\kk+\bb)
 \ee
  
-Finally the term  $i {\partial}/{\partial \kk}$ can be calculated directly as a finite difference k-point mesh of the density matrix in the Wannier guage.
+Finally the term  $i {\partial}/{\partial \kk}$ can be calculated directly as a finite difference k-point mesh of the density matrix in the Wannier gauge.
 \end{itemize}
 
 \section{Equation of motion}
-Using the definition Eq.\ref{rperiodic} for the position operator, it is possible to write down the equation of motion(EOM) for the denity matrix in the Wannier gauge as:
+Using the definition Eq.\ref{rperiodic} for the position operator, it is possible to write down the equation of motion(EOM) for the density matrix in the Wannier gauge as:
 \begin{align}
 i\hbar\frac{\partial}{\partial t}\rho\pw_{nm}\left(\boldsymbol{k},t\right) & =\left[H\pw\left(\boldsymbol{k}\right),\rho\pw\left(\boldsymbol{k},t\right)\right]_{nm}\nonumber \\
  & +i\left|e\right|\boldsymbol{E}\left(t\right).\frac{\partial}{\partial\boldsymbol{k}}\rho\pw_{nm}\left(\boldsymbol{k},t\right)\nonumber \\
  & +\left|e\right|\boldsymbol{E}\left(t\right).\left[\boldsymbol{A}\pw\left(\boldsymbol{k}\right),\rho\pw\left(\boldsymbol{k},t\right)\right]_{nm}\label{eq:RDM_eq_motion}
 \end{align}
-Notice that in this gauge everything is smooth function of $\kk$. Then we can rotate these equations in the Hamiltonian guage, using the relations:
+Notice that in this gauge everything is smooth function of $\kk$. Then we can rotate these equations in the Hamiltonian gauge, using the relations:
 \begin{align}
 \rho_{nm}^{\left(H\right)}\left(\boldsymbol{k},t\right) & =\sum_{ab}U_{nb}^{\dagger}\left(\boldsymbol{k}\right)\rho_{ba}^{\left(W\right)}\left(\boldsymbol{k},t\right)U_{am}\left(\boldsymbol{k}\right)\\
 	\rho_{nm}^{\left(W\right)}\left(\boldsymbol{k},t\right) & =\sum_{ab}U_{nb}\left(\boldsymbol{k}\right)\rho_{ba}^{\left(H\right)}\left(\boldsymbol{k},t\right)U_{am}^{\dagger}\left(\boldsymbol{k}\right). \label{eq_rho_w}
@@ -239,7 +241,7 @@ i\hbar\frac{\partial}{\partial t}\rho_{nm}^{\left(H\right)}\left(\boldsymbol{k},
 	& +\left|e\right|\boldsymbol{E}\left(t\right).\left[\boldsymbol{A}^{\left(H\right)}\left(\boldsymbol{k}\right),\rho^{\left(H\right)}\left(\boldsymbol{k},t\right)\right]_{nm} \label{eq_rho_h}
 \end{align}
 Notice that in this gauge $A\ph(\kk)$ is composed of two terms, the rotation of $A\pw(\kk)$ and a term that is generated by the derivative in $\kk$ applied to the rotation matrices. Eq.~\ref{eq_rho_h} is obtained from Eq.~\ref{eq_rho_w}, using Eqs.~\ref{eq:RDM_eq_motion} and the fact that $(\partial_\kk  U^\dagger) U = - U^\dagger( \partial_\kk U) $.\\
-Notice that in the Hamiltonian guage we can safely include dephasing or self-energies.
+Notice that in the Hamiltonian gauge we can safely include dephasing or self-energies.
 \section{Current and polarization}	
 
 \appendix
