@@ -28,13 +28,16 @@ h_dim=2 # hamiltonian dimension
 #
 # Distance between neighbor 
 a_cc=2.632 # a.u.
+
 # Lattice vectors:
 a_1=a_cc/2.0*[3.0,  sqrt(3.0)]
 a_2=a_cc/2.0*[3.0, -sqrt(3.0)]
 
+# Atom positions
 d_1= a_cc/2.0*[1.0,  sqrt(3.0)]
 d_2= a_cc/2.0*[1.0, -sqrt(3.0)]
 d_3=-a_cc*[1.0,0.0]
+d_4= [0.0,0.0]
 
 
 export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,d_1,d_2,d_3
@@ -43,7 +46,7 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,d_1,d_2,d_3
   #
   global off_diag=.~I(h_dim)
   #
-  function Hamiltonian(k)::Matrix{Complex{Float64}}
+  function Hamiltonian(k; gauge="lattice")::Matrix{Complex{Float64}}
         #
 	H=zeros(Complex{Float64},2,2)
         #
@@ -57,7 +60,16 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,d_1,d_2,d_3
         #
 	f_k=exp(-1im*k[1]*a_cc)*(1.0+2.0*exp(1im*k[1]*3.0*a_cc/2.0)*cos(sqrt(3.0)*k[2]*a_cc/2.0))
 	H[1,2]=t_0*f_k
+        #
+        # Transform the Hamiltonian in "atomic gauge" see notes
+        #
+        if gauge=="atomic"
+          delta_tau=d_4-d_2
+          H[1,2]=H[1,2]*exp(1im*dot(k,delta_tau))
+        end
+        # 
 	H[2,1]=conj(H[1,2])
+        #
 	return H
    end
    #
