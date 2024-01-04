@@ -64,8 +64,8 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,d_1,d_2,d_3
         # Transform the Hamiltonian in "atomic gauge" see notes
         #
         if gauge=="atomic"
-          delta_tau=d_4-d_2
-          H[1,2]=H[1,2]*exp(1im*dot(k,delta_tau))
+          delta_tau=d_3-d_4
+          H[1,2]=H[1,2]*exp(-1im*dot(k,delta_tau))
         end
         # 
 	H[2,1]=conj(H[1,2])
