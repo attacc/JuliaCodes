@@ -65,7 +65,7 @@ dyn_props.use_dipoles=true
 #
 # Use UdU for dipoles
 #
-dyn_props.use_UdU_for_dipoles=false #true
+dyn_props.use_UdU_for_dipoles=true
 
 # Include drho/dk in the dynamics
 dyn_props.include_drho_dk=false
@@ -99,6 +99,7 @@ println(" Number of threads: ",Threads.nthreads())
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 TB_sol.H_w=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
     H_w=Hamiltonian(k_grid.kpt[:,ik])
     data= eigen(H_w)      # Diagonalize the matrix

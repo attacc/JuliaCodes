@@ -197,8 +197,8 @@ function Grad_U(ik, k_grid, lattice, TB_sol)
       #  
       if k_grid.nk_dir[id]==1; continue end
       #
-      ik_plus  ,border_k_plus =get_k_neighbor(ik,id, 1,k_grid)
-      ik_minus ,border_k_minus=get_k_neighbor(ik,id,-1,k_grid)
+      ik_plus  =get_k_neighbor(ik,id, 1,k_grid)
+      ik_minus =get_k_neighbor(ik,id,-1,k_grid)
       #
       dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id] 
       #
@@ -210,13 +210,7 @@ function Grad_U(ik, k_grid, lattice, TB_sol)
       #
       eigenvec=TB_sol.eigenvec[:,:,ik]
       #
-      if border_k_plus
-        dU[:,:,id]=(eigenvec-eigenvec_m)/(dk)
-      elseif border_k_minus
-        dU[:,:,id]=(eigenvec_p-eigenvec)/(dk)
-      else
-        dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
-      end
+      dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
       #
       dH_eigenval[:,id]=(eigenval_p-eigenval_m)/(2.0*dk)
       #
@@ -286,8 +280,8 @@ function Evaluate_Dk_rho(rho, ik, k_grid, U, lattice)
     #
     if k_grid.nk_dir[id]==1; continue end
     #
-    ik_plus ,border_k_plus =get_k_neighbor(ik,id, 1,k_grid)
-    ik_minus,border_k_minus=get_k_neighbor(ik,id,-1,k_grid)
+    ik_plus =get_k_neighbor(ik,id, 1,k_grid)
+    ik_minus=get_k_neighbor(ik,id,-1,k_grid)
     #
     dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id]
     #
@@ -295,13 +289,7 @@ function Evaluate_Dk_rho(rho, ik, k_grid, U, lattice)
     rho_minus=rho[:,:,ik_minus]
     rho_k    =rho[:,:,ik]
     #
-    if border_k_plus
-      dk_rho[:,:,id]=(rho_k-rho_minus)/(dk)
-    elseif border_k_minus
-      dk_rho[:,:,id]=(rho_plus-rho_k)/(dk)
-    else
-      dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
-    end
+    dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
     #
   end
   #

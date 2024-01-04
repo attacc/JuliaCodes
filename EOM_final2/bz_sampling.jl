@@ -85,14 +85,11 @@ function generate_circuit(points, n_steps)
      # shift the k-points by an integer step
      ik_n[id] =ik_n[id]+istep 
 #
-     border_k=false
      d_size=k_grid.nk_dir[id]
      if ik_n[id] > d_size
         ik_n[id]=ik_n[id]-d_size
-        border_k=true
      elseif ik_n[id]<=0
         ik_n[id]=ik_n[id]+d_size
-        border_k=true
      end
 #
      ik_indx=[1,1,1]
@@ -100,7 +97,7 @@ function generate_circuit(points, n_steps)
         ik_indx[id]=ik_n[id]
      end
      ik_n=k_grid.ik_map[ik_indx[1],ik_indx[2],ik_indx[3]]
-     return ik_n,border_k
+     return ik_n
  end
  #
 end

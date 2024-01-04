@@ -118,7 +118,7 @@ and finally Bloch wave-function can be written as:
 |\psi_{n \kk} \rangle &=& \sum_{\RR} \sum_j C_{n \kk}^j e^{i\kk \cdot (\RR + \tau_j) }  | \phi_{\RR j} \rangle \\
 |\psi_{n \kk} \rangle &=& \sum_{\RR} \sum_j \tilde C_{n \kk}^j e^{i\kk \cdot \RR  }  | \phi_{\RR j} \rangle
 \eea
-These result show that $ C_{n \kk}^j$ correspond to the cell periodic solution of the tight-binding, while $\tilde C_{n \kk}^j $ contains also the phase factor. These last one is the most common convention in tight-binding but it is not practical for the calculation of Berry phase related objects.
+These results show that $ C_{n \kk}^j$ correspond to the cell periodic solution of the tight-binding and in the literature this choice is called "atomic gauge", while $\tilde C_{n \kk}^j $ contains also the phase factor and it is called "lattice gauge".\cite{wanniertools} These last one is the most common convention in tight-binding but it is not practical for the calculation of Berry phase related objects.
 \subsection{Fixing structural gauge in two a two band model}
 In the previsou section we saw how to get the periodic part of the Bloch function in tight-binding. However in order to calculate Berry connection we have to solve the problem of the structural gauge,\cite{yue2022introduction} namely the problem that due to the numerical diagonalization the wave-function aquires a generic phase factor at each $\kk$ point. We follow the idea of Ref.~\onlinecite{silva2019high} (from a privite discussion), we fix the phase in such a way that the first element of the lowest eigenvectors is real and positive. In this wave, for a system without degenerate state we fix the phase in all the  Brillouin zone.
 \section{Wannier and Hamiltonian gauge}
