@@ -109,7 +109,7 @@ Or in a matrix notation:
 H(\kk)&=&V^\dagger(\kk) \tilde H(\kk) V(\kk) \\
 V_{ij}(\kk)&=& e^{i\kk \tau_i} \delta_{i,j}
 \eea
-These two Hamiltonian have the same eigenvalues (this is a similarity transformation) but their eigenvectors are related by:
+These two Hamiltonians have the same eigenvalues (this is a similarity transformation) but their eigenvectors are related by:
 \be
  C_j^{n \kk} = e^{-i \kk \tau_j} \tilde C_j^{n \kk}
 \ee
@@ -159,7 +159,7 @@ where $\partial_\alpha = \partial/\partial_{\kk_\alpha}$. We consider the second
 \ee
 where $ H^{(W)}_\alpha =\partial_\alpha  H^{(W)}$. Then we can define the derivative respect to $\kk$ of an eigenvector as:
 \be
-\ket{ \partial_\alpha u_{n,\boldsymbol{k}}^{\left(H\right)}}=	\frac{\ket{ u_{n,\boldsymbol{k}+\Delta \kk}^{\left(H\right)}}-\ket{ u_{n,\boldsymbol{k}}^{\left(H\right)}}}{\Delta \kk}= \sum_{m} \frac{\bra{u_{m,\boldsymbol{k} }} H^{(W)}_\alpha   \ket{u_{n,\boldsymbol{k} }}}{\epsilon^{(H)}_{m\kk}-\epsilon(H)_{n\kk}} \ket{u_{m,\boldsymbol{k} }}
+\ket{ \partial_\alpha u_{n,\boldsymbol{k}}^{\left(H\right)}}=	\frac{\ket{ u_{n,\boldsymbol{k}+\Delta \kk}^{\left(H\right)}}-\ket{ u_{n,\boldsymbol{k}}^{\left(H\right)}}}{\Delta \kk}= \sum_{m \neq n} \frac{\bra{u_{m,\boldsymbol{k} }} H^{(W)}_\alpha   \ket{u_{n,\boldsymbol{k} }}}{\epsilon^{(H)}_{m\kk}-\epsilon^{(H)}_{n\kk}} \ket{u_{m,\boldsymbol{k} }}
 \ee
 in matrix notation it becomes $ \partial_\alpha U_{mn} = \sum_l U_{ml} D^{(H)}_{ln\alpha}$ and
 \begin{equation}
