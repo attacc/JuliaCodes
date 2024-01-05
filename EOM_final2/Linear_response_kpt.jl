@@ -64,7 +64,7 @@ println(" nk = ",k_grid.nk)
 println("Building Hamiltonian: ")
 #Threads.@threads for ik in ProgressBar(1:nk)
 for ik in 1:k_grid.nk
-   TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik])
+   TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik],gauge="atomic")
    data= eigen(TB_sol.H_w[:,:,ik])      # Diagonalize the matrix
    TB_sol.eigenval[:,ik]   = data.values
    TB_sol.eigenvec[:,:,ik] = data.vectors

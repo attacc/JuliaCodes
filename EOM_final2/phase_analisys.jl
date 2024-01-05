@@ -137,3 +137,12 @@ Threads.@threads for ik in ProgressBar(1:nk)
   end
   #
 end
+
+fig = figure("Eigenvalues",figsize=(10,20))
+plot(real(TB_sol.eigenvec[1,1,:]),label="Re[V_1[1]]") 
+plot(imag(TB_sol.eigenvec[1,1,:]),label="Im[V_1[1]]") 
+plot(real(TB_sol.eigenvec[2,1,:]),label="Re[V_1[2]]") 
+plot(imag(TB_sol.eigenvec[2,1,:]),label="Re[V_1[2]]") 
+legend()
+PyPlot.show();
+
