@@ -25,6 +25,7 @@ include("bz_sampling.jl")
 using .BZ_sampling
 
 lattice=set_Lattice(2,[a_1,a_2])
+oribtals=
 # 
 # Code This code is in Hamiltonian space
 # in dipole approximation only at the K-point
@@ -101,9 +102,10 @@ else
 end
 
 # Dipoles
+dk=0.01
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,nk,s_dim)
 Threads.@threads for ik in ProgressBar(1:nk)
-    ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,0.01)
+    ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,dk)
     ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol)
   if use_Dipoles
     for id in 1:s_dim

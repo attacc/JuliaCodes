@@ -23,7 +23,7 @@ using .LatticeTools
 include("bz_sampling.jl")
 using .BZ_sampling
 
-lattice=set_Lattice(2,[a_1,a_2])
+lattice =set_Lattice(2,[a_1,a_2])
 # 
 # Code This code is in Hamiltonian space
 # in dipole approximation only at the K-point
@@ -84,10 +84,12 @@ else
   println("Building Dipoles using UdU/dk:")
 end
 
+dk=0.01
+
 # Dipoles
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk,s_dim)
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
-    ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,0.01)
+    ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,dk)
     ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol)
   if use_Dipoles
     for id in 1:s_dim

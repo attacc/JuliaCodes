@@ -2,7 +2,7 @@ module LatticeTools
 
 using LinearAlgebra
 
-export Lattice,set_Lattice,K_cart_to_crys,K_crys_to_cart,generate_R_grid
+export Lattice,set_Lattice,K_cart_to_crys,K_crys_to_cart,generate_R_grid,set_Orbitals
 
 mutable struct Lattice
     dim::Int8
@@ -18,6 +18,11 @@ mutable struct R_grid
     R_vec::Array{Float64,2}
     nR_dir::Array{Int,1}
     nR::Int
+end
+
+mutable struct Orbitals_tau
+    nOrb::Int
+    tau::Array{Array{Float64,1}}
 end
 
 
@@ -129,6 +134,13 @@ function set_Lattice(dim, vectors)
         b_mat_inv
     )
     return lattice
+end
+
+function set_Orbitals(nOrb, tau_vectors)
+    orbitals_tau=Orbitals_tau(
+      nOrb,
+      tau_vectors)
+    return orbitals_tau
 end
 
 function generate_R_grid(lattice, k_grid=nothing, n_Rx=nothing, n_Ry=nothing)

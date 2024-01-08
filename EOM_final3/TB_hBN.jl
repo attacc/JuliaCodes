@@ -34,13 +34,16 @@ a_1=a_cc/2.0*[3.0,  sqrt(3.0)]
 a_2=a_cc/2.0*[3.0, -sqrt(3.0)]
 
 # Atom positions
-d_1= a_cc/2.0*[1.0,  sqrt(3.0)]
-d_2= a_cc/2.0*[1.0, -sqrt(3.0)]
-d_3=-a_cc*[1.0,0.0]
-d_4= [0.0,0.0]
+d_1=      [0.0,0.0]
+d_2=-a_cc*[1.0,0.0]
+#d_1= a_cc/2.0*[1.0,  sqrt(3.0)]
+#d_2= a_cc/2.0*[1.0, -sqrt(3.0)]
+#d_3=-a_cc*[1.0,0.0]
+#d_4= [0.0,0.0]
 
+orbitals=set_Orbitals(2,[d_1,d_2])
 
-export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,d_1,d_2,d_3
+export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals
   #
   global ndim=2
   #
@@ -64,7 +67,7 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,d_1,d_2,d_3
         # Transform the Hamiltonian in "atomic gauge" see notes
         #
         if gauge=="atomic"
-          delta_tau=d_3-d_4
+          delta_tau=d_2-d_1
           H[1,2]=H[1,2]*exp(-1im*dot(k,delta_tau))
         end
         # 
