@@ -36,15 +36,15 @@ lattice=set_Lattice(2,[a_1,a_2])
 # if use_Dipoles=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_Dipoles=true
+use_Dipoles=true #false
 
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=128
-n_k2=1
+n_k1=64
+n_k2=64
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
@@ -126,9 +126,9 @@ end
 # External field and response parameters
 # 
 E_field_ver=[1.0,0.0]
-freqs_range  =[0.0/ha2ev, 15.0/ha2ev] # eV
+freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
 eta          =0.15/ha2ev
-freqs_nsteps =200
+freqs_nsteps =400
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 
 #

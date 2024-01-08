@@ -233,6 +233,9 @@ end
 
 function Grad_H(ik, k_grid, lattice, Hamiltonian, dk=0.01)
     #
+#    gauge="lattice"
+    gauge="atomic"
+    #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
     #
@@ -257,9 +260,9 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, dk=0.01)
       k_plus[id] =k_grid.kpt[id,ik]+dk
       k_minus[id]=k_grid.kpt[id,ik]-dk
       #
-      H_plus =Hamiltonian(k_plus)
+      H_plus =Hamiltonian(k_plus,  gauge=gauge)
       #
-      H_minus=Hamiltonian(k_minus)
+      H_minus=Hamiltonian(k_minus, gauge=gauge)
       #
       dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
       #
