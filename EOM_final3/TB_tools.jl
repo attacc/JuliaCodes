@@ -273,7 +273,7 @@ end
 # For the derivative of the Hamiltonian
 # I recalcualte it because H(k+G)/=H(k)
 
-function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, gauge=TB_lattice, dk=0.01)
+function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, gauge=TB_lattice)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
@@ -288,35 +288,52 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, gauge=TB_lattice, dk=0
     # Derivative by finite differences, 
     # recalculating the Hamiltonian
     #
-    k_plus =copy(k_grid.kpt[:,ik])
-    k_minus=copy(k_grid.kpt[:,ik])
-    #
     for id in 1:s_dim
       #
-      # Just to be consistent, this line can be removed
       if k_grid.nk_dir[id]==1; continue end
       #
-      k_plus[id] =k_grid.kpt[id,ik]+dk
-      k_minus[id]=k_grid.kpt[id,ik]-dk
-      #
-      H_plus =Hamiltonian(k_plus,  gauge=gauge)
-      #
-      H_minus=Hamiltonian(k_minus, gauge=gauge)
+      if gauge==TB_lattice
+        #  
+        k_plus =copy(k_grid.kpt[:,ik])
+        k_minus=copy(k_grid.kpt[:,ik])
+        #
+        vec_dk=lattice.rvectors[id]/k_grid.nk_dir[id]
+        dk=norm(vec_dk)
+        #
+        k_plus =k_plus +vec_dk
+        k_minus=k_minus-vec_dk
+        #
+        H_plus =Hamiltonian(k_plus,  gauge=gauge)
+        H_minus=Hamiltonian(k_minus, gauge=gauge)
+        #
+      else
+        #
+        # In the atomic gauge U is periodic
+        # but I need to add the part coming from the Bloch phase
+        #
+        ik_plus  =get_k_neighbor(ik,id, 1,k_grid)
+        ik_minus =get_k_neighbor(ik,id,-1,k_grid)
+        #
+        dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id]
+        #
+        H_plus =TB_sol.H_w[:,:,ik_plus]
+        H_minus=TB_sol.H_w[:,:,ik_minus]
+        #
+      end
       #
       dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
       #
-      k_plus =copy(k_grid.kpt[:,ik])
-      k_minus=copy(k_grid.kpt[:,ik])
-      #     
     end
+    #
+    dH_w  =K_crys_to_cart(dH_w,lattice)
     #
     # If gauge is "atomic" apply correction to ∇H
     #
     if gauge==TB_atomic
        d_tau=orbitals.tau[2]-orbitals.tau[1]     
        k_dot_dtau=dot(k_grid.kpt[:,ik],d_tau)     
-       dH_w[1,2,:]=exp( 1im*k_dot_dtau)*(dH_w[1,2,:]+1im*d_tau*TB_sol.H_w[1,2,ik])
-       dH_w[2,1,:]=exp(-1im*k_dot_dtau)*(dH_w[2,1,:]-1im*d_tau*TB_sol.H_w[2,1,ik])
+       dH_w[1,2,:]=exp( 1im*k_dot_dtau)*(dH_w[1,2,:]+1im*d_tau[:]*TB_sol.H_w[1,2,ik])
+       dH_w[2,1,:]=exp(-1im*k_dot_dtau)*(dH_w[2,1,:]-1im*d_tau[:]*TB_sol.H_w[2,1,ik])
     end
     #
     return dH_w
