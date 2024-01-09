@@ -61,14 +61,14 @@ dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-dyn_props.use_dipoles=true
+dyn_props.use_dipoles=false
 #
 # Use UdU for dipoles
 #
 dyn_props.use_UdU_for_dipoles=false
 
 # Include drho/dk in the dynamics
-dyn_props.include_drho_dk=false
+dyn_props.include_drho_dk=true
 
 # Include A_w in the calculation of A_h
 dyn_props.include_A_w=true
