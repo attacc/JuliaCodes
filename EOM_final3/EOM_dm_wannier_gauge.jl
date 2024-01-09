@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=128
-n_k2=1
+n_k1=24
+n_k2=24
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -53,7 +53,7 @@ println(" nk = ",k_grid.nk)
 # Hamiltonian gauge:  h_gauge = true  
 # Wannier gauge    :  h_gauge = false
 #
-dyn_props.h_gauge=true
+dyn_props.h_gauge=false
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -96,12 +96,16 @@ println("* * * Full coupling with r = id/dk + A_w * * * ")
 println(" Field name : ",field_name)
 println(" Number of threads: ",Threads.nthreads())
 
+#TB_gauge=TB_lattice
+TB_gauge=TB_atomic
+println("Tight-binding gauge : $TB_gauge ")
+
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 TB_sol.H_w=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
-    H_w=Hamiltonian(k_grid.kpt[:,ik],gauge="atomic")
+    H_w=Hamiltonian(k_grid.kpt[:,ik],gauge=TB_gauge)
     data= eigen(H_w)      # Diagonalize the matrix
     TB_sol.eigenval[:,ik]   = data.values
     TB_sol.eigenvec[:,:,ik] = data.vectors
@@ -133,13 +137,14 @@ Dip_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 ∇H_h =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 ∇eigenval=zeros(Complex{Float64},h_dim,s_dim,k_grid.nk)
 
+
 println("Building ∇H and Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
 # Dipoles 
   #Gradient of the Hamiltonian by finite difference 
-  ∇H_w[:,:,:,ik]=Grad_H(ik, k_grid, lattice, Hamiltonian, 0.01)
+  ∇H_w[:,:,:,ik]=Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge)
   #Gradient of eigenvectors/eigenvalus on the regular grid
-  ∇U[:,:,:,ik],∇eigenval[:,:,ik]=Grad_U(ik, k_grid, lattice, TB_sol)
+  ∇U[:,:,:,ik],∇eigenval[:,:,ik]=Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge)
   #
   # Build \nabla H_h
   #
@@ -537,7 +542,7 @@ if props.eval_pol
   write(f,header)
   write(f,"#time[fs] polarization_x  polarization_y\n") 
   for it in 1:n_steps
-    write(f,"$(t_and_E[it,1]) $(pol[it,1])  $(pol[it,2]) \n")
+    write(f,"$(t_and_E[it,1]), $(pol[it,1]),  $(pol[it,2]) \n")
   end
   close(f)
 end
@@ -548,7 +553,7 @@ if props.eval_curr
   write(f,header)
   write(f,"#time[fs] j_intra_x  j_intra_y  j_inter_x  j_inter_y\n") 
   for it in 1:n_steps
-      write(f,"$(t_and_E[it,1]) $(j_intra[it,1])  $(j_intra[it,2])  $(j_inter[it,1])  $(j_inter[it,2]) \n")
+      write(f,"$(t_and_E[it,1]), $(j_intra[it,1]),  $(j_intra[it,2]),  $(j_inter[it,1]),  $(j_inter[it,2]) \n")
   end
   close(f)
 end
@@ -557,6 +562,6 @@ f = open("external_field.csv","w")
 write(f,header)
 write(f,"#time[fs]  efield_x efield_y\n") 
 for it in 1:n_steps
-  write(f,"$(t_and_E[it,1])  $(t_and_E[it,2])  $(t_and_E[it,3]) \n")
+  write(f,"$(t_and_E[it,1]),  $(t_and_E[it,2]),  $(t_and_E[it,3]) \n")
 end
 

@@ -69,8 +69,7 @@ function damp_it(times, pol,T2,itstart)
     return pol
 end
 
-#df = CSV.read("polarization.csv",DataFrame)
-df = CSV.read("polarization.csv_H",DataFrame)
+df = CSV.read("polarization.csv",DataFrame, comment="#",delim=',')
 pol_and_times=Matrix(df)
 e_vec=[1.0, 0.0]
 
@@ -80,6 +79,7 @@ println("Spacial dimensions :",s_dim)
 println("Number of steps    :",n_steps)
 
 pol  =pol_and_times[:,2:s_dim+1]
+println(pol_and_times[1:10,1])
 times=pol_and_times[:,1]*fs2aut
 
 freqs_range  =[0.0/ha2ev, 20.0/ha2ev] # eV
@@ -99,7 +99,7 @@ if T2 !=0.0
 end
 pol_w=FFT_1D(times, freqs, pol, e_vec)
 # I multiply for -1im lost somewhere
-pol_w=1im*Divide_by_the_field(pol_w,times,itstart)
+pol_w=-1im*Divide_by_the_field(pol_w,times,itstart)
 #
 # Write data on file
 #

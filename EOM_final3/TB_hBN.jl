@@ -91,11 +91,14 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice
         # therefore in the cell I have only a second atom at t_n=-d_3
         # all the others are connected by a vector R but \delta_{R,0}
         #
+        # Berry Connection is nothing else the the gradient
+        # of the similarity transformation
+        # VdV see TB_tools.jl
+        #
 	A=zeros(Complex{Float64},2,2,ndim)
-        A[1,1,1]=0
-        A[2,2,1]=-d_3[1]
-	A[1,1,2]=0.0 #sqrt(3)/2.0*a_cc
-        A[2,2,2]=-d_3[2]
+        for ih in 1:h_dim
+          A[ih,ih,:]=-1im*orbitals.tau[ih][:]
+        end
 	return A
    end
    #
