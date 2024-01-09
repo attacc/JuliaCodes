@@ -197,18 +197,47 @@ function Grad_U(ik, k_grid, lattice, TB_sol, gauge=TB_lattice)
       #  
       if k_grid.nk_dir[id]==1; continue end
       #
-      ik_plus  =get_k_neighbor(ik,id, 1,k_grid)
-      ik_minus =get_k_neighbor(ik,id,-1,k_grid)
+      # In lattice gauge U is not periodic 
+      # I need to recalculate it beyond the BZ
       #
-      dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id] 
-      #
-      eigenval_p=TB_sol.eigenval[:,ik_plus]
-      eigenvec_p=TB_sol.eigenvec[:,:,ik_plus]
-      #
-      eigenval_m=TB_sol.eigenval[:,ik_minus]
-      eigenvec_m=TB_sol.eigenvec[:,:,ik_minus]
-      #
-      eigenvec=TB_sol.eigenvec[:,:,ik]
+      if gauge==TB_lattice
+        #
+        k_plus =copy(k_grid.kpt[:,ik])
+        k_minus=copy(k_grid.kpt[:,ik])
+        #
+        vec_dk=lattice.rvectors[id]/k_grid.nk_dir[id]
+        dk=norm(vec_dk)
+        #
+        k_plus =k_plus +vec_dk
+        k_minus=k_minus-vec_dk
+        #
+        H_plus =Hamiltonian(k_plus,  gauge=gauge)
+        H_minus=Hamiltonian(k_minus, gauge=gauge)
+        #  
+        data_p=eigen(H_plus)      # Diagonalize the matrix
+        data_m=eigen(H_minus)      # Diagonalize the matrix
+        eigenvec_m= fix_eigenvec_phase(data_m.vectors)
+        eigenvec_p= fix_eigenvec_phase(data_p.vectors)
+        eigenval_m= data_m.values
+        eigenval_p= data_p.values
+        #
+      else
+        #
+        # In the atomic gauge U is periodic
+        # but I need to add the part coming from the Bloch phase
+        #
+        ik_plus  =get_k_neighbor(ik,id, 1,k_grid)
+        ik_minus =get_k_neighbor(ik,id,-1,k_grid)
+        #
+        dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id] 
+        #
+        eigenval_p=TB_sol.eigenval[:,ik_plus]
+        eigenvec_p=TB_sol.eigenvec[:,:,ik_plus]
+        #
+        eigenval_m=TB_sol.eigenval[:,ik_minus]
+        eigenvec_m=TB_sol.eigenvec[:,:,ik_minus]
+        #
+      end
       #
       dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
       #
@@ -224,7 +253,17 @@ function Grad_U(ik, k_grid, lattice, TB_sol, gauge=TB_lattice)
     dU         =K_crys_to_cart(dU,lattice)
     dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
     #
-    if gauge=TB_atomic
+    # Correction in atomic gauge
+    #
+    if gauge==TB_atomic
+      VdV=zeros(Complex{Float64},h_dim,h_dim,s_dim)
+      for ih in 1:h_dim
+        VdV[ih,ih,:]=-1im*orbitals.tau[ih][:]
+      end
+      U=TB_sol.eigenvec[:,:,ik]
+      for id in 1:s_dim
+        dU[:,:,id]=dU[:,:,id]+(U')*VdV[:,:,id]*U
+      end
     end
     #
     return dU,dH_eigenval

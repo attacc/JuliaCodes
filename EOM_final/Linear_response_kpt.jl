@@ -34,15 +34,15 @@ lattice=set_Lattice(2,[a_1,a_2])
 # if use_Dipoles=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_Dipoles=true
+use_Dipoles=false
 
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=96
-n_k2=96
+n_k1=64
+n_k2=64
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 

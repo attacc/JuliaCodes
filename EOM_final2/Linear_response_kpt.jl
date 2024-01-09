@@ -36,7 +36,7 @@ lattice=set_Lattice(2,[a_1,a_2])
 # if use_Dipoles=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_Dipoles=true #false
+use_Dipoles=false
 
 
 # a generic off-diagonal matrix example (0 1; 1 0)
