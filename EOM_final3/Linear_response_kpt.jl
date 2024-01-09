@@ -7,7 +7,6 @@ using DataFrames
 using Base.Threads
 using PyPlot
 
-
 include("TB_hBN.jl")
 using .hBN2D
 
@@ -38,13 +37,12 @@ lattice =set_Lattice(2,[a_1,a_2])
 #
 use_Dipoles=true
 
-
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=96
-n_k2=96
+n_k1=24
+n_k2=24
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
@@ -87,21 +85,23 @@ if use_Dipoles
 else
   println("Building Dipoles using UdU/dk:")
 end
-
-dk=0.01
-
+# 
 # Dipoles
+#
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk,s_dim)
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
-    ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,TB_gauge)
-    ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge)
+  #  
+  ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,TB_gauge)
+  #
+  ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge)
+  #
   if use_Dipoles
     for id in 1:s_dim
       Dip_h[:,:,ik,id]=HW_rotate(∇H_w[:,:,id],TB_sol.eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
       Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
     end
-    
+#    
 # Now I have to divide for the energies
 #
 #  p = \grad_k H 
@@ -127,7 +127,6 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   end
   #
 end
-
 #
 # External field and response parameters
 # 
@@ -173,7 +172,6 @@ function generate_header(k_grid,eta,Efield_ver,freqs)
 end
 
 xhi = Linear_response(freqs, E_field_ver, eta)
-
 # 
 # Plot and write on disk
 #
