@@ -41,15 +41,18 @@ d_2=-a_cc*[1.0,0.0]
 #d_3=-a_cc*[1.0,0.0]
 #d_4= [0.0,0.0]
 
+TB_lattice="lattice"
+TB_atomic ="atomic"
+
 orbitals=set_Orbitals(2,[d_1,d_2])
 
-export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals
+export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice,TB_atomic
   #
   global ndim=2
   #
   global off_diag=.~I(h_dim)
   #
-  function Hamiltonian(k; gauge="lattice")::Matrix{Complex{Float64}}
+  function Hamiltonian(k; gauge=TB_lattice)::Matrix{Complex{Float64}}
         #
 	H=zeros(Complex{Float64},2,2)
         #
@@ -66,7 +69,7 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals
         #
         # Transform the Hamiltonian in "atomic gauge" see notes
         #
-        if gauge=="atomic"
+        if gauge==TB_atomic
           d_tau=orbitals.tau[2]-orbitals.tau[1]
           k_dot_dtau=dot(k,d_tau)
           H[1,2]=H[1,2]*exp(-1im*k_dot_dtau)

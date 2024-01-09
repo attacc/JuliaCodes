@@ -176,7 +176,7 @@ end
 # In this subroutine I do not recalculate H because
 # I fix the phase
 #
-function Grad_U(ik, k_grid, lattice, TB_sol)
+function Grad_U(ik, k_grid, lattice, TB_sol, gauge=TB_lattice)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
@@ -224,6 +224,9 @@ function Grad_U(ik, k_grid, lattice, TB_sol)
     dU         =K_crys_to_cart(dU,lattice)
     dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
     #
+    if gauge=TB_atomic
+    end
+    #
     return dU,dH_eigenval
     #
 end
@@ -231,10 +234,7 @@ end
 # For the derivative of the Hamiltonian
 # I recalcualte it because H(k+G)/=H(k)
 
-function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, dk=0.01)
-    #
-    gauge="lattice"
-#    gauge="atomic"
+function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, gauge=TB_lattice, dk=0.01)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
@@ -273,11 +273,11 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, dk=0.01)
     #
     # If gauge is "atomic" apply correction to ∇H
     #
-    if gauge=="atomic"
+    if gauge==TB_atomic
        d_tau=orbitals.tau[2]-orbitals.tau[1]     
        k_dot_dtau=dot(k_grid.kpt[:,ik],d_tau)     
-       dH_w[1,2,:]=dH_w[1,2,:]*exp( 1im*k_dot_dtau)+1im*d_tau*TB_sol.H_w[1,2,ik]
-       dH_w[2,1,:]=dH_w[2,1,:]*exp(-1im*k_dot_dtau)-1im*d_tau*TB_sol.H_w[2,1,ik]
+       dH_w[1,2,:]=exp( 1im*k_dot_dtau)*(dH_w[1,2,:]+1im*d_tau*TB_sol.H_w[1,2,ik])
+       dH_w[2,1,:]=exp(-1im*k_dot_dtau)*(dH_w[2,1,:]-1im*d_tau*TB_sol.H_w[2,1,ik])
     end
     #
     return dH_w
