@@ -68,6 +68,9 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice
 	H[1,2]=t_0*f_k
         #
         # Transform the Hamiltonian in "atomic gauge" see notes
+        # the "atomic gauge" is equivalent to the periodic part
+        # of the Bloch functions only, while the "lattice guage"
+        # includes also the k-dependent phase factor 
         #
         if gauge==TB_atomic
           d_tau=orbitals.tau[2]-orbitals.tau[1]
