@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=48
-n_k2=1
+n_k1=24
+n_k2=24
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -61,17 +61,17 @@ dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-dyn_props.use_dipoles=false
+dyn_props.use_dipoles=true
 #
 # Use UdU for dipoles
 #
 dyn_props.use_UdU_for_dipoles=false
 
 # Include drho/dk in the dynamics
-dyn_props.include_drho_dk=true
+dyn_props.include_drho_dk=false
 
 # Include A_w in the calculation of A_h
-dyn_props.include_A_w=true
+dyn_props.include_A_w=false
 
 # Print properties on disk
 props.print_dm =true

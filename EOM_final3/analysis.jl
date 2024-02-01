@@ -6,6 +6,8 @@ using CSV
 using DataFrames
 using FFTW
 using ProgressBars
+using PyPlot
+
 
 include("TB_hBN.jl")
 using .hBN2D
@@ -82,8 +84,8 @@ pol  =pol_and_times[:,2:s_dim+1]
 println(pol_and_times[1:10,1])
 times=pol_and_times[:,1]*fs2aut
 
-freqs_range  =[0.0/ha2ev, 20.0/ha2ev] # eV
-freqs_nsteps =200
+freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
+freqs_nsteps =250
 
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 
@@ -105,3 +107,9 @@ pol_w=-1im*Divide_by_the_field(pol_w,times,itstart)
 #
 df_out= DataFrame( freqs = freqs*ha2ev, re_pol_w = real.(pol_w), im_pol_w=imag.(pol_w))
 CSV.write("pol_w.cvs", df_out; quotechar=' ', delim=' ')  
+
+fig = figure("Real-time response",figsize=(10,20))
+plot(freqs*ha2ev,imag(pol_w))
+plot(freqs*ha2ev,real(pol_w))
+PyPlot.show();
+
