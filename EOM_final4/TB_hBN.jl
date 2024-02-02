@@ -100,7 +100,10 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice
         #
 	A=zeros(Complex{Float64},2,2,ndim)
         for ih in 1:h_dim
-          A[ih,ih,:]=-1im*orbitals.tau[ih][:]
+          for id in 1:s_dim
+             if k_grid.nk_dir[id]==1; continue end
+             A[ih,ih,id]=-1im*orbitals.tau[ih][id]
+          end
         end
 	return A
    end

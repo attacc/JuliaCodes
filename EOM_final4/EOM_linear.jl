@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=48
-n_k2=1
+n_k1=1
+n_k2=48
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -68,7 +68,7 @@ dyn_props.use_dipoles=true
 dyn_props.use_UdU_for_dipoles=true
 
 # Include drho/dk in the dynamics
-dyn_props.include_drho_dk=true 
+dyn_props.include_drho_dk=false
 # Include A_w in the calculation of A_h
 dyn_props.include_A_w=false
 
@@ -261,7 +261,7 @@ T_2=6.0*fs2aut   # fs
 t_start=0.0
 dt =0.01*fs2aut  # fs
 t_end  =T_2*12.0
-E_vec=[1.0,0.0]
+E_vec=[1.0,1.0]
 #
 t_range = t_start:dt:t_end
 n_steps=size(t_range)[1]
