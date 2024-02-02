@@ -30,7 +30,7 @@ off_diag=.~I(h_dim)
 
 # K-points
 n_k1=1
-n_k2=48
+n_k2=96
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -61,14 +61,14 @@ dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-dyn_props.use_dipoles=true
+dyn_props.use_dipoles=false
 #
 # Use UdU for dipoles
 #
 dyn_props.use_UdU_for_dipoles=true
 
 # Include drho/dk in the dynamics
-dyn_props.include_drho_dk=false
+dyn_props.include_drho_dk=true
 # Include A_w in the calculation of A_h
 dyn_props.include_A_w=false
 
@@ -79,8 +79,10 @@ props.eval_pol =true
 
 check_dk_rho=false
 
-#field_name="PHHG"
-field_name="delta"
+field_name="PHHG"
+#field_name="delta"
+Int  = 2.64E5*kWCMm22AU
+Eamp =sqrt(I*4.0*pi/SPEED_of_LIGHT)
 
 if dyn_props.h_gauge     
 	println("* * * Hamiltonian gauge * * * ")             
@@ -307,20 +309,16 @@ function get_Efield(t, ftype; itstart=3)
 		a_t=0.0
 	  end
           #
-	  I    = 1E1*kWCMm22AU
-          E    =sqrt(I*4.0*pi/SPEED_of_LIGHT)
-          a_t=a_t*E
+          a_t=a_t*Eamp
 	  #
  	elseif ftype=="PHHG"
 	  w    =0.77/ha2ev
 	  sigma=30.0*fs2aut
 	  T_0  = itstart*dt
-	  I    = 2.64E10*kWCMm22AU
-          E    =sqrt(I*4.0*pi/SPEED_of_LIGHT)
 	  if (t-T_0)>=sigma || (t-T_0)<0.0
 	          a_t=0.0
 	  else
-		  a_t =E*(sin(pi*(t-T_0)/sigma))^2*cos(w*t)
+		  a_t =Eamp*(sin(pi*(t-T_0)/sigma))^2*cos(w*t)
 	  end
 	else
 	  println("Field unknown!! ")	
