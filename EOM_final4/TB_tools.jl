@@ -262,6 +262,7 @@ function Grad_U(ik, k_grid, lattice, TB_sol, gauge=TB_lattice)
       end
       U=TB_sol.eigenvec[:,:,ik]
       for id in 1:s_dim
+        if k_grid.nk_dir[id]==1; continue end
         dU[:,:,id]=dU[:,:,id]+(U')*VdV[:,:,id]*U
       end
     end
@@ -332,8 +333,11 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, gauge=TB_lattice)
     if gauge==TB_atomic
        d_tau=orbitals.tau[2]-orbitals.tau[1]     
        k_dot_dtau=dot(k_grid.kpt[:,ik],d_tau)     
-       dH_w[1,2,:]=exp( 1im*k_dot_dtau)*(dH_w[1,2,:]+1im*d_tau[:]*TB_sol.H_w[1,2,ik])
-       dH_w[2,1,:]=exp(-1im*k_dot_dtau)*(dH_w[2,1,:]-1im*d_tau[:]*TB_sol.H_w[2,1,ik])
+       for id in 1:s_dim
+         if k_grid.nk_dir[id]==1; continue end
+         dH_w[1,2,id]=exp( 1im*k_dot_dtau)*(dH_w[1,2,id]+1im*d_tau[id]*TB_sol.H_w[1,2,ik])
+         dH_w[2,1,id]=exp(-1im*k_dot_dtau)*(dH_w[2,1,id]-1im*d_tau[id]*TB_sol.H_w[2,1,ik])
+       end
     end
     #
     return dH_w

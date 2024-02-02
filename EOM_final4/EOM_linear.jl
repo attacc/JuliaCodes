@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=24
-n_k2=24
+n_k1=48
+n_k2=1
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -61,7 +61,7 @@ dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-dyn_props.use_dipoles=false
+dyn_props.use_dipoles=true
 #
 # Use UdU for dipoles
 #

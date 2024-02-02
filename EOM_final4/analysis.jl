@@ -106,7 +106,7 @@ if T2 !=0.0
 end
 pol_w=FFT_1D(times, freqs, pol, e_vec)
 # I multiply for 1im lost somewhere
-pol_w=1im*Divide_by_the_field(pol_w,times,itstart)
+pol_w=-1im*Divide_by_the_field(pol_w,times,itstart)
 #
 # Write data on file
 #
