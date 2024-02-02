@@ -9,7 +9,7 @@
 # use damping : true 
 # use UdU for dipoles : false 
 # calculate polarization : true
-# calculate current      : true
+# calculate current      : false
 # print dm               : true
 #
 #

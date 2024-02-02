@@ -29,13 +29,13 @@ lattice =set_Lattice(2,[a_1,a_2])
 #
 # * * * DIPOLES * * * #
 #
-# if use_Dipoles=true  dipoles are calculated
+# if use_gradH=true  dipoles are calculated
 # using dH/dh
 #
-# if use_Dipoles=false dipoles are calculated
+# if use_GradH=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_Dipoles=true
+use_GradH=false
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
@@ -80,7 +80,7 @@ println("Direct gap : ",dir_gap*ha2ev," [eV] ")
 ind_gap=minimum(TB_sol.eigenval[2,:])-maximum(TB_sol.eigenval[1,:])
 println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 
-if use_Dipoles
+if use_GradH
   println("Building Dipoles using dH/dk:")
 else
   println("Building Dipoles using UdU/dk:")
@@ -95,7 +95,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
   ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge)
   #
-  if use_Dipoles
+  if use_GradH
     for id in 1:s_dim
       Dip_h[:,:,ik,id]=HW_rotate(∇H_w[:,:,id],TB_sol.eigenvec[:,:,ik],"W_to_H")
 # I set to zero the diagonal part of dipoles
