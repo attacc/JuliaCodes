@@ -84,7 +84,7 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice
    end
    #
    #
-   function Berry_Connection(k)  
+   function Berry_Connection(k_grid)  
         #
         # Notice that in TB-approximation 
         # the Berry connect does not depend from k

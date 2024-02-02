@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=1
-n_k2=96
+n_k1=48
+n_k2=1
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -53,7 +53,7 @@ println(" nk = ",k_grid.nk)
 # Hamiltonian gauge:  h_gauge = true  
 # Wannier gauge    :  h_gauge = false
 #
-dyn_props.h_gauge=true
+dyn_props.h_gauge=false
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -70,7 +70,7 @@ dyn_props.use_UdU_for_dipoles=true
 # Include drho/dk in the dynamics
 dyn_props.include_drho_dk=true
 # Include A_w in the calculation of A_h
-dyn_props.include_A_w=false
+dyn_props.include_A_w=true
 
 # Print properties on disk
 props.print_dm =false
@@ -80,9 +80,12 @@ props.eval_pol =true
 check_dk_rho=false
 
 field_name="PHHG"
-#field_name="delta"
-Int  = 2.64E5*kWCMm22AU
-Eamp =sqrt(I*4.0*pi/SPEED_of_LIGHT)
+Int  = 2.64E8*kWCMm22AU
+
+field_name="delta"
+Int  = 2.64E1*kWCMm22AU
+
+Eamp =sqrt(Int*4.0*pi/SPEED_of_LIGHT)
 
 if dyn_props.h_gauge     
 	println("* * * Hamiltonian gauge * * * ")             
@@ -210,7 +213,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
     # Calculate A(W) and rotate in H-gauge
     # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
     # Notice that in TB-approxamation the Berry Connection is independent from k
-    A_w[:,:,:,ik]=Berry_Connection(k_grid.kpt[:,ik])
+    A_w[:,:,:,ik]=Berry_Connection(k_grid)
     #
     # Calculate Berry Connection using Eq. 44 of PRB 74, 195118 (2006) 
 #    A_w[:,:,:,ik]=Calculate_Berry_Conec_FD(ik, k_grid, eigenvec[:,:,ik])
