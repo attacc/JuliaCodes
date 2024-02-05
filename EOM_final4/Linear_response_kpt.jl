@@ -41,8 +41,8 @@ use_GradH=false
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=12
-n_k2=12
+n_k1=1
+n_k2=48
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
@@ -59,8 +59,8 @@ println(" K-point list ")
 println(" nk = ",k_grid.nk)
 #print_k_grid(k_grid, lattice)
 #
-#TB_gauge=TB_lattice
-TB_gauge=TB_atomic
+TB_gauge=TB_lattice
+#TB_gauge=TB_atomic
 println("Tight-binding gauge : $TB_gauge ")
 
 println("Building Hamiltonian: ")
