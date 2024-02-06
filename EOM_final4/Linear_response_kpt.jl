@@ -35,7 +35,7 @@ lattice =set_Lattice(2,[a_1,a_2])
 # if use_GradH=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_GradH=false
+use_GradH=true
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
@@ -59,13 +59,14 @@ println(" K-point list ")
 println(" nk = ",k_grid.nk)
 #print_k_grid(k_grid, lattice)
 #
-TB_gauge=TB_lattice
-#TB_gauge=TB_atomic
+#TB_gauge=TB_lattice
+TB_gauge=TB_atomic
+dk=0.01
 println("Tight-binding gauge : $TB_gauge ")
+println("Delta-k for derivatives : $dk ")
 
 println("Building Hamiltonian: ")
-#Threads.@threads for ik in ProgressBar(1:nk)
-for ik in 1:k_grid.nk
+Threads.@threads for ik in ProgressBar(1:k_grid.nk)
    TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik],gauge=TB_gauge)
    data= eigen(TB_sol.H_w[:,:,ik])      # Diagonalize the matrix
    TB_sol.eigenval[:,ik]   = data.values
@@ -91,9 +92,9 @@ end
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk,s_dim)
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #  
-  ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,TB_gauge)
+  ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,TB_gauge,dk)
   #
-  ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge)
+  ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge,dk)
   #
   if use_GradH
     for id in 1:s_dim

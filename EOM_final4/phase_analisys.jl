@@ -66,8 +66,8 @@ print_k_grid(k_grid, lattice)
 
 println("Building Hamiltonian: ")
 
-#TB_gauge=TB_lattice
-TB_gauge=TB_atomic
+TB_gauge=TB_lattice
+#TB_gauge=TB_atomic
 dk=0.01
 
 #Threads.@threads for ik in ProgressBar(1:nk)

@@ -341,7 +341,7 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge, deltaK=nothi
        d_tau=orbitals.tau[2]-orbitals.tau[1]     
        k_dot_dtau=dot(k_grid.kpt[:,ik],d_tau)     
        for id in 1:s_dim
-         dH_w[1,2,id]=exp( 1im*k_dot_dtau)*(dH_w[1,2,id]+1im*d_tau[id]*TB_sol.H_w[1,2,ik])
+         dH_w[1,2,id]=exp(1im*k_dot_dtau)*(dH_w[1,2,id]+1im*d_tau[id]*TB_sol.H_w[1,2,ik])
          dH_w[2,1,id]=conj(dH_w[1,2,id])
        end
     end
