@@ -266,8 +266,7 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
       end
       U=TB_sol.eigenvec[:,:,ik]
       for id in 1:s_dim
-#        dU[:,:,id]=dU[:,:,id]+(U')*VdV[:,:,id]*U
-        dU[:,:,id]=(U')*VdV[:,:,id]*U
+        dU[:,:,id]=dU[:,:,id]+VdV[:,:,id]*U
       end
     end
     #

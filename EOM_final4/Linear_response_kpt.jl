@@ -61,7 +61,7 @@ println(" nk = ",k_grid.nk)
 #
 #TB_gauge=TB_lattice
 TB_gauge=TB_atomic
-dk=0.01
+dk=nothing #0.01
 println("Tight-binding gauge : $TB_gauge ")
 println("Delta-k for derivatives : $dk ")
 

@@ -99,11 +99,15 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice
         # VdV see TB_tools.jl
         #
 	A=zeros(Complex{Float64},2,2,ndim)
-        for ih in 1:h_dim
-          for id in 1:s_dim
-            A[ih,ih,id]=orbitals.tau[ih][id]
-          end
-        end
+#        for ih in 1:h_dim
+           A[1,1,:]=orbitals.tau[1][:]
+           A[2,2,:]=orbitals.tau[2][:]
+#        end
+#        for id in 1:s_dim
+#         A[1,2,id]=(orbitals.tau[2][id]-orbitals.tau[1][id])
+#         A[2,1,id]=(orbitals.tau[1][id]-orbitals.tau[2][id])
+#        end
+#       end
 	return A
    end
    #

@@ -61,14 +61,14 @@ dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-dyn_props.use_dipoles=true
+dyn_props.use_dipoles=false
 #
 # Use UdU for dipoles
 #
 dyn_props.use_UdU_for_dipoles=true
 
 # Include drho/dk in the dynamics
-dyn_props.include_drho_dk=false #true
+dyn_props.include_drho_dk=true
 # Include A_w in the calculation of A_h
 dyn_props.include_A_w=true #false
 
@@ -115,6 +115,10 @@ TB_gauge=TB_atomic
 dk=nothing #0.01
 println("Tight-binding gauge : $TB_gauge ")
 println("Delta-k for derivatives : $dk ")
+
+println("Orbitals coordinates : ")
+println(orbitals.tau[1])
+println(orbitals.tau[2])
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
@@ -208,48 +212,40 @@ A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 A_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 
-Threads.@threads for ik in ProgressBar(1:k_grid.nk)
+if dyn_props.include_A_w
+  println("Calculate A_w: ")
+  Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
-  if dyn_props.include_A_w
-    #
-    # Calculate A(W) and rotate in H-gauge
-    # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
-    # Notice that in TB-approxamation the Berry Connection is independent from k
-    A_w[:,:,:,ik]=Berry_Connection(k_grid)
-    #
-    # Calculate Berry Connection using Eq. 44 of PRB 74, 195118 (2006) 
-#    A_w[:,:,:,ik]=Calculate_Berry_Conec_FD(ik, k_grid, eigenvec[:,:,ik])
-    #
-    # Then I rotate from W -> H
-    #
-    for id in 1:s_dim
-       A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
-    end
-    #
-    #
+  #
+  # Calculate A(W) and rotate in H-gauge
+  # Eq. II.13 of https://arxiv.org/pdf/1904.00283.pdf 
+  # Notice that in TB-approxamation the Berry Connection is independent from k
+  A_w[:,:,:,ik]=Berry_Connection(k_grid)
+  #
+  # Then I rotate from W -> H
+  #
+  for id in 1:s_dim
+     A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
   end
+  #
+  end
+end
+
+println("Calculate UdU:")
+Threads.@threads for ik in ProgressBar(1:k_grid.nk)
+  #  
   # Calculate U^+ \d/dk U
   #
   #  Using the fixing of the guage
   U=TB_sol.eigenvec[:,:,ik]
   for id in 1:s_dim
-      UdU[:,:,id,ik]=1im*(U')*∇U[:,:,id,ik]
+    UdU[:,:,id,ik]=(U')*∇U[:,:,id,ik]
   end
   #
-  #  Using the parallel transport gauge
-# for id in 1:s_dim
-#     if k_grid.nk_dir[id]==1; continue end
-#     UdU[:,:,id]=-1im*Dip_h[:,:,ik,id]
-#  end
-  #
-  for id in 1:s_dim
-    A_h[:,:,id,ik]=A_h[:,:,id,ik]+UdU[:,:,id,ik]
-  end
+  A_h[:,:,:,ik]+=1im*UdU[:,:,:,ik]
   #
   if dyn_props.use_UdU_for_dipoles
-    for id in 1:s_dim
-      Dip_h[:,:,id,ik]=UdU[:,:,id,ik].*off_diag
-    end
+    Dip_h[:,:,:,ik]=1im*UdU[:,:,:,ik]
     if !dyn_props.h_gauge
       for id in 1:s_dim
           Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
@@ -259,7 +255,6 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
 end
 #
-# 
 # Input paramters for linear optics with delta function
 #
 T_2=6.0*fs2aut   # fs
