@@ -112,6 +112,7 @@ println(" Number of threads: ",Threads.nthreads())
 
 #TB_gauge=TB_lattice
 TB_gauge=TB_atomic
+dk=0.01
 println("Tight-binding gauge : $TB_gauge ")
 
 println("Building Hamiltonian: ")
@@ -156,9 +157,9 @@ println("Building ∇H and Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
 # Dipoles 
   #Gradient of the Hamiltonian by finite difference 
-  ∇H_w[:,:,:,ik]=Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge)
+  ∇H_w[:,:,:,ik]=Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge,dk)
   #Gradient of eigenvectors/eigenvalus on the regular grid
-  ∇U[:,:,:,ik],∇eigenval[:,:,ik]=Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge)
+  ∇U[:,:,:,ik],∇eigenval[:,:,ik]=Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge,dk)
   #
   # Build \nabla H_h
   #

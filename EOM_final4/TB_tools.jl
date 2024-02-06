@@ -176,7 +176,7 @@ end
 # In this subroutine I do not recalculate H because
 # I fix the phase
 #
-function Grad_U(ik, k_grid, lattice, TB_sol)
+function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
@@ -195,24 +195,28 @@ function Grad_U(ik, k_grid, lattice, TB_sol)
     #
     for id in 1:s_dim
       #  
-      if k_grid.nk_dir[id]==1; continue end
-      #
       # In lattice gauge U is not periodic 
       # I need to recalculate it beyond the BZ
       #
-      if gauge==TB_lattice
+      if k_grid.nk_dir[id]==1 && deltaK==nothing; continue end
+      #
+      if TB_gauge==TB_lattice || deltaK!=nothing
         #
         k_plus =copy(k_grid.kpt[:,ik])
         k_minus=copy(k_grid.kpt[:,ik])
         #
-        vec_dk=lattice.rvectors[id]/k_grid.nk_dir[id]
+        if deltaK==nothing
+          vec_dk=lattice.rvectors[id]/k_grid.nk_dir[id]
+        else
+          vec_dk=lattice.rvectors[id]*deltaK
+        end
         dk=norm(vec_dk)
         #
         k_plus =k_plus +vec_dk
         k_minus=k_minus-vec_dk
         #
-        H_plus =Hamiltonian(k_plus,  gauge=gauge)
-        H_minus=Hamiltonian(k_minus, gauge=gauge)
+        H_plus =Hamiltonian(k_plus,  gauge=TB_gauge)
+        H_minus=Hamiltonian(k_minus, gauge=TB_gauge)
         #  
         data_p=eigen(H_plus)      # Diagonalize the matrix
         data_m=eigen(H_minus)      # Diagonalize the matrix
@@ -221,9 +225,9 @@ function Grad_U(ik, k_grid, lattice, TB_sol)
         eigenval_m= data_m.values
         eigenval_p= data_p.values
         #
-      else
+      elseif TB_gauge==TB_atomic && deltaK==nothing
         #
-        # In the atomic gauge U is periodic
+        # In the atomic gauge U is periodic, I can use the values in the grid
         # but I need to add the part coming from the Bloch phase
         #
         ik_plus  =get_k_neighbor(ik,id, 1,k_grid)
@@ -255,14 +259,13 @@ function Grad_U(ik, k_grid, lattice, TB_sol)
     #
     # Correction in atomic gauge
     #
-    if gauge==TB_atomic
+    if TB_gauge==TB_atomic
       VdV=zeros(Complex{Float64},h_dim,h_dim,s_dim)
       for ih in 1:h_dim
         VdV[ih,ih,:]=-1im*orbitals.tau[ih][:]
       end
       U=TB_sol.eigenvec[:,:,ik]
       for id in 1:s_dim
-        if k_grid.nk_dir[id]==1; continue end
         dU[:,:,id]=dU[:,:,id]+(U')*VdV[:,:,id]*U
       end
     end
@@ -274,7 +277,7 @@ end
 # For the derivative of the Hamiltonian
 # I recalcualte it because H(k+G)/=H(k)
 
-function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, gauge)
+function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge, deltaK=nothing)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
@@ -291,25 +294,29 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, gauge)
     #
     for id in 1:s_dim
       #
-      if k_grid.nk_dir[id]==1; continue end
+      if k_grid.nk_dir[id]==1 && deltaK==nothing; continue end
       #
-      if gauge==TB_lattice
+      if TB_gauge==TB_lattice || deltaK!=nothing
         #  
         k_plus =copy(k_grid.kpt[:,ik])
         k_minus=copy(k_grid.kpt[:,ik])
         #
-        vec_dk=lattice.rvectors[id]/k_grid.nk_dir[id]
+        if deltaK==nothing
+          vec_dk=lattice.rvectors[id]/k_grid.nk_dir[id]
+        else
+          vec_dk=lattice.rvectors[id]*deltaK
+        end
         dk=norm(vec_dk)
         #
         k_plus =k_plus +vec_dk
         k_minus=k_minus-vec_dk
         #
-        H_plus =Hamiltonian(k_plus,  gauge=gauge)
-        H_minus=Hamiltonian(k_minus, gauge=gauge)
+        H_plus =Hamiltonian(k_plus,  gauge=TB_gauge)
+        H_minus=Hamiltonian(k_minus, gauge=TB_gauge)
         #
-      else
+      elseif TB_gauge==TB_atomic && deltaK==nothing
         #
-        # In the atomic gauge U is periodic
+        # In the atomic gauge H is periodic I can use the value on the grid
         # but I need to add the part coming from the Bloch phase
         #
         ik_plus  =get_k_neighbor(ik,id, 1,k_grid)
@@ -330,15 +337,14 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, gauge)
     #
     # If gauge is "atomic" apply correction to ∇H
     #
-#    if gauge==TB_atomic
-#       d_tau=orbitals.tau[2]-orbitals.tau[1]     
-#       k_dot_dtau=dot(k_grid.kpt[:,ik],d_tau)     
-#       for id in 1:s_dim
-#         if k_grid.nk_dir[id]==1; continue end
-#         dH_w[1,2,id]=exp( 1im*k_dot_dtau)*(dH_w[1,2,id]+1im*d_tau[id]*TB_sol.H_w[1,2,ik])
-#         dH_w[2,1,id]=exp(-1im*k_dot_dtau)*(dH_w[2,1,id]-1im*d_tau[id]*TB_sol.H_w[2,1,ik])
-#       end
-#    end
+    if TB_gauge==TB_atomic
+       d_tau=orbitals.tau[2]-orbitals.tau[1]     
+       k_dot_dtau=dot(k_grid.kpt[:,ik],d_tau)     
+       for id in 1:s_dim
+         dH_w[1,2,id]=exp( 1im*k_dot_dtau)*(dH_w[1,2,id]+1im*d_tau[id]*TB_sol.H_w[1,2,ik])
+         dH_w[2,1,id]=conj(dH_w[1,2,id])
+       end
+    end
     #
     return dH_w
     #

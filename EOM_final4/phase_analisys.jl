@@ -68,6 +68,7 @@ println("Building Hamiltonian: ")
 
 #TB_gauge=TB_lattice
 TB_gauge=TB_atomic
+dk=0.01
 
 #Threads.@threads for ik in ProgressBar(1:nk)
 for ik in 1:nk
@@ -99,30 +100,25 @@ println("Direct gap : ",dir_gap*ha2ev," [eV] ")
 ind_gap=minimum(TB_sol.eigenval[2,:])-maximum(TB_sol.eigenval[1,:])
 println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 
-if use_Dipoles
-  println("Building Dipoles using dH/dk:")
-else
-  println("Building Dipoles using UdU/dk:")
-end
-
-fig = figure("Eigenvalues",figsize=(10,20))
-plot(real(TB_sol.eigenvec[1,1,:]),label="Re[V_1[1]]") 
-plot(imag(TB_sol.eigenvec[1,1,:]),label="Im[V_1[1]]") 
-plot(real(TB_sol.eigenvec[2,1,:]),label="Re[V_1[2]]") 
-plot(imag(TB_sol.eigenvec[2,1,:]),label="Re[V_1[2]]") 
-legend()
-PyPlot.show();
+#fig = figure("Eigenvalues",figsize=(10,20))
+#plot(real(TB_sol.eigenvec[1,1,:]),label="Re[V_1[1]]") 
+#plot(imag(TB_sol.eigenvec[1,1,:]),label="Im[V_1[1]]") 
+#plot(real(TB_sol.eigenvec[2,1,:]),label="Re[V_1[2]]") 
+#plot(imag(TB_sol.eigenvec[2,1,:]),label="Re[V_1[2]]") 
+#legend()
+#PyPlot.show();
 
 # Dipoles
-dk=0.01
 ∇H_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,nk)
 Threads.@threads for ik in ProgressBar(1:nk)
-  ∇H_w[:,:,:,ik]=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,dk,TB_gauge)
+  ∇H_w[:,:,:,ik]=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,TB_gauge,dk)
 end
 
-fig = figure("Grad H",figsize=(10,20))
+fig = figure("Grad H $TB_gauge",figsize=(10,20))
 plot(real(real(∇H_w[1,2,1,:])),label="∇H_w[1,2,id=1]") 
 plot(real(imag(∇H_w[1,2,1,:])),label="∇H_w[1,2,id=1]") 
+#plot(real(real(∇H_w[2,1,2,:])),label="∇H_w[1,2,id=1]") 
+#plot(real(imag(∇H_w[2,1,2,:])),label="∇H_w[1,2,id=1]") 
 legend()
 PyPlot.show();
 
