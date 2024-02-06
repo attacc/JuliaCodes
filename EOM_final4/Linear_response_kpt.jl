@@ -123,7 +123,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
      #
      U=TB_sol.eigenvec[:,:,ik]
      for id in 1:s_dim
-        Dip_h[:,:,ik,id]=(U')*∇U[:,:,id]
+        Dip_h[:,:,ik,id]=1im*(U')*∇U[:,:,id]
      end
   end
   #
