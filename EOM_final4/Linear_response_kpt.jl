@@ -59,15 +59,15 @@ println(" K-point list ")
 println(" nk = ",k_grid.nk)
 #print_k_grid(k_grid, lattice)
 #
-TB_gauge=TB_lattice
-#TB_gauge=TB_atomic
+#TB_gauge=TB_lattice
+TB_gauge=TB_atomic
 dk=0.01
 println("Tight-binding gauge : $TB_gauge ")
 println("Delta-k for derivatives : $dk ")
 
 println("Building Hamiltonian: ")
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
-   TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik],gauge=TB_gauge)
+   TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik],TB_gauge)
    data= eigen(TB_sol.H_w[:,:,ik])      # Diagonalize the matrix
    TB_sol.eigenval[:,ik]   = data.values
    TB_sol.eigenvec[:,:,ik] = data.vectors

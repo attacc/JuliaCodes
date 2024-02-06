@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=18
-n_k2=18
+n_k1=16
+n_k2=16
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -65,12 +65,12 @@ dyn_props.use_dipoles=true
 #
 # Use UdU for dipoles
 #
-dyn_props.use_UdU_for_dipoles=false
+dyn_props.use_UdU_for_dipoles=true
 
 # Include drho/dk in the dynamics
-dyn_props.include_drho_dk=true
+dyn_props.include_drho_dk=false #true
 # Include A_w in the calculation of A_h
-dyn_props.include_A_w=false
+dyn_props.include_A_w=true #false
 
 # Print properties on disk
 props.print_dm =false
@@ -233,7 +233,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #  Using the fixing of the guage
   U=TB_sol.eigenvec[:,:,ik]
   for id in 1:s_dim
-      UdU[:,:,id,ik]=(U')*∇U[:,:,id,ik]
+      UdU[:,:,id,ik]=1im*(U')*∇U[:,:,id,ik]
   end
   #
   #  Using the parallel transport gauge
@@ -391,7 +391,6 @@ function deriv_rho(rho, t)
 	     if dyn_props.include_drho_dk
                Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, TB_sol.eigenvec, lattice)
                #
-	       #
                for id in 1:s_dim
                  d_rho[:,:,ik]+=1im*E_field[id]*Dk_rho[:,:,id]
                end
@@ -456,7 +455,7 @@ function get_polarization(rho_s)
          if !dyn_props.h_gauge
            rho=HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
          else
-            rho=rho_s[it,:,:,ik]
+           rho=rho_s[it,:,:,ik]
          end
          for id in 1:s_dim
             if !dyn_props.h_gauge
