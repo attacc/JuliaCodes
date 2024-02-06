@@ -77,8 +77,6 @@ props.print_dm =false
 props.eval_curr=false
 props.eval_pol =true
 
-check_dk_rho=false
-
 field_name="PHHG"
 EInt = 2.64E8*kWCMm22AU
 
@@ -390,28 +388,8 @@ function deriv_rho(rho, t)
                  d_rho[:,:,ik]+=1im*E_field[id]*Dk_rho[:,:,id]
                end
 	       #
-               if check_dk_rho 
-                   println("Check drho/dk for ik ",ik)
-                   U=TB_sol.eigenvec[:,:,ik]
-                   if !dyn_props.h_gauge
-                     test_dk_rho=∇U[:,:,1,ik]*rho0_h[:,:,ik]*(U')+U*rho0_h[:,:,ik]*(∇U[:,:,1,ik]')
-                   else
-                     println("Not implemented yet ")
-                     exit()
-                   end
-                   if norm(Dk_rho[:,1,1]-test_dk_rho[:,1])>1e-2 || norm(Dk_rho[:,2,1]-test_dk_rho[:,2])>1e-2
-                      println(Dk_rho[:,1,1])
-                      println(Dk_rho[:,2,1])
-                      println(test_dk_rho[:,1])
-                      println(test_dk_rho[:,2])
-                   else
-                       println("...OK ")
-                   end
-
-                   if ik==k_grid.nk; exit() end
-               end
-               #
              end
+             #
            end
            #
            # Commutator D*rho-rho*D
