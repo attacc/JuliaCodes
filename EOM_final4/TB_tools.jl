@@ -215,8 +215,8 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
         k_plus =k_plus +vec_dk
         k_minus=k_minus-vec_dk
         #
-        H_plus =Hamiltonian(k_plus,  gauge=TB_gauge)
-        H_minus=Hamiltonian(k_minus, gauge=TB_gauge)
+        H_plus =Hamiltonian(k_plus,  TB_gauge)
+        H_minus=Hamiltonian(k_minus, TB_gauge)
         #  
         data_p=eigen(H_plus)      # Diagonalize the matrix
         data_m=eigen(H_minus)      # Diagonalize the matrix
@@ -311,8 +311,8 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge, deltaK=nothi
         k_plus =k_plus +vec_dk
         k_minus=k_minus-vec_dk
         #
-        H_plus =Hamiltonian(k_plus,  gauge=TB_gauge)
-        H_minus=Hamiltonian(k_minus, gauge=TB_gauge)
+        H_plus =Hamiltonian(k_plus,  TB_gauge)
+        H_minus=Hamiltonian(k_minus, TB_gauge)
         #
       elseif TB_gauge==TB_atomic && deltaK==nothing
         #

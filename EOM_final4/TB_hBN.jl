@@ -52,7 +52,7 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice
   #
   global off_diag=.~I(h_dim)
   #
-  function Hamiltonian(k; gauge=TB_lattice)::Matrix{Complex{Float64}}
+  function Hamiltonian(k, gauge)::Matrix{Complex{Float64}}
         #
 	H=zeros(Complex{Float64},2,2)
         #

@@ -105,7 +105,7 @@ if T2 !=0.0
    pol  =damp_it(times, pol, T2, itstart)
 end
 pol_w=FFT_1D(times, freqs, pol, e_vec)
-# I multiply for 1im lost somewhere
+# I multiply for -1im lost somewhere
 pol_w=1im*Divide_by_the_field(pol_w,times,itstart)
 #
 # Write data on file

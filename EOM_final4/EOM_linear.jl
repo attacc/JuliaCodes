@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=12
-n_k2=12
+n_k1=18
+n_k2=18
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -61,16 +61,16 @@ dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-dyn_props.use_dipoles=false
+dyn_props.use_dipoles=true
 #
 # Use UdU for dipoles
 #
-dyn_props.use_UdU_for_dipoles=true
+dyn_props.use_UdU_for_dipoles=false
 
 # Include drho/dk in the dynamics
 dyn_props.include_drho_dk=true
 # Include A_w in the calculation of A_h
-dyn_props.include_A_w=true
+dyn_props.include_A_w=false
 
 # Print properties on disk
 props.print_dm =false
@@ -80,12 +80,12 @@ props.eval_pol =true
 check_dk_rho=false
 
 field_name="PHHG"
-Int  = 2.64E8*kWCMm22AU
+EInt = 2.64E8*kWCMm22AU
 
 field_name="delta"
-Int  = 2.64E1*kWCMm22AU
+EInt  = 2.64E1*kWCMm22AU
 
-Eamp =sqrt(Int*4.0*pi/SPEED_of_LIGHT)
+Eamp =sqrt(EInt*4.0*pi/SPEED_of_LIGHT)
 
 if dyn_props.h_gauge     
 	println("* * * Hamiltonian gauge * * * ")             
@@ -112,15 +112,16 @@ println(" Number of threads: ",Threads.nthreads())
 
 #TB_gauge=TB_lattice
 TB_gauge=TB_atomic
-dk=0.01
+dk=nothing #0.01
 println("Tight-binding gauge : $TB_gauge ")
+println("Delta-k for derivatives : $dk ")
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 TB_sol.H_w=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
-    H_w=Hamiltonian(k_grid.kpt[:,ik],gauge=TB_gauge)
+    H_w=Hamiltonian(k_grid.kpt[:,ik],TB_gauge)
     data= eigen(H_w)      # Diagonalize the matrix
     TB_sol.eigenval[:,ik]   = data.values
     TB_sol.eigenvec[:,:,ik] = data.vectors
@@ -230,11 +231,9 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   # Calculate U^+ \d/dk U
   #
   #  Using the fixing of the guage
-  for ik in 1:k_grid.nk
-    U=TB_sol.eigenvec[:,:,ik]
-    for id in 1:s_dim
-        UdU[:,:,id,ik]=(U')*∇U[:,:,id,ik]
-    end
+  U=TB_sol.eigenvec[:,:,ik]
+  for id in 1:s_dim
+      UdU[:,:,id,ik]=(U')*∇U[:,:,id,ik]
   end
   #
   #  Using the parallel transport gauge
@@ -248,7 +247,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   end
   #
   if dyn_props.use_UdU_for_dipoles
-    for id in 1:s_dim,ik in 1:k_grid.nk
+    for id in 1:s_dim
       Dip_h[:,:,id,ik]=UdU[:,:,id,ik].*off_diag
     end
     if !dyn_props.h_gauge
@@ -453,16 +452,19 @@ function get_polarization(rho_s)
     pol=zeros(Float64,nsteps,s_dim)
     println("Calculate polarization: ")
     Threads.@threads for it in ProgressBar(1:nsteps)
-        for id in 1:s_dim
-           for ik in 1:k_grid.nk
-             if !dyn_props.h_gauge
+      for ik in 1:k_grid.nk
+         if !dyn_props.h_gauge
+           rho=HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
+         else
+            rho=rho_s[it,:,:,ik]
+         end
+         for id in 1:s_dim
+            if !dyn_props.h_gauge
                dip=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H").*off_diag
-               rho=HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
              else
                dip=Dip_h[:,:,id,ik].*off_diag
-               rho=rho_s[it,:,:,ik]
              end
-       	       pol[it,id]=pol[it,id]+real.(sum(dip.*transpose(rho)))
+       	     pol[it,id]=pol[it,id]+real.(sum(dip.*transpose(rho)))
 	   end
         end
     end

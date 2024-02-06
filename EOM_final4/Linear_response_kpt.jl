@@ -35,14 +35,14 @@ lattice =set_Lattice(2,[a_1,a_2])
 # if use_GradH=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_GradH=true
+use_GradH=false
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=1
-n_k2=48
+n_k1=18
+n_k2=18
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
@@ -59,8 +59,8 @@ println(" K-point list ")
 println(" nk = ",k_grid.nk)
 #print_k_grid(k_grid, lattice)
 #
-#TB_gauge=TB_lattice
-TB_gauge=TB_atomic
+TB_gauge=TB_lattice
+#TB_gauge=TB_atomic
 dk=0.01
 println("Tight-binding gauge : $TB_gauge ")
 println("Delta-k for derivatives : $dk ")
