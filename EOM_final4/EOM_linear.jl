@@ -151,24 +151,12 @@ println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
 # k-gradients of Hmailtonian, eigenvalues and eigenvectors
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 ∇H_w =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
-∇U   =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
-∇H_h =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
-∇eigenval=zeros(Complex{Float64},h_dim,s_dim,k_grid.nk)
-
 
 println("Building ∇H and Dipoles: ")
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
 # Dipoles 
   #Gradient of the Hamiltonian by finite difference 
   ∇H_w[:,:,:,ik]=Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge,dk)
-  #Gradient of eigenvectors/eigenvalus on the regular grid
-  ∇U[:,:,:,ik],∇eigenval[:,:,ik]=Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge,dk)
-  #
-  # Build \nabla H_h
-  #
-  for i in 1:h_dim	  
-    ∇H_h[i,i,:,ik]=∇eigenval[i,:,ik]
-  end
   #
   # Build dipoles
   for id in 1:s_dim
@@ -208,7 +196,6 @@ end
 println("Calculate A^H(k) : ")
 A_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 A_w=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
-UdU=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 
 if dyn_props.include_A_w
   println("Calculate A_w: ")
@@ -229,21 +216,27 @@ if dyn_props.include_A_w
   end
 end
 
+
 println("Calculate UdU:")
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #  
   # Calculate U^+ \d/dk U
   #
+  #Gradient of eigenvectors/eigenvalus on the regular grid
+  #
+  UdU=Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge,dk)
+  #
   #  Using the fixing of the guage
+  #
   U=TB_sol.eigenvec[:,:,ik]
   for id in 1:s_dim
-    UdU[:,:,id,ik]=(U')*∇U[:,:,id,ik]
+    UdU[:,:,id]=(U')*UdU[:,:,id]
   end
   #
-  A_h[:,:,:,ik]+=1im*UdU[:,:,:,ik]
+  A_h[:,:,:,ik]+=1im*UdU[:,:,:]
   #
   if dyn_props.use_UdU_for_dipoles
-    Dip_h[:,:,:,ik]=1im*UdU[:,:,:,ik]
+    Dip_h[:,:,:,ik]=1im*UdU[:,:,:]
     if !dyn_props.h_gauge
       for id in 1:s_dim
           Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
@@ -267,17 +260,14 @@ n_steps=size(t_range)[1]
 # Buildo rho_0
 #
 rho0=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
-rho0_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
-rho0_h[1,1,:].=1.0
+rho0[1,1,:].=1.0
 #
 # Transform in Wannier Gauge
 #
 if !dyn_props.h_gauge
   Threads.@threads for ik in 1:k_grid.nk
-     rho0[:,:,ik]=HW_rotate(rho0_h[:,:,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
+     rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
   end
-else
-   rho0=copy(rho0_h)
 end
 #
 #

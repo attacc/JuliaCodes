@@ -184,7 +184,6 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
     h_dim=TB_sol.h_dim    # hamiltonian dimension
     s_dim=lattice.dim     # space dimension
     #
-    dH_eigenval=zeros(Float64,h_dim,s_dim)
     dU         =zeros(Complex{Float64},h_dim,h_dim,s_dim)
     #
     # Derivative by finite differences, 
@@ -245,8 +244,6 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
       #
       dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
       #
-      dH_eigenval[:,id]=(eigenval_p-eigenval_m)/(2.0*dk)
-      #
       k_plus =copy(k_grid.kpt[:,ik])
       k_minus=copy(k_grid.kpt[:,ik])
       #     
@@ -255,7 +252,6 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
     # Convert from crystal to cartesian
     #
     dU         =K_crys_to_cart(dU,lattice)
-    dH_eigenval=K_crys_to_cart(dH_eigenval,lattice)
     #
     # Correction in atomic gauge
     #
@@ -270,7 +266,7 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
       end
     end
     #
-    return dU,dH_eigenval
+    return dU
     #
 end
 
@@ -286,8 +282,6 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge, deltaK=nothi
     s_dim=lattice.dim     # space dimension
     #
     dH_w       =zeros(Complex{Float64},h_dim,h_dim,s_dim)
-    dH_eigenval=zeros(Float64,h_dim,s_dim)
-    dU         =zeros(Complex{Float64},h_dim,h_dim,s_dim)
     #
     # Derivative by finite differences, 
     # recalculating the Hamiltonian
