@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=36
-n_k2=36
+n_k1=24
+n_k2=24
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -79,7 +79,7 @@ props.curr_gauge=H_gauge
 props.eval_pol  =true
 
 field_name="PHHG"
-EInt = 2.64E10*kWCMm22AU
+EInt = 2.64E9*kWCMm22AU
 
 # field_name="delta"
 # EInt  = 2.64E1*kWCMm22AU
@@ -390,12 +390,12 @@ function deriv_rho(rho, t)
 	#
 	if T_2!=0.0 && dyn_props.damping==true
 	   Threads.@threads for ik in 1:k_grid.nk
+             Δrho=rho[:,:,ik]-rho0[:,:,ik]
 	     if dyn_props.dyn_gauge==H_gauge
-	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*(rho[:,:,ik]-rho0[:,:,ik])
+	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*Δrho
        	     else
-	       rho_s=rho[:,:,ik]-rho0[:,:,ik]
-	       rho_s=off_diag.*HW_rotate(rho_s,TB_sol.eigenvec[:,:,ik],"W_to_H")
-	       damp_mat=HW_rotate(rho_s,TB_sol.eigenvec[:,:,ik],"H_to_W")
+	       Δrho=off_diag.*HW_rotate(Δrho,TB_sol.eigenvec[:,:,ik],"W_to_H")
+	       damp_mat=HW_rotate(Δrho,TB_sol.eigenvec[:,:,ik],"H_to_W")
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*damp_mat
 	     end
 	   end
