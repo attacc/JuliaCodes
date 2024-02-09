@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=16
-n_k2=16
+n_k1=36
+n_k2=36
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -53,7 +53,7 @@ println(" nk = ",k_grid.nk)
 # Hamiltonian gauge:  dyn_gauge = H_gauge
 # Wannier gauge    :  dyn_gauge = W_gauge
 #
-dyn_props.dyn_gauge=W_gauge
+dyn_props.dyn_gauge=H_gauge
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -79,11 +79,11 @@ props.curr_gauge=H_gauge
 props.eval_pol  =true
 
 field_name="PHHG"
-EInt = 2.64E11*kWCMm22AU
+EInt = 2.64E10*kWCMm22AU
 
 # field_name="delta"
 # EInt  = 2.64E1*kWCMm22AU
-
+#
 Eamp =sqrt(EInt*4.0*pi/SPEED_of_LIGHT)
 
 if dyn_props.dyn_gauge==H_gauge     
@@ -295,8 +295,8 @@ function get_Efield(t, ftype; itstart=3)
           a_t=a_t*Eamp
 	  #
  	elseif ftype=="PHHG"
-	  w    =0.77/ha2ev
-	  sigma=30.0*fs2aut
+	  w    =0.4132/ha2ev # Parameter from De Silva
+	  sigma=34.2*fs2aut  # Parameter from De Silva
 	  T_0  = itstart*dt
 	  if (t-T_0)>=sigma || (t-T_0)<0.0
 	          a_t=0.0
@@ -441,7 +441,8 @@ function get_current(rho_s)
          for ik in 1:k_grid.nk
 	    rho_t_H=transpose(rho_s[it,:,:,ik])
             for id in 1:s_dim
-     	       j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_h[:,:,id,ik].*rho_t_H))
+               ∇H_h=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H") #.*off_diag
+     	       j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_h.*rho_t_H))
 	       commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
 	       j_inter[it,id]=j_inter[it,id]-imag(sum(commutator.*rho_t_H))
 	    end
