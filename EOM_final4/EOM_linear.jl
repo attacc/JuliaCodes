@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=24
-n_k2=24
+n_k1=48
+n_k2=48
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -75,11 +75,11 @@ dyn_props.include_A_w=true #false
 # Print properties on disk
 props.print_dm  =false
 props.eval_curr =true
-props.curr_gauge=H_gauge
+props.curr_gauge=W_gauge
 props.eval_pol  =true
 
 field_name="PHHG"
-EInt = 2.64E9*kWCMm22AU
+EInt = 2.64E10*kWCMm22AU
 
 # field_name="delta"
 # EInt  = 2.64E1*kWCMm22AU
@@ -510,7 +510,6 @@ function generate_header(k_grid=nothing,dyn_props=nothing,props=nothing)
      end
      header*="# include drho/dk in the dynamics: $(dyn_props.include_drho_dk) \n"
      header*="# include A_w in the dynamics: $(dyn_props.include_A_w) \n"
-     header*="# current gauge : $(dyn_props.curr_gauge) \n"
      header*="# use dipoles : $(dyn_props.use_dipoles) \n"
      header*="# use damping : $(dyn_props.damping) \n"
      header*="# use UdU for dipoles : $(dyn_props.use_UdU_for_dipoles) \n"
@@ -519,6 +518,7 @@ function generate_header(k_grid=nothing,dyn_props=nothing,props=nothing)
    if props != nothing
      header*="# calculate polarization : $(props.eval_pol)\n"
      header*="# calculate current      : $(props.eval_curr)\n"
+     header*="# current gauge          : $(props.curr_gauge) \n"
      header*="# print dm               : $(props.print_dm)\n"
    end
    header*="#\n#\n"
