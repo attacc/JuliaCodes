@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=96
-n_k2=96
+n_k1=16
+n_k2=16
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -50,10 +50,10 @@ println(" nk = ",k_grid.nk)
 #
 # Select the space of the dynamics:
 #
-# Hamiltonian gauge:  h_gauge = true  
-# Wannier gauge    :  h_gauge = false
+# Hamiltonian gauge:  dyn_gauge = H_gauge
+# Wannier gauge    :  dyn_gauge = W_gauge
 #
-dyn_props.h_gauge=false
+dyn_props.dyn_gauge=W_gauge
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -73,19 +73,20 @@ dyn_props.include_drho_dk=true
 dyn_props.include_A_w=true #false
 
 # Print properties on disk
-props.print_dm =false
-props.eval_curr=false
-props.eval_pol =true
+props.print_dm  =false
+props.eval_curr =true
+props.curr_gauge=H_gauge
+props.eval_pol  =true
 
 field_name="PHHG"
-EInt = 2.64E8*kWCMm22AU
+EInt = 2.64E11*kWCMm22AU
 
-field_name="delta"
-EInt  = 2.64E1*kWCMm22AU
+# field_name="delta"
+# EInt  = 2.64E1*kWCMm22AU
 
 Eamp =sqrt(EInt*4.0*pi/SPEED_of_LIGHT)
 
-if dyn_props.h_gauge     
+if dyn_props.dyn_gauge==H_gauge     
 	println("* * * Hamiltonian gauge * * * ")             
 else 
 	println("* * * Wannier gauge * * * ") 
@@ -127,12 +128,8 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
     data= eigen(H_w)      # Diagonalize the matrix
     TB_sol.eigenval[:,ik]   = data.values
     TB_sol.eigenvec[:,:,ik] = data.vectors
-    if dyn_props.h_gauge
-       for i in 1:h_dim
-          H_h[i,i,ik]=TB_sol.eigenval[i,ik]
-        end
-    else
-        H_h[:,:,ik]=H_w
+    for i in 1:h_dim
+      H_h[i,i,ik]=TB_sol.eigenval[i,ik]
     end
     TB_sol.H_w[:,:,ik]=H_w
     #
@@ -182,7 +179,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
   # I bring them back in Wannier gauge
   #
-  if !dyn_props.h_gauge
+  if dyn_props.dyn_gauge==W_gauge
     for id in 1:s_dim
         Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
      end
@@ -237,7 +234,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
   if dyn_props.use_UdU_for_dipoles
     Dip_h[:,:,:,ik]=1im*UdU[:,:,:]
-    if !dyn_props.h_gauge
+    if dyn_props.dyn_gauge==W_gauge
       for id in 1:s_dim
           Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
        end
@@ -264,7 +261,7 @@ rho0[1,1,:].=1.0
 #
 # Transform in Wannier Gauge
 #
-if !dyn_props.h_gauge
+if dyn_props.dyn_gauge==W_gauge
   Threads.@threads for ik in 1:k_grid.nk
      rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
   end
@@ -327,7 +324,7 @@ function deriv_rho(rho, t)
 	#
 	# Hamiltonian term
 	#
-        if dyn_props.h_gauge
+        if dyn_props.dyn_gauge==H_gauge
           # in h-space the Hamiltonian is diagonal
 	  Threads.@threads for ik in 1:k_grid.nk
              for ib in 1:h_dim, ic in 1:h_dim
@@ -356,7 +353,7 @@ function deriv_rho(rho, t)
                 E_dot_DIP+=E_field[id]*Dip_h[:,:,id,ik]
              end
           else
-   	    if dyn_props.h_gauge
+   	    if dyn_props.dyn_gauge==H_gauge
               for id in 1:s_dim
                  E_dot_DIP+=E_field[id]*A_h[:,:,id,ik]
               end
@@ -393,7 +390,7 @@ function deriv_rho(rho, t)
 	#
 	if T_2!=0.0 && dyn_props.damping==true
 	   Threads.@threads for ik in 1:k_grid.nk
-	     if dyn_props.h_gauge
+	     if dyn_props.dyn_gauge==H_gauge
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*(rho[:,:,ik]-rho0[:,:,ik])
        	     else
 	       rho_s=rho[:,:,ik]-rho0[:,:,ik]
@@ -415,13 +412,13 @@ function get_polarization(rho_s)
     println("Calculate polarization: ")
     Threads.@threads for it in ProgressBar(1:nsteps)
       for ik in 1:k_grid.nk
-         if !dyn_props.h_gauge
+         if dyn_props.dyn_gauge==W_gauge
            rho=HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
          else
            rho=rho_s[it,:,:,ik]
          end
          for id in 1:s_dim
-            if !dyn_props.h_gauge
+            if dyn_props.dyn_gauge==W_gauge
                dip=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H").*off_diag
              else
                dip=Dip_h[:,:,id,ik].*off_diag
@@ -439,38 +436,54 @@ function get_current(rho_s)
     j_intra=zeros(Float64,nsteps,s_dim)
     j_inter=zeros(Float64,nsteps,s_dim)
     println("Calculate current: ")
-    Threads.@threads for it in ProgressBar(1:nsteps)
-      if dyn_props.h_gauge
-        for ik in 1:k_grid.nk
-	   rho_t_H=transpose(rho_s[it,:,:,ik])
-           for id in 1:s_dim
-     	      j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_h[:,:,id,ik].*rho_t_H))
-	      commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
-	      j_inter[it,id]=j_inter[it,id]-imag(sum(commutator.*rho_t_H))
-	   end
-	end
+    if dyn_props.dyn_gauge==H_gauge
+      Threads.@threads for it in ProgressBar(1:nsteps)
+         for ik in 1:k_grid.nk
+	    rho_t_H=transpose(rho_s[it,:,:,ik])
+            for id in 1:s_dim
+     	       j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_h[:,:,id,ik].*rho_t_H))
+	       commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
+	       j_inter[it,id]=j_inter[it,id]-imag(sum(commutator.*rho_t_H))
+	    end
+	 end
+       end
       else
-        for ik in 1:k_grid.nk
-	  rho_t_w=transpose(rho_s[it,:,:,ik])
-           for id in 1:s_dim
-     	      j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_w[:,:,id,ik].*rho_t_w))
-	      commutator=A_w[:,:,id,ik]*TB_sol.H_w[:,:,ik]-TB_sol.H_w[:,:,ik]*A_w[:,:,id,ik]
-	      j_inter[it,id]=j_inter[it,id]-imag(sum(commutator.*rho_t_w))
+         if props.curr_gauge==H_gauge
+#        Current using the Hamiltonian gauge
+         Threads.@threads for it in ProgressBar(1:nsteps)
+           for ik in 1:k_grid.nk
+             rho_h=HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
+             rho_h=transpose(rho_h)
+             for id in 1:s_dim
+                # Not sure I should multiply for off_diag this is not clear
+                ∇H_h=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H") #.*off_diag
+     	        j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_h.*rho_h))
+                commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
+	        j_inter[it,id]=j_inter[it,id]-imag(sum(commutator.*rho_h))
+	     end
 	   end
-	end
-      end
-    end
+	 end
+        elseif props.curr_gauge==W_gauge
+#       Current using the Wannier gauge
+          Threads.@threads for it in ProgressBar(1:nsteps)
+            for ik in 1:k_grid.nk
+ 	      rho_w=transpose(rho_s[it,:,:,ik])
+              for id in 1:s_dim
+                j_intra[it,id]=j_intra[it,id]-real.(sum(∇H_w[:,:,id,ik].*rho_w))
+                commutator=A_w[:,:,id,ik]*TB_sol.H_w[:,:,ik]-TB_sol.H_w[:,:,ik]*A_w[:,:,id,ik]
+	        j_inter[it,id]=j_inter[it,id]-imag(sum(commutator.*rho_w))
+	      end
+            end
+          end
+       end # of the j gauge
+    end # of tho rho gauge
     j_intra=j_intra/k_grid.nk
     j_inter=j_inter/k_grid.nk
     return j_intra,j_inter
 end 
 
-
-
 # Solve EOM
-
 solution = rungekutta2_dm(deriv_rho, rho0, t_range)
-
 
 if props.eval_pol
   # Calculate the polarization in time and frequency
@@ -489,10 +502,10 @@ function generate_header(k_grid=nothing,dyn_props=nothing,props=nothing)
      header*="# k-point grid: $(k_grid.nk_dir[1]) - $(k_grid.nk_dir[2]) \n"
    end
    if dyn_props != nothing
-     if dyn_props.h_gauge
-         header*="# structure gauge : hamiltonian \n"
+     if dyn_props.dyn_gauge==H_gauge
+         header*="# structure gauge : Hamiltonian \n"
      else
-         header*="# structure gauge : wannier \n"
+         header*="# structure gauge : Wannier \n"
      end
      header*="# include drho/dk in the dynamics: $(dyn_props.include_drho_dk) \n"
      header*="# include A_w in the dynamics: $(dyn_props.include_A_w) \n"

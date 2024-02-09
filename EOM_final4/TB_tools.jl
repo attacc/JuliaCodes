@@ -2,16 +2,20 @@ module TB_tools
 
 using ProgressBars
 
-export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U
+export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge
+
+const W_gauge=true
+const H_gauge=false
 
 mutable struct Properties
 	eval_curr   ::Bool
 	eval_pol    ::Bool
 	print_dm    ::Bool
+        curr_gauge  ::Bool
 end
 
 mutable struct Dynamics_Properties
-	h_gauge      :: Bool
+	dyn_gauge    :: Bool
 	damping	     :: Bool
 	use_dipoles  :: Bool
 	include_drho_dk :: Bool
@@ -31,7 +35,7 @@ TB_sol=TB_Solution()
 
 dyn_props = Dynamics_Properties(true,true,false,true,true,false)
 
-props = Properties(true, true, false)
+props = Properties(true, true, false, W_gauge)
 
 mutable struct IO_Output
 	dm_file  ::Union{IOStream, Nothing}
