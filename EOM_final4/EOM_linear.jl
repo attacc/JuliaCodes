@@ -510,6 +510,7 @@ function generate_header(k_grid=nothing,dyn_props=nothing,props=nothing)
      end
      header*="# include drho/dk in the dynamics: $(dyn_props.include_drho_dk) \n"
      header*="# include A_w in the dynamics: $(dyn_props.include_A_w) \n"
+     header*="# current gauge : $(dyn_props.curr_gauge) \n"
      header*="# use dipoles : $(dyn_props.use_dipoles) \n"
      header*="# use damping : $(dyn_props.damping) \n"
      header*="# use UdU for dipoles : $(dyn_props.use_UdU_for_dipoles) \n"
