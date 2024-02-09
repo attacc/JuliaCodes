@@ -463,7 +463,8 @@ function current(rho)
         rho_h=transpose(rho_h)
         for id in 1:s_dim
            # Not sure I should multiply for off_diag this is not clear
-           ∇H_h=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H") #.*off_diag
+           # If I do not do so I get finite current after the pulse (that it is fine)
+           ∇H_h=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H").*off_diag
      	   j_intra[id]=j_intra[id]-real.(sum(∇H_h.*rho_h))
            commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
 	   j_inter[id]=j_inter[id]-imag(sum(commutator.*rho_h))
