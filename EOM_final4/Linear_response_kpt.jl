@@ -41,8 +41,8 @@ use_GradH=false
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=18
-n_k2=18
+n_k1=96
+n_k2=96
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
@@ -94,7 +94,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #  
   ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,TB_gauge,dk)
   #
-  ∇U,∇eigenval=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge,dk)
+  ∇U=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge,dk)
   #
   if use_GradH
     for id in 1:s_dim
