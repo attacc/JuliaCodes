@@ -376,18 +376,3 @@ function Evaluate_Dk_rho(rho, ik, k_grid, U, lattice)
   return dk_rho
   #
 end
-
-function get_polarization(rho)
-    pol=zeros(Float64,_dim)
-    Threads.@threads for ik in 1:nk
-        for id in 1:s_dim
-	      if use_Dipoles
-       	        pol[it,id]=pol[it,id]+real.(sum(Dip_h[:,:,ik,id].*transpose(rho_s[it,:,:,ik])))
-	      else
-      	        pol[it,id]=pol[it,id]+real.(sum(A_h[:,:,id,ik].*transpose(rho_s[it,:,:,ik])))
-	      end
-	   end
-    end
-    return pol
-end
-

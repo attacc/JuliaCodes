@@ -408,7 +408,7 @@ function deriv_rho(rho, t)
 	end
         #
 	Threads.@threads for ik in 1:k_grid.nk
-	  d_rho[:,:,ik].=-1im*d_rho[:,:,ik]
+	  d_rho[:,:,ik]=-1im*d_rho[:,:,ik]
 	end
 	#
     return d_rho
