@@ -313,6 +313,25 @@ function get_Efield(t, ftype; itstart=3)
 	return Efield
 end
 
+# 
+# Different possible matrix for the coupling
+# with the external field in the commutator
+#
+# Dip_h= simple dipoles (ok for linear response)  dH/dk / (e_i -e_j)
+# A_h  = Eq. II.13 of arXiv:1904.00283v2  (Berry connection in Hamiltonian gauge)
+# A_w  = Eq. II.9 with approximation III.1 of of arXiv:1904.00283v2 (Berry connection in Wannier gauge)
+#
+if dyn_props.use_dipoles
+  DIP_matrix=Dip_h
+else
+  if dyn_props.dyn_gauge==H_gauge
+    DIP_maitrx=A_h
+  elseif dyn_props.dyn_gauge==W_gauge
+    DIP_matrix=A_w
+  end
+end
+
+
 function deriv_rho(rho, t)
 	#
         # Variable of the dynamics
@@ -327,7 +346,7 @@ function deriv_rho(rho, t)
           # in h-space the Hamiltonian is diagonal
 	  Threads.@threads for ik in 1:k_grid.nk
              for ib in 1:h_dim, ic in 1:h_dim
-  		   d_rho[ib,ic,ik] =TB_sol.eigenval[ib,ik]*rho[ib,ic,ik]-rho[ib,ic,ik]*TB_sol.eigenval[ic,ik]
+  	       d_rho[ib,ic,ik] =TB_sol.eigenval[ib,ik]*rho[ib,ic,ik]-rho[ib,ic,ik]*TB_sol.eigenval[ic,ik]
              end
 	  end
         else
@@ -343,48 +362,32 @@ function deriv_rho(rho, t)
 	#
 	Threads.@threads for ik in 1:k_grid.nk
 	  #
-	  # Dipole dot field
+	  # Dipole term for the commutator dot field
 	  #
           E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim)
-	  #
-          if dyn_props.use_dipoles
-            for id in 1:s_dim
-                E_dot_DIP+=E_field[id]*Dip_h[:,:,id,ik]
-             end
-          else
-   	    if dyn_props.dyn_gauge==H_gauge
-              for id in 1:s_dim
-                 E_dot_DIP+=E_field[id]*A_h[:,:,id,ik]
-              end
-	    else
-              for id in 1:s_dim
-                 E_dot_DIP+=E_field[id]*A_w[:,:,id,ik]
-              end
-	    end
+          for id in 1:s_dim
+            E_dot_DIP+=E_field[id]*DIP_matrix[:,:,id,ik]
           end
           #
-          if !dyn_props.use_dipoles
-             # 
-             # Add d_rho/dk
-             #
-	     if dyn_props.include_drho_dk
-               Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, TB_sol.eigenvec, lattice)
-               #
-               for id in 1:s_dim
-                 d_rho[:,:,ik]+=1im*E_field[id]*Dk_rho[:,:,id]
-               end
-	       #
-             end
-             #
-           end
-           #
-           # Commutator D*rho-rho*D
-           # 
-	   d_rho[:,:,ik]=d_rho[:,:,ik]+(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
-           #
-           # 
+          # Commutator D*rho-rho*D
+          # 
+	  d_rho[:,:,ik]=d_rho[:,:,ik]+(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
+          #
 	end
 	#
+        if !dyn_props.use_dipoles &&  dyn_props.include_drho_dk
+          # 
+          # Add d_rho/dk
+          #
+   	  Threads.@threads for ik in 1:k_grid.nk
+            Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, TB_sol.eigenvec, lattice)
+            for id in 1:s_dim
+              d_rho[:,:,ik]+=1im*E_field[id]*Dk_rho[:,:,id]
+            end
+          end
+          #
+        end
+        #
 	# Damping
 	#
 	if T_2!=0.0 && dyn_props.damping==true
