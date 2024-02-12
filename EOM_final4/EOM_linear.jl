@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=12
-n_k2=12
+n_k1=96
+n_k2=96
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -245,11 +245,11 @@ end
 #
 # Input paramters for linear optics with delta function
 #
-T_2=6.0*fs2aut   # fs
+T_2=2.0*fs2aut   # fs
 t_start=0.0
-dt =0.005*fs2aut  # fs
-t_end  =T_2*12.0
-E_vec=[1.0,1.0]
+dt =0.0025*fs2aut  # fs
+t_end  =72.0*fs2aut #T_2*12.0
+E_vec=[1.0,0.0]
 #
 t_range = t_start:dt:t_end
 n_steps=size(t_range)[1]
@@ -392,11 +392,14 @@ function deriv_rho(rho, t)
 	#
 	if T_2!=0.0 && dyn_props.damping==true
            #
-	   Threads.@threads for ik in 1:k_grid.nk
-             Δrho=rho[:,:,ik]-rho0[:,:,ik]
-	     if dyn_props.dyn_gauge==H_gauge
+	   if dyn_props.dyn_gauge==H_gauge
+	     Threads.@threads for ik in 1:k_grid.nk
+               Δrho=rho[:,:,ik]-rho0[:,:,ik]
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*Δrho
-       	     else
+             end
+       	   else
+	     Threads.@threads for ik in 1:k_grid.nk
+               Δrho=rho[:,:,ik]-rho0[:,:,ik]
 	       Δrho=off_diag.*HW_rotate(Δrho,TB_sol.eigenvec[:,:,ik],"W_to_H")
 	       damp_mat=HW_rotate(Δrho,TB_sol.eigenvec[:,:,ik],"H_to_W")
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*damp_mat
@@ -441,8 +444,8 @@ function get_current(rho_s)
     j_intra=zeros(Float64,nsteps,s_dim)
     j_inter=zeros(Float64,nsteps,s_dim)
     println("Calculate current: ")
-    Threads.@threads for it in ProgressBar(1:nsteps)
-        j_intra[it,:],j_inter[it,:]=current(rho_s[it,:,:,:])
+    for it in ProgressBar(1:nsteps)
+       j_intra[it,:],j_inter[it,:]=current(rho_s[it,:,:,:])
     end
     return j_intra,j_inter
 end
@@ -451,7 +454,7 @@ function current(rho)
  j_intra=zeros(Float64,s_dim)
  j_inter=zeros(Float64,s_dim)
  if dyn_props.dyn_gauge==H_gauge
-   for ik in 1:k_grid.nk
+   Threads.@threads for ik in 1:k_grid.nk
      rho_t_H=transpose(rho[:,:,ik])
      for id in 1:s_dim
         ∇H_h=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H") #.*off_diag
@@ -463,7 +466,7 @@ function current(rho)
  else
    if props.curr_gauge==H_gauge
 #  Current using the Hamiltonian gauge
-     for ik in 1:k_grid.nk
+     Threads.@threads for ik in 1:k_grid.nk
         rho_h=HW_rotate(rho[:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
         rho_h=transpose(rho_h)
         for id in 1:s_dim
@@ -481,7 +484,7 @@ function current(rho)
      end
    elseif props.curr_gauge==W_gauge
 #    Current using the Wannier gauge
-     for ik in 1:k_grid.nk
+     Threads.@threads for ik in 1:k_grid.nk
        rho_w=transpose(rho[:,:,ik])
        for id in 1:s_dim
           j_intra[id]=j_intra[id]-real.(sum(∇H_w[:,:,id,ik].*rho_w))
@@ -506,7 +509,7 @@ end
 if props.eval_curr
   j0_intra,j0_inter=current(rho0)
   j_intra,j_inter  =get_current(solution)
-  for it in 1:n_steps
+  Threads.@threads for it in 1:n_steps
     j_intra[it,:]-= j0_intra[:]
     j_inter[it,:]-= j0_inter[:]
   end
