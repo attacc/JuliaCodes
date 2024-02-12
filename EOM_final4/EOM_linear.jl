@@ -79,7 +79,7 @@ props.curr_gauge=H_gauge
 props.eval_pol  =true
 
 field_name="PHHG"
-EInt = 2.64E10*kWCMm22AU
+EInt = 2.64E11*kWCMm22AU
 
 #field_name="delta"
 #EInt  = 2.64E1*kWCMm22AU
