@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=24
-n_k2=24
+n_k1=12
+n_k2=12
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -81,8 +81,8 @@ props.eval_pol  =true
 field_name="PHHG"
 EInt = 2.64E11*kWCMm22AU
 
-#field_name="delta"
-#EInt  = 2.64E1*kWCMm22AU
+field_name="delta"
+EInt  = 2.64E1*kWCMm22AU
 #
 Eamp =sqrt(EInt*4.0*pi/SPEED_of_LIGHT)
 
@@ -245,7 +245,7 @@ end
 #
 # Input paramters for linear optics with delta function
 #
-T_2=2.0*fs2aut   # fs
+T_2=6.0*fs2aut   # fs
 t_start=0.0
 dt =0.0025*fs2aut  # fs
 t_end  =72.0*fs2aut #T_2*12.0

@@ -56,8 +56,7 @@ function Divide_by_the_field(pol_w, times, itstart)
   #
   Int  = 2.64E1*kWCMm22AU
   Eamp =sqrt(Int*4.0*pi/SPEED_of_LIGHT)
-  # I miss a fator 2?
-  pol_w.=pol_w/Eamp/2.0
+  pol_w.=pol_w/Eamp
   #
   return pol_w
   #

@@ -240,6 +240,8 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
         eigenval_m= data_m.values
         eigenval_p= data_p.values
         #
+        dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
+        #
       elseif TB_gauge==TB_atomic && deltaK==nothing
         #
         # In the atomic gauge U is periodic, I can use the values in the grid
@@ -250,15 +252,27 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
         #
         dk=norm(lattice.rvectors[id])/k_grid.nk_dir[id] 
         #
-        eigenval_p=TB_sol.eigenval[:,ik_plus]
         eigenvec_p=TB_sol.eigenvec[:,:,ik_plus]
-        #
-        eigenval_m=TB_sol.eigenval[:,ik_minus]
         eigenvec_m=TB_sol.eigenvec[:,:,ik_minus]
         #
+        # Higher order formula
+        #
+        if k_grid.nk_dir[id]>=6
+          #  
+          ik_plus2   =get_k_neighbor(ik,id, 2,k_grid)
+          ik_minus2  =get_k_neighbor(ik,id,-2,k_grid)
+          eigenvec_p2=TB_sol.eigenvec[:,:,ik_plus2]
+          eigenvec_m2=TB_sol.eigenvec[:,:,ik_minus2]
+          #
+          ΔU_k =(eigenvec_p-eigenvec_m)
+          ΔU_2k=(eigenvec_p2-eigenvec_m2)
+          dU[:,:,id]=(8.0*ΔU_k-ΔU_2k)/(12.0*dk)
+          #
+        else
+          dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
+        end
+        #
       end
-      #
-      dU[:,:,id]=(eigenvec_p-eigenvec_m)/(2.0*dk)
       #
       k_plus =copy(k_grid.kpt[:,ik])
       k_minus=copy(k_grid.kpt[:,ik])
@@ -324,6 +338,8 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge, deltaK=nothi
         H_plus =Hamiltonian(k_plus,  TB_gauge)
         H_minus=Hamiltonian(k_minus, TB_gauge)
         #
+        dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
+        #
       elseif TB_gauge==TB_atomic && deltaK==nothing
         #
         # In the atomic gauge H is periodic I can use the value on the grid
@@ -337,9 +353,24 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge, deltaK=nothi
         H_plus =TB_sol.H_w[:,:,ik_plus]
         H_minus=TB_sol.H_w[:,:,ik_minus]
         #
+        # Higher order formula
+        #
+        if k_grid.nk_dir[id]>=6
+          #  
+          ik_plus2   =get_k_neighbor(ik,id, 2,k_grid)
+          ik_minus2  =get_k_neighbor(ik,id,-2,k_grid)
+          H_plus2    =TB_sol.H_w[:,:,ik_plus2]
+          H_minus2   =TB_sol.H_w[:,:,ik_minus2]
+          #
+          ΔH_k =(H_plus-H_minus)
+          ΔH_2k=(H_plus2-H_minus2)
+          dH_w[:,:,id]=(8.0*ΔH_k-ΔH_2k)/(12.0*dk)
+          #
+        else
+          dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
+        end
+        #
       end
-      #
-      dH_w[:,:,id]=(H_plus-H_minus)/(2.0*dk)
       #
     end
     #
@@ -377,7 +408,25 @@ function Evaluate_Dk_rho(rho, ik, k_grid, U, lattice)
     rho_minus=rho[:,:,ik_minus]
     rho_k    =rho[:,:,ik]
     #
-    dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
+    # Higher order formula
+    #
+    if k_grid.nk_dir[id]>=6
+      #  
+      ik_plus2  =get_k_neighbor(ik,id, 2,k_grid)
+      ik_minus2 =get_k_neighbor(ik,id,-2,k_grid)
+      rho_plus2 =rho[:,:,ik_plus]
+      rho_minus2=rho[:,:,ik_minus]
+      #
+      dk_rho[:,:,id]=(rho_plus-rho_minus)/(2.0*dk)
+      #
+    else
+      #  
+      Δρ_k =(rho_plus-rho_minus)
+      Δρ_2k=(rho_plus2-rho_minus2)
+      dk_rho[:,:,id]=(8.0*Δρ_k-Δρ_2k)/(12.0*dk)
+      #
+    end
+    #
     #
   end
   #
