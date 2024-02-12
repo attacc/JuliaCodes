@@ -318,7 +318,6 @@ function deriv_rho(rho, t)
         # Variable of the dynamics
         #
 	h_dim=2
-        #
 	#
 	d_rho=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk) #
 	#
@@ -389,6 +388,7 @@ function deriv_rho(rho, t)
 	# Damping
 	#
 	if T_2!=0.0 && dyn_props.damping==true
+           #
 	   Threads.@threads for ik in 1:k_grid.nk
              Δrho=rho[:,:,ik]-rho0[:,:,ik]
 	     if dyn_props.dyn_gauge==H_gauge
@@ -400,9 +400,11 @@ function deriv_rho(rho, t)
 	     end
 	   end
 	end
-
-	d_rho.=-1im*d_rho
-	
+        #
+	Threads.@threads for ik in 1:k_grid.nk
+	  d_rho[:,:,ik].=-1im*d_rho[:,:,ik]
+	end
+	#
     return d_rho
 end
 
