@@ -133,6 +133,22 @@ function rungekutta2_dm(d_rho, rho_0, t)
     return rho_t
 end
 #
+function rungekutta4_dm(d_rho, rho_0, t)
+    n     = length(t)
+    nk    = size(rho_0)[3]
+    h_dim = size(rho_0)[1]
+    rho_t = zeros(Complex{Float64},n, h_dim, h_dim, nk)
+    rho_t[1,:,:,:] = rho_0
+
+    println("Real-time equation integration: ")
+    for i in ProgressBar(1:n-1)
+        h = t[i+1] - t[i]
+	rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
+    end
+    return rho_t
+end
+#
+#
 # Fix phase of the eigenvectors in such a way
 # to have a positive definite diagonal
 #
