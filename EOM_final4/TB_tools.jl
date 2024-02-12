@@ -74,16 +74,12 @@ IO_output=IO_Output()
  #
 end
 
-function HW_rotate(M,eigenvec,mode)
-	if mode=="W_to_H"
-		rot_M=adjoint(eigenvec)*M*eigenvec
-	elseif mode=="H_to_W"
-                rot_M=eigenvec*M*adjoint(eigenvec)
-	else
-		println("Wrong call to rotate_H_to_W")
-		exit()
-	end
-	return rot_M
+@inline function HW_rotate(M,eigenvec)
+  return eigenvec*M*adjoint(eigenvec)
+end 
+
+@inline function WH_rotate(M,eigenvec)
+  return adjoint(eigenvec)*M*eigenvec
 end 
 
 function init_output()

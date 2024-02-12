@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=96
-n_k2=96
+n_k1=24
+n_k2=24
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -157,7 +157,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
   # Build dipoles
   for id in 1:s_dim
-        Dip_h[:,:,id,ik]=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
+        Dip_h[:,:,id,ik]=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik])
 # I set to zero the diagonal part of dipoles
 	Dip_h[:,:,id,ik]=Dip_h[:,:,id,ik].*off_diag
   end
@@ -181,7 +181,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
   if dyn_props.dyn_gauge==W_gauge
     for id in 1:s_dim
-        Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
+        Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik])
      end
   end
 end
@@ -207,7 +207,7 @@ if dyn_props.include_A_w
   # Then I rotate from W -> H
   #
   for id in 1:s_dim
-     A_h[:,:,id,ik]=HW_rotate(A_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
+     A_h[:,:,id,ik]=WH_rotate(A_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik])
   end
   #
   end
@@ -236,7 +236,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
     Dip_h[:,:,:,ik]=1im*UdU[:,:,:]
     if dyn_props.dyn_gauge==W_gauge
       for id in 1:s_dim
-          Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
+          Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik])
        end
     end
   end
@@ -263,7 +263,7 @@ rho0[1,1,:].=1.0
 #
 if dyn_props.dyn_gauge==W_gauge
   Threads.@threads for ik in 1:k_grid.nk
-     rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],TB_sol.eigenvec[:,:,ik],"H_to_W")
+     rho0[:,:,ik]=HW_rotate(rho0[:,:,ik],TB_sol.eigenvec[:,:,ik])
   end
 end
 #
@@ -278,7 +278,7 @@ end
 println("External field versor :",E_vec)
 
 #
-itstart = 10 # start of the external field
+itstart = 20 # start of the external field
 
 function get_Efield(t, ftype; itstart=3)
 	#
@@ -301,7 +301,7 @@ function get_Efield(t, ftype; itstart=3)
 	  if (t-T_0)>=sigma || (t-T_0)<0.0
 	          a_t=0.0
 	  else
-		  a_t =Eamp*(sin(pi*(t-T_0)/sigma))^2*cos(w*t)
+                 a_t =Eamp*(sin(pi*(t-T_0)/sigma))^2*sin(w*(t-T_0))
 	  end
 	else
 	  println("Field unknown!! ")	
@@ -400,15 +400,15 @@ function deriv_rho(rho, t)
        	   else
 	     Threads.@threads for ik in 1:k_grid.nk
                Δrho=rho[:,:,ik]-rho0[:,:,ik]
-	       Δrho=off_diag.*HW_rotate(Δrho,TB_sol.eigenvec[:,:,ik],"W_to_H")
-	       damp_mat=HW_rotate(Δrho,TB_sol.eigenvec[:,:,ik],"H_to_W")
+	       Δrho=off_diag.*WH_rotate(Δrho,TB_sol.eigenvec[:,:,ik])
+	       damp_mat=HW_rotate(Δrho,TB_sol.eigenvec[:,:,ik])
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*damp_mat
 	     end
 	   end
 	end
         #
 	Threads.@threads for ik in 1:k_grid.nk
-	  d_rho[:,:,ik]=-1im*d_rho[:,:,ik]
+	  d_rho[:,:,ik].=-1im*d_rho[:,:,ik]
 	end
 	#
     return d_rho
@@ -421,13 +421,13 @@ function get_polarization(rho_s)
     Threads.@threads for it in ProgressBar(1:nsteps)
       for ik in 1:k_grid.nk
          if dyn_props.dyn_gauge==W_gauge
-           rho=HW_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
+           rho=WH_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik])
          else
            rho=rho_s[it,:,:,ik]
          end
          for id in 1:s_dim
             if dyn_props.dyn_gauge==W_gauge
-               dip=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H").*off_diag
+               dip=WH_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik]).*off_diag
              else
                dip=Dip_h[:,:,id,ik].*off_diag
              end
@@ -457,7 +457,7 @@ function current(rho)
    Threads.@threads for ik in 1:k_grid.nk
      rho_t_H=transpose(rho[:,:,ik])
      for id in 1:s_dim
-        ∇H_h=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H") #.*off_diag
+        ∇H_h=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik]) #.*off_diag
         j_intra[id]=j_intra[id]-real.(sum(∇H_h.*rho_t_H))
         commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
         j_inter[id]=j_inter[id]-imag(sum(commutator.*rho_t_H))
@@ -467,7 +467,7 @@ function current(rho)
    if props.curr_gauge==H_gauge
 #  Current using the Hamiltonian gauge
      Threads.@threads for ik in 1:k_grid.nk
-        rho_h=HW_rotate(rho[:,:,ik],TB_sol.eigenvec[:,:,ik],"W_to_H")
+        rho_h=WH_rotate(rho[:,:,ik],TB_sol.eigenvec[:,:,ik])
         rho_h=transpose(rho_h)
         for id in 1:s_dim
            # 
@@ -476,7 +476,7 @@ function current(rho)
            # Probably introducing a LifeTime for the electron remove the necessity
            # of this off_diag or a windows for the current 
            #
-           ∇H_h=HW_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik],"W_to_H").*off_diag
+           ∇H_h=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik]).*off_diag
      	   j_intra[id]=j_intra[id]-real.(sum(∇H_h.*rho_h))
            commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
 	   j_inter[id]=j_inter[id]-imag(sum(commutator.*rho_h))
