@@ -53,7 +53,7 @@ println(" nk = ",k_grid.nk)
 # Hamiltonian gauge:  dyn_gauge = H_gauge
 # Wannier gauge    :  dyn_gauge = W_gauge
 #
-dyn_props.dyn_gauge=W_gauge
+dyn_props.dyn_gauge=H_gauge
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -61,16 +61,16 @@ dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-dyn_props.use_dipoles=false
+dyn_props.use_dipoles=true
 #
 # Use UdU for dipoles
 #
-dyn_props.use_UdU_for_dipoles=true
+dyn_props.use_UdU_for_dipoles=false #true
 
 # Include drho/dk in the dynamics
 dyn_props.include_drho_dk=true
 # Include A_w in the calculation of A_h
-dyn_props.include_A_w=true #false
+dyn_props.include_A_w=true
 
 # Print properties on disk
 props.print_dm  =false
@@ -82,7 +82,7 @@ field_name="PHHG"
 EInt = 2.64E11*kWCMm22AU
 
 field_name="delta"
-EInt  = 2.64E1*kWCMm22AU
+EInt  = 2.64E8*kWCMm22AU
 #
 Eamp =sqrt(EInt*4.0*pi/SPEED_of_LIGHT)
 
@@ -111,7 +111,8 @@ println(" Number of threads: ",Threads.nthreads())
 
 #TB_gauge=TB_lattice
 TB_gauge=TB_atomic
-dk=nothing #0.01
+#dk=nothing 
+dk=0.01
 println("Tight-binding gauge : $TB_gauge ")
 println("Delta-k for derivatives : $dk ")
 
@@ -249,7 +250,7 @@ T_2=6.0*fs2aut   # fs
 t_start=0.0
 dt =0.0025*fs2aut  # fs
 t_end  =72.0*fs2aut #T_2*12.0
-E_vec=[1.0,0.0]
+E_vec=[0.0,1.0]
 #
 t_range = t_start:dt:t_end
 n_steps=size(t_range)[1]
@@ -476,7 +477,7 @@ function current(rho)
            # Probably introducing a LifeTime for the electron remove the necessity
            # of this off_diag or a windows for the current 
            #
-           ∇H_h=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik]).*off_diag
+           ∇H_h=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik]) #.*off_diag
      	   j_intra[id]=j_intra[id]-real.(sum(∇H_h.*rho_h))
            commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
 	   j_inter[id]=j_inter[id]-imag(sum(commutator.*rho_h))
@@ -501,6 +502,7 @@ end
 
 # Solve EOM
 solution = rungekutta2_dm(deriv_rho, rho0, t_range)
+#solution = rungekutta4_dm(deriv_rho, rho0, t_range)
 
 if props.eval_pol
   # Calculate the polarization in time and frequency

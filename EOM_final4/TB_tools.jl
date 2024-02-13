@@ -2,7 +2,7 @@ module TB_tools
 
 using ProgressBars
 
-export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate
+export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,rungekutta4
 
 const W_gauge=true
 const H_gauge=false
@@ -333,8 +333,10 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge, deltaK=nothi
         if deltaK==nothing
           vec_dk=lattice.rvectors[id]/k_grid.nk_dir[id]
         else
-          vec_dk=lattice.rvectors[id]*deltaK
+          vec_dk=zeros(Float64,s_dim)
+          vec_dk[id]=deltaK
         end
+        #
         dk=norm(vec_dk)
         #
         k_plus =k_plus +vec_dk
@@ -379,7 +381,9 @@ function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge, deltaK=nothi
       #
     end
     #
-    dH_w  =K_crys_to_cart(dH_w,lattice)
+    if dk==nothing 
+      dH_w  =K_crys_to_cart(dH_w,lattice)
+    end
     #
     # If gauge is "atomic" apply correction to ∇H
     #
