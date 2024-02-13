@@ -143,7 +143,12 @@ function rungekutta4_dm(d_rho, rho_0, t)
     println("Real-time equation integration: ")
     for i in ProgressBar(1:n-1)
         h = t[i+1] - t[i]
-	rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
+        rho0 = rho_t[i,:,:,:]  
+	rho1 = d_rho(rho0, t[i])
+	rho2 = d_rho(rho0+rho1*h/2.0, t[i]+h/2.0)
+	rho3 = d_rho(rho0+rho2*h/2.0, t[i]+h/2.0)
+	rho4 = d_rho(rho0+rho3*h, t[i]+h)
+        rho_t[i+1,:,:,:] = rho0 + h*(rho1/6.0+rho2/3.0+rho3/3.0+rho4/6.0)
     end
     return rho_t
 end
