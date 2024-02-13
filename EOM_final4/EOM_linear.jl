@@ -29,8 +29,8 @@ lattice=set_Lattice(2,[a_1,a_2])
 off_diag=.~I(h_dim)
 
 # K-points
-n_k1=12
-n_k2=12
+n_k1=6
+n_k2=6
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # print_k_grid(k_grid)
@@ -53,7 +53,7 @@ println(" nk = ",k_grid.nk)
 # Hamiltonian gauge:  dyn_gauge = H_gauge
 # Wannier gauge    :  dyn_gauge = W_gauge
 #
-dyn_props.dyn_gauge=H_gauge
+dyn_props.dyn_gauge=W_gauge
 #
 # Add damping to the dynamics -i T_2 * \rho_{ij}
 #
@@ -65,7 +65,7 @@ dyn_props.use_dipoles=true
 #
 # Use UdU for dipoles
 #
-dyn_props.use_UdU_for_dipoles=false #true
+dyn_props.use_UdU_for_dipoles=true
 
 # Include drho/dk in the dynamics
 dyn_props.include_drho_dk=true
@@ -79,10 +79,10 @@ props.curr_gauge=H_gauge
 props.eval_pol  =true
 
 field_name="PHHG"
-EInt = 2.64E11*kWCMm22AU
+EInt = 2.64E8*kWCMm22AU
 
-field_name="delta"
-EInt  = 2.64E8*kWCMm22AU
+#field_name="delta"
+#EInt  = 2.64E8*kWCMm22AU
 #
 Eamp =sqrt(EInt*4.0*pi/SPEED_of_LIGHT)
 
@@ -452,16 +452,17 @@ function get_current(rho_s)
 end
 
 function current(rho)
- j_intra=zeros(Float64,s_dim)
- j_inter=zeros(Float64,s_dim)
+ j_intra_t=zeros(Float64, s_dim, Threads.nthreads())
+ j_inter_t=zeros(Float64, s_dim, Threads.nthreads())
  if dyn_props.dyn_gauge==H_gauge
    Threads.@threads for ik in 1:k_grid.nk
      rho_t_H=transpose(rho[:,:,ik])
+     t_id=Threads.threadid()
      for id in 1:s_dim
         ∇H_h=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik]) #.*off_diag
-        j_intra[id]=j_intra[id]-real.(sum(∇H_h.*rho_t_H))
+        j_intra_t[id,t_id]=j_intra_t[id,t_id]-real.(sum(∇H_h.*rho_t_H))
         commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
-        j_inter[id]=j_inter[id]-imag(sum(commutator.*rho_t_H))
+        j_inter_t[id,t_id]=j_inter_t[id,t_id]-imag(sum(commutator.*rho_t_H))
      end
    end
  else
@@ -470,6 +471,7 @@ function current(rho)
      Threads.@threads for ik in 1:k_grid.nk
         rho_h=WH_rotate(rho[:,:,ik],TB_sol.eigenvec[:,:,ik])
         rho_h=transpose(rho_h)
+        t_id=Threads.threadid()
         for id in 1:s_dim
            # 
            # Not sure if I should multiply for off_diag this is not clear
@@ -478,25 +480,31 @@ function current(rho)
            # of this off_diag or a windows for the current 
            #
            ∇H_h=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik]) #.*off_diag
-     	   j_intra[id]=j_intra[id]-real.(sum(∇H_h.*rho_h))
+           j_intra_t[id,t_id]=j_intra_t[id,t_id]-real.(sum(∇H_h.*rho_h))
            commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
-	   j_inter[id]=j_inter[id]-imag(sum(commutator.*rho_h))
+	   j_inter_t[id,t_id]=j_inter_t[id,t_id]-imag(sum(commutator.*rho_h))
 	end
      end
+
    elseif props.curr_gauge==W_gauge
 #    Current using the Wannier gauge
      Threads.@threads for ik in 1:k_grid.nk
+       t_id=Threads.threadid()
        rho_w=transpose(rho[:,:,ik])
        for id in 1:s_dim
-          j_intra[id]=j_intra[id]-real.(sum(∇H_w[:,:,id,ik].*rho_w))
+          j_intra_t[id,t_id]=j_intra_t[id,t_id]-real.(sum(∇H_w[:,:,id,ik].*rho_w))
           commutator=A_w[:,:,id,ik]*TB_sol.H_w[:,:,ik]-TB_sol.H_w[:,:,ik]*A_w[:,:,id,ik]
-	  j_inter[id]=j_inter[id]-imag(sum(commutator.*rho_w))
+	  j_inter_t[id,t_id]=j_inter_t[id,t_id]-imag(sum(commutator.*rho_w))
        end
      end
    end
   end
-  j_intra=j_intra/k_grid.nk
-  j_inter=j_inter/k_grid.nk
+  j_intra=zeros(Float64,s_dim)
+  j_inter=zeros(Float64,s_dim)
+  for id in 1:s_dim
+      j_intra[id]=sum(j_intra_t[id,:])/k_grid.nk
+      j_inter[id]=sum(j_inter_t[id,:])/k_grid.nk
+  end
   return j_intra,j_inter
 end 
 
