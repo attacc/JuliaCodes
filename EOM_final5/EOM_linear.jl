@@ -437,8 +437,13 @@ function current(rho)
 end 
 
 # Solve EOM
-solution = rungekutta2_dm(deriv_rho, rho0, t_range)
-#solution = rungekutta4_dm(deriv_rho, rho0, t_range)
+if Integrator==RK2
+  solution = rungekutta2_dm(deriv_rho, rho0, t_range)
+elseif Integrator==RK4
+  solution = rungekutta4_dm(deriv_rho, rho0, t_range)
+else
+  println("Unknown integrator")
+end
 
 if props.eval_pol
   # Calculate the polarization in time and frequency

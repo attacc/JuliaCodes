@@ -23,6 +23,10 @@ lattice=set_Lattice(2,[a_1,a_2])
 n_k1=6
 n_k2=6
 #
+# Integrator
+#
+Integrator=RK2
+#
 # Select the space of the dynamics:
 #
 # Hamiltonian gauge:  dyn_gauge = H_gauge

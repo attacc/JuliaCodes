@@ -2,7 +2,7 @@ module TB_tools
 
 using ProgressBars
 
-export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,rungekutta4
+export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,rungekutta4,RK2,RK4
 
 const W_gauge=true
 const H_gauge=false
@@ -30,6 +30,12 @@ mutable struct TB_Solution
 	H_w::Array{Complex{Float64},3}
 	TB_Solution() = new()
 end
+
+# 
+# Possible integrators
+#
+RK2=1
+RK4=2
 
 TB_sol=TB_Solution()
 
