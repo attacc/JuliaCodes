@@ -2,7 +2,7 @@ module TB_tools
 
 using ProgressBars
 
-export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,rungekutta4,RK2,RK4,rk2_step,generate_header
+export evaluate_DOS,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,RK2,RK4,rk2_step,rk4_step,generate_header
 
 const W_gauge=true
 const H_gauge=false
@@ -115,54 +115,20 @@ function finalize_output()
 	end
 end 
 
-function rungekutta2_dm(d_rho, rho_0, t)
-    n     = length(t)
-    nk    = size(rho_0)[3]
-    h_dim = size(rho_0)[1]
-    rho_t = zeros(Complex{Float64},n, h_dim, h_dim, nk)
-    rho_t[1,:,:,:] = rho_0
-
-    init_output()
-
-    println("Real-time equation integration: ")
-    for i in ProgressBar(1:n-1)
-        rho_t[i+1,:,:,:] = rk2_step(d_rho, rho_t[i,:,:,:], t, i) 
-	if props.print_dm
-	   print_density_matrix(t[i],rho_t[i,:,:,:])
-	end
-    end
-
-    finalize_output()
-
-    return rho_t
-end
-#
 function rk2_step(d_rho, rho_in, time, it)
   h = time[it+1] - time[it]
   return rho_in + h * d_rho(rho_in + d_rho(rho_in, time[it]) * h/2, time[it] + h/2)
 end
-#
-function rungekutta4_dm(d_rho, rho_0, t)
-    n     = length(t)
-    nk    = size(rho_0)[3]
-    h_dim = size(rho_0)[1]
-    rho_t = zeros(Complex{Float64},n, h_dim, h_dim, nk)
-    rho_t[1,:,:,:] = rho_0
 
-    println("Real-time equation integration: ")
-    for i in ProgressBar(1:n-1)
-        h = t[i+1] - t[i]
-        rho0 = rho_t[i,:,:,:]  
-	rho1 = d_rho(rho0, t[i])
-	rho2 = d_rho(rho0+rho1*h/2.0, t[i]+h/2.0)
-	rho3 = d_rho(rho0+rho2*h/2.0, t[i]+h/2.0)
-	rho4 = d_rho(rho0+rho3*h, t[i]+h)
-        rho_t[i+1,:,:,:] = rho0 + h*(rho1/6.0+rho2/3.0+rho3/3.0+rho4/6.0)
-    end
-    return rho_t
+function rk4_step(d_rho, rho_in, time, it)
+  h = time[it+1] - time[it]
+  rho1 = d_rho(rho_in, time[i])
+  rho2 = d_rho(rho_in+rho1*h/2.0, time[i]+h/2.0)
+  rho3 = d_rho(rho_in+rho2*h/2.0, time[i]+h/2.0)
+  rho4 = d_rho(rho_in+rho3*h, time[i]+h)
+  rho_out = rho_in + h*(rho1/6.0+rho2/3.0+rho3/3.0+rho4/6.0)
+  return rho_out
 end
-
-#
 #
 # Fix phase of the eigenvectors in such a way
 # to have a positive definite diagonal
