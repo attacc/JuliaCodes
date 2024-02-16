@@ -326,7 +326,7 @@ function deriv_rho(rho, t)
                damp_mat=1.0/T_2*off_diag
            end
            if T_1!=0.0
-               dmap_mat+=1.0/T_1*I(h_dim)
+               damp_mat+=1.0/T_1*I(h_dim)
            end
            #
 	   if dyn_props.dyn_gauge==H_gauge
