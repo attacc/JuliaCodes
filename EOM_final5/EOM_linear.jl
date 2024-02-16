@@ -203,6 +203,7 @@ println("Time rage ",0.0," - ",t_end/fs2aut)
 println("Number of steps ",n_steps)
 if dyn_props.damping
    println("Dephasing time ",T_2/fs2aut," [fs] ")
+   println("Life-time      ",T_1/fs2aut," [fs] ")
 end
 println("External field versor :",E_vec)
 
