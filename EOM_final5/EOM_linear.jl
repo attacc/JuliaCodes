@@ -262,7 +262,7 @@ else
 end
 
 
-function deriv_rho(rho, t)
+function deriv_rho(rho_in, t)
 	#
         # Variable of the dynamics
         #
@@ -276,13 +276,13 @@ function deriv_rho(rho, t)
           # in h-space the Hamiltonian is diagonal
 	  Threads.@threads for ik in 1:k_grid.nk
              for ib in 1:h_dim, ic in 1:h_dim
-  	       d_rho[ib,ic,ik] =TB_sol.eigenval[ib,ik]*rho[ib,ic,ik]-rho[ib,ic,ik]*TB_sol.eigenval[ic,ik]
+  	       d_rho[ib,ic,ik] =TB_sol.eigenval[ib,ik]*rho_in[ib,ic,ik]-rho_in[ib,ic,ik]*TB_sol.eigenval[ic,ik]
              end
 	  end
         else
           # in the w-space the Hamiltonian is not diagonal
 	  Threads.@threads for ik in 1:k_grid.nk
- 	     d_rho[:,:,ik]=TB_sol.H_w[:,:,ik]*rho[:,:,ik]-rho[:,:,ik]*TB_sol.H_w[:,:,ik]
+ 	     d_rho[:,:,ik]=TB_sol.H_w[:,:,ik]*rho_in[:,:,ik]-rho_in[:,:,ik]*TB_sol.H_w[:,:,ik]
 	  end
         end
 	#
@@ -301,7 +301,7 @@ function deriv_rho(rho, t)
           #
           # Commutator D*rho-rho*D
           # 
-	  d_rho[:,:,ik]=d_rho[:,:,ik]+(E_dot_DIP[:,:]*rho[:,:,ik]-rho[:,:,ik]*E_dot_DIP[:,:])
+	  d_rho[:,:,ik]=d_rho[:,:,ik]+(E_dot_DIP[:,:]*rho_in[:,:,ik]-rho_in[:,:,ik]*E_dot_DIP[:,:])
           #
 	end
 	#
@@ -310,7 +310,7 @@ function deriv_rho(rho, t)
           # Add d_rho/dk
           #
    	  Threads.@threads for ik in 1:k_grid.nk
-            Dk_rho=Evaluate_Dk_rho(rho, ik, k_grid, TB_sol.eigenvec, lattice)
+            Dk_rho=Evaluate_Dk_rho(rho_in, ik, k_grid, TB_sol.eigenvec, lattice)
             for id in 1:s_dim
               d_rho[:,:,ik]+=1im*E_field[id]*Dk_rho[:,:,id]
             end
@@ -332,12 +332,12 @@ function deriv_rho(rho, t)
            #
 	   if dyn_props.dyn_gauge==H_gauge
 	     Threads.@threads for ik in 1:k_grid.nk
-               Δrho=rho[:,:,ik]-rho0[:,:,ik]
+               Δrho=rho_in[:,:,ik]-rho0[:,:,ik]
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im*damp_mat.*Δrho
              end
        	   else
 	     Threads.@threads for ik in 1:k_grid.nk
-               Δrho=rho[:,:,ik]-rho0[:,:,ik]
+               Δrho=rho_in[:,:,ik]-rho0[:,:,ik]
 	       damp_dot_Δrho=damp_mat.*WH_rotate(Δrho,TB_sol.eigenvec[:,:,ik])
 	       damp_dot_Δrho=HW_rotate(damp_dot_Δrho,TB_sol.eigenvec[:,:,ik])
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im*damp_dot_Δrho
@@ -352,41 +352,26 @@ function deriv_rho(rho, t)
     return d_rho
 end
 
-function get_polarization(rho_s)
-    nsteps=size(rho_s,1)
-    pol=zeros(Float64,nsteps,s_dim)
-    println("Calculate polarization: ")
-    Threads.@threads for it in ProgressBar(1:nsteps)
-      for ik in 1:k_grid.nk
-         if dyn_props.dyn_gauge==W_gauge
-           rho=WH_rotate(rho_s[it,:,:,ik],TB_sol.eigenvec[:,:,ik])
-         else
-           rho=rho_s[it,:,:,ik]
-         end
-         for id in 1:s_dim
-            if dyn_props.dyn_gauge==W_gauge
-               dip=WH_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik]).*off_diag
-             else
-               dip=Dip_h[:,:,id,ik].*off_diag
-             end
-       	     pol[it,id]=pol[it,id]+real.(sum(dip.*transpose(rho)))
-	   end
+function polarization(rho)
+  pol_t=zeros(Float64,s_dim)
+  for ik in 1:k_grid.nk
+    if dyn_props.dyn_gauge==W_gauge
+       rho_in=WH_rotate(rho[:,:,ik],TB_sol.eigenvec[:,:,ik])
+    else
+      rho_in=rho[:,:,ik]
+    end
+    for id in 1:s_dim
+       if dyn_props.dyn_gauge==W_gauge
+          dip=WH_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik]).*off_diag
+        else
+          dip=Dip_h[:,:,id,ik].*off_diag
         end
+        pol_t[id]+=real.(sum(dip.*transpose(rho_in)))
     end
-    pol=pol/k_grid.nk
-    return pol
+  end
+  pol_t=pol_t/k_grid.nk
+  return pol_t
 end 
-
-function get_current(rho_s)
-    nsteps=size(rho_s,1)
-    j_intra=zeros(Float64,nsteps,s_dim)
-    j_inter=zeros(Float64,nsteps,s_dim)
-    println("Calculate current: ")
-    for it in ProgressBar(1:nsteps)
-       j_intra[it,:],j_inter[it,:]=current(rho_s[it,:,:,:])
-    end
-    return j_intra,j_inter
-end
 
 function current(rho)
  j_intra_t=zeros(Float64, s_dim, Threads.nthreads())
@@ -445,96 +430,66 @@ function current(rho)
   return j_intra,j_inter
 end 
 
-# Solve EOM
-if Integrator==RK2
-  solution = rungekutta2_dm(deriv_rho, rho0, t_range)
-elseif Integrator==RK4
-  solution = rungekutta4_dm(deriv_rho, rho0, t_range)
-else
-  println("Unknown integrator")
-end
-
-if props.eval_pol
-  # Calculate the polarization in time and frequency
-  pol=get_polarization(solution)
-end
-if props.eval_curr
-  j0_intra,j0_inter=current(rho0)
-  j_intra,j_inter  =get_current(solution)
-  Threads.@threads for it in 1:n_steps
-    j_intra[it,:]-= j0_intra[:]
-    j_inter[it,:]-= j0_inter[:]
-  end
-end
-
-# Generate headers
-
-function generate_header(k_grid=nothing,dyn_props=nothing,props=nothing)
-   header="#\n# * * * EOM of the density matrix * * * \n#\n#"
-
-   if k_grid != nothing
-     header*="# k-point grid: $(k_grid.nk_dir[1]) - $(k_grid.nk_dir[2]) \n"
-   end
-   if dyn_props != nothing
-     if dyn_props.dyn_gauge==H_gauge
-         header*="# structure gauge : Hamiltonian \n"
-     else
-         header*="# structure gauge : Wannier \n"
-     end
-     header*="# include drho/dk in the dynamics: $(dyn_props.include_drho_dk) \n"
-     header*="# include A_w in the dynamics: $(dyn_props.include_A_w) \n"
-     header*="# use dipoles : $(dyn_props.use_dipoles) \n"
-     header*="# use damping : $(dyn_props.damping) \n"
-     header*="# use UdU for dipoles : $(dyn_props.use_UdU_for_dipoles) \n"
-   end
-
-   if props != nothing
-     header*="# calculate polarization : $(props.eval_pol)\n"
-     header*="# calculate current      : $(props.eval_curr)\n"
-     header*="# current gauge          : $(props.curr_gauge) \n"
-     header*="# print dm               : $(props.print_dm)\n"
-   end
-   header*="#\n#\n"
-  return header
-end
-
-
-# Write polarization and external field on disk
-
-t_and_E=zeros(Float64,n_steps,3)
-Threads.@threads for it in 1:n_steps
- t=it*dt
- E_field_t=get_Efield(t,field_name,itstart=itstart)
- t_and_E[it,:]=[t/fs2aut,E_field_t[1],E_field_t[2]]
-end
+nsteps = length(t_range)
 
 header=generate_header(k_grid,dyn_props,props)
 
-if props.eval_pol
-  f = open("polarization.csv","w") 
-  write(f,header)
-  write(f,"#time[fs] polarization_x  polarization_y\n") 
-  for it in 1:n_steps
-    write(f,"$(t_and_E[it,1]), $(pol[it,1]),  $(pol[it,2]) \n")
-  end
-  close(f)
-end
-
-
 if props.eval_curr
-  f = open("current.csv","w") 
-  write(f,header)
-  write(f,"#time[fs] j_intra_x  j_intra_y  j_inter_x  j_inter_y\n") 
-  for it in 1:n_steps
-      write(f,"$(t_and_E[it,1]), $(j_intra[it,1]),  $(j_intra[it,2]),  $(j_inter[it,1]),  $(j_inter[it,2]) \n")
-  end
-  close(f)
+  j0_intra,j0_inter=current(rho0)
+  f_curr = open("current.csv","w") 
+  write(f_curr,header)
+  write(f_curr,"#time[fs] j_intra_x  j_intra_y  j_inter_x  j_inter_y\n") 
+end
+if props.eval_pol
+  f_pol = open("polarization.csv","w") 
+  write(f_pol,header)
+  write(f_pol,"#time[fs] polarization_x  polarization_y\n") 
 end
 
-f = open("external_field.csv","w") 
-write(f,header)
-write(f,"#time[fs]  efield_x efield_y\n") 
-for it in 1:n_steps
-  write(f,"$(t_and_E[it,1]),  $(t_and_E[it,2]),  $(t_and_E[it,3]) \n")
+f_field = open("external_field.csv","w") 
+write(f_field,header)
+write(f_field,"#time[fs]  efield_x efield_y\n") 
+
+rho =
+
+println("Real-time equation integration: ")
+
+
+let rho=copy(rho0)
+  for it in ProgressBar(1:nsteps-1)
+     #
+     # Integration
+     #
+     if Integrator==RK2
+      rho=rk2_step(deriv_rho, rho, t_range, it) 
+    elseif Integrator==RK4
+     rho=rk4_step(deriv_rho, rho, t_range, it) 
+    else
+      println("Unknown integrator")
+      exit()
+    end
+    #
+    # Evaluate properties
+    #
+    if props.eval_curr;  
+       j_intra,j_inter=current(rho)      
+       j_intra-= j0_intra
+       j_inter-= j0_inter
+       write(f_curr,"$(t_range[it]/fs2aut), $(j_intra[1]),  $(j_intra[2]),  $(j_inter[1]),  $(j_inter[2]) \n")
+    end
+    if props.eval_pol;   
+       pol=polarization(rho) 
+       write(f_pol,"$(t_range[it]/fs2aut), $(pol[1]),  $(pol[2]) \n")
+    end    
+    #
+    # Write field on disk disk
+    #
+    E_field_t=get_Efield(t_range[it],field_name,itstart=itstart)
+    write(f_field,"$(t_range[it]/fs2aut),  $(E_field_t[1]),  $(E_field_t[2]) \n")
+    #
+end
 end
 
+close(f_field)
+if props.eval_pol; close(f_pol) end
+if props.eval_curr; close(f_curr) end

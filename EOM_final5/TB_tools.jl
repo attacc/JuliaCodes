@@ -2,7 +2,7 @@ module TB_tools
 
 using ProgressBars
 
-export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,rungekutta4,RK2,RK4
+export evaluate_DOS,rungekutta2_dm,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,rungekutta4,RK2,RK4,rk2_step,generate_header
 
 const W_gauge=true
 const H_gauge=false
@@ -126,9 +126,7 @@ function rungekutta2_dm(d_rho, rho_0, t)
 
     println("Real-time equation integration: ")
     for i in ProgressBar(1:n-1)
-        h = t[i+1] - t[i]
-	rho_t[i+1,:,:,:] = rho_t[i,:,:,:] + h * d_rho(rho_t[i,:,:,:] + d_rho(rho_t[i,:,:,:], t[i]) * h/2, t[i] + h/2)
-
+        rho_t[i+1,:,:,:] = rk2_step(d_rho, rho_t[i,:,:,:], t, i) 
 	if props.print_dm
 	   print_density_matrix(t[i],rho_t[i,:,:,:])
 	end
@@ -137,6 +135,11 @@ function rungekutta2_dm(d_rho, rho_0, t)
     finalize_output()
 
     return rho_t
+end
+#
+function rk2_step(d_rho, rho_in, time, it)
+  h = time[it+1] - time[it]
+  return rho_in + h * d_rho(rho_in + d_rho(rho_in, time[it]) * h/2, time[it] + h/2)
 end
 #
 function rungekutta4_dm(d_rho, rho_0, t)
@@ -158,6 +161,7 @@ function rungekutta4_dm(d_rho, rho_0, t)
     end
     return rho_t
 end
+
 #
 #
 # Fix phase of the eigenvectors in such a way
@@ -452,3 +456,33 @@ function Evaluate_Dk_rho(rho, ik, k_grid, U, lattice)
   return dk_rho
   #
 end
+
+function generate_header(k_grid=nothing,dyn_props=nothing,props=nothing)
+   header="#\n# * * * EOM of the density matrix * * * \n#\n#"
+
+   if k_grid != nothing
+     header*="# k-point grid: $(k_grid.nk_dir[1]) - $(k_grid.nk_dir[2]) \n"
+   end
+   if dyn_props != nothing
+     if dyn_props.dyn_gauge==H_gauge
+         header*="# structure gauge : Hamiltonian \n"
+     else
+         header*="# structure gauge : Wannier \n"
+     end
+     header*="# include drho/dk in the dynamics: $(dyn_props.include_drho_dk) \n"
+     header*="# include A_w in the dynamics: $(dyn_props.include_A_w) \n"
+     header*="# use dipoles : $(dyn_props.use_dipoles) \n"
+     header*="# use damping : $(dyn_props.damping) \n"
+     header*="# use UdU for dipoles : $(dyn_props.use_UdU_for_dipoles) \n"
+   end
+
+   if props != nothing
+     header*="# calculate polarization : $(props.eval_pol)\n"
+     header*="# calculate current      : $(props.eval_curr)\n"
+     header*="# current gauge          : $(props.curr_gauge) \n"
+     header*="# print dm               : $(props.print_dm)\n"
+   end
+   header*="#\n#\n"
+  return header
+end
+
