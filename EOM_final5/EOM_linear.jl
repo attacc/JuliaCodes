@@ -319,19 +319,27 @@ function deriv_rho(rho, t)
         #
 	# Damping
 	#
-	if T_2!=0.0 && dyn_props.damping==true
+        if (T_2!=0.0 || T_1!=0.0) && dyn_props.damping==true
+           #
+           damp_mat=zeros(Float64,h_dim,h_dim)
+           if T_2!=0.0
+               damp_mat=1.0/T_2*off_diag
+           end
+           if T_1!=0.0
+               dmap_mat+=1.0/T_1*I(h_dim)
+           end
            #
 	   if dyn_props.dyn_gauge==H_gauge
 	     Threads.@threads for ik in 1:k_grid.nk
                Δrho=rho[:,:,ik]-rho0[:,:,ik]
-	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*off_diag.*Δrho
+	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im*damp_mat.*Δrho
              end
        	   else
 	     Threads.@threads for ik in 1:k_grid.nk
                Δrho=rho[:,:,ik]-rho0[:,:,ik]
-	       Δrho=off_diag.*WH_rotate(Δrho,TB_sol.eigenvec[:,:,ik])
-	       damp_mat=HW_rotate(Δrho,TB_sol.eigenvec[:,:,ik])
-	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im/T_2*damp_mat
+	       damp_dot_Δrho=damp_mat.*WH_rotate(Δrho,TB_sol.eigenvec[:,:,ik])
+	       damp_dot_Δrho=HW_rotate(damp_dot_Δrho,TB_sol.eigenvec[:,:,ik])
+	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im*damp_dot_Δrho
 	     end
 	   end
 	end

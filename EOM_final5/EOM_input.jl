@@ -78,6 +78,7 @@ TB_gauge=TB_atomic
 dk=0.01
         
 T_2=6.0*fs2aut      #  dephasing fs
+T_1=12.0*fs2aut      #  dephasing fs
 dt =0.0025*fs2aut   #  time-step fs
 t_end  =72.0*fs2aut #  simulation lenght T_2*12.0
 itstart = 20 # start of the external field
