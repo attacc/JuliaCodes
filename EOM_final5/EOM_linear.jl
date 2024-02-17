@@ -296,7 +296,7 @@ function deriv_rho(rho_in, t)
 	  #
 	  # Dipole term for the commutator dot field D*rho-rho*D
           # 
-	  d_rho[:,:,ik]+=E_field*(E_dot_DIP[:,:,ik]*rho_in[:,:,ik]-rho_in[:,:,ik]*E_dot_DIP[:,:,ik])
+          d_rho[:,:,ik]+=E_field*(@view(E_dot_DIP[:,:,ik])*@view(rho_in[:,:,ik])-@view(rho_in[:,:,ik])*@view(E_dot_DIP[:,:,ik]))
           #
 	end
         #
@@ -309,6 +309,7 @@ function deriv_rho(rho_in, t)
             for id in 1:s_dim
               d_rho[:,:,ik].=d_rho[:,:,ik]+1im*E_field[id]*Dk_rho[:,:,id]
             end
+            Dk_rho=nothing
           end
           #
         end
@@ -345,7 +346,6 @@ function deriv_rho(rho_in, t)
 	  d_rho[:,:,ik].=-1im*d_rho[:,:,ik]
 	end
 	#
-    GC.gc()
     return d_rho
 end
 
@@ -449,8 +449,7 @@ f_field = open("external_field.csv","w")
 write(f_field,header)
 write(f_field,"#time[fs]  efield_x efield_y\n") 
 
-rho =
-
+GC.gc()
 println("Real-time equation integration: ")
 
 
