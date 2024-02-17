@@ -238,9 +238,7 @@ function get_Efield(t, ftype; itstart=3)
 	  exit()
 	end
 	#
-	Efield=a_t*E_vec
-	#
-	return Efield
+	return a_t
 end
 
 # 
@@ -260,6 +258,10 @@ else
     DIP_matrix=A_w
   end
 end
+E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+for id in 1:s_dim, ik in 1:k_grid.nk
+  E_dot_DIP[:,:,ik]+=E_vec[id]*DIP_matrix[:,:,id,ik]
+end
 
 
 function deriv_rho(rho_in, t)
@@ -269,20 +271,20 @@ function deriv_rho(rho_in, t)
 	h_dim=2
 	#
 	d_rho=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk) #
-	#
+        #
 	# Hamiltonian term
 	#
         if dyn_props.dyn_gauge==H_gauge
           # in h-space the Hamiltonian is diagonal
 	  Threads.@threads for ik in 1:k_grid.nk
              for ib in 1:h_dim, ic in 1:h_dim
-  	       d_rho[ib,ic,ik] =TB_sol.eigenval[ib,ik]*rho_in[ib,ic,ik]-rho_in[ib,ic,ik]*TB_sol.eigenval[ic,ik]
+  	       d_rho[ib,ic,ik]=TB_sol.eigenval[ib,ik]*rho_in[ib,ic,ik]-rho_in[ib,ic,ik]*TB_sol.eigenval[ic,ik]
              end
 	  end
         else
           # in the w-space the Hamiltonian is not diagonal
 	  Threads.@threads for ik in 1:k_grid.nk
- 	     d_rho[:,:,ik]=TB_sol.H_w[:,:,ik]*rho_in[:,:,ik]-rho_in[:,:,ik]*TB_sol.H_w[:,:,ik]
+ 	     d_rho[:,:,ik].=TB_sol.H_w[:,:,ik]*rho_in[:,:,ik]-rho_in[:,:,ik]*TB_sol.H_w[:,:,ik]
 	  end
         end
 	#
@@ -292,19 +294,12 @@ function deriv_rho(rho_in, t)
 	#
 	Threads.@threads for ik in 1:k_grid.nk
 	  #
-	  # Dipole term for the commutator dot field
-	  #
-          E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim)
-          for id in 1:s_dim
-            E_dot_DIP+=E_field[id]*DIP_matrix[:,:,id,ik]
-          end
-          #
-          # Commutator D*rho-rho*D
+	  # Dipole term for the commutator dot field D*rho-rho*D
           # 
-	  d_rho[:,:,ik]=d_rho[:,:,ik]+(E_dot_DIP[:,:]*rho_in[:,:,ik]-rho_in[:,:,ik]*E_dot_DIP[:,:])
+	  d_rho[:,:,ik]+=E_field*(E_dot_DIP[:,:,ik]*rho_in[:,:,ik]-rho_in[:,:,ik]*E_dot_DIP[:,:,ik])
           #
 	end
-	#
+        #
         if !dyn_props.use_dipoles &&  dyn_props.include_drho_dk
           # 
           # Add d_rho/dk
@@ -312,7 +307,7 @@ function deriv_rho(rho_in, t)
    	  Threads.@threads for ik in 1:k_grid.nk
             Dk_rho=Evaluate_Dk_rho(rho_in, ik, k_grid, TB_sol.eigenvec, lattice)
             for id in 1:s_dim
-              d_rho[:,:,ik]+=1im*E_field[id]*Dk_rho[:,:,id]
+              d_rho[:,:,ik].=d_rho[:,:,ik]+1im*E_field[id]*Dk_rho[:,:,id]
             end
           end
           #
@@ -343,12 +338,14 @@ function deriv_rho(rho_in, t)
 	       d_rho[:,:,ik]=d_rho[:,:,ik]-1im*damp_dot_Δrho
 	     end
 	   end
+           damp_mat=nothing
 	end
         #
 	Threads.@threads for ik in 1:k_grid.nk
 	  d_rho[:,:,ik].=-1im*d_rho[:,:,ik]
 	end
 	#
+    GC.gc()
     return d_rho
 end
 
@@ -427,6 +424,8 @@ function current(rho)
       j_intra[id]=sum(j_intra_t[id,:])/k_grid.nk
       j_inter[id]=sum(j_inter_t[id,:])/k_grid.nk
   end
+  j_intra_t=nothing
+  j_inter_t=nothing
   return j_intra,j_inter
 end 
 
@@ -476,16 +475,18 @@ let rho=copy(rho0)
        j_intra-= j0_intra
        j_inter-= j0_inter
        write(f_curr,"$(t_range[it]/fs2aut), $(j_intra[1]),  $(j_intra[2]),  $(j_inter[1]),  $(j_inter[2]) \n")
+       j_intra,j_inter=nothing,nothing
     end
     if props.eval_pol;   
        pol=polarization(rho) 
        write(f_pol,"$(t_range[it]/fs2aut), $(pol[1]),  $(pol[2]) \n")
+       pol=nothing
     end    
     #
     # Write field on disk disk
     #
     E_field_t=get_Efield(t_range[it],field_name,itstart=itstart)
-    write(f_field,"$(t_range[it]/fs2aut),  $(E_field_t[1]),  $(E_field_t[2]) \n")
+    write(f_field,"$(t_range[it]/fs2aut),  $(E_field_t*E_vec[1]),  $(E_field_t*E_vec[2]) \n")
     #
 end
 end
