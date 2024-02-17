@@ -296,7 +296,8 @@ function deriv_rho(rho_in, t)
 	  #
 	  # Dipole term for the commutator dot field D*rho-rho*D
           # 
-          d_rho[:,:,ik]+=E_field*(@view(E_dot_DIP[:,:,ik])*@view(rho_in[:,:,ik])-@view(rho_in[:,:,ik])*@view(E_dot_DIP[:,:,ik]))
+          d_rho[:,:,ik]+=E_field*(@view(E_dot_DIP[:,:,ik])*@view(rho_in[:,:,ik]))
+          d_rho[:,:,ik]-=E_field*(@view(rho_in[:,:,ik])   *@view(E_dot_DIP[:,:,ik]))
           #
 	end
         #
@@ -487,7 +488,9 @@ let rho=copy(rho0)
     E_field_t=get_Efield(t_range[it],field_name,itstart=itstart)
     write(f_field,"$(t_range[it]/fs2aut),  $(E_field_t*E_vec[1]),  $(E_field_t*E_vec[2]) \n")
     #
-end
+    if mod(it,1000)==0; GC.gc() end
+    #
+  end
 end
 
 close(f_field)
