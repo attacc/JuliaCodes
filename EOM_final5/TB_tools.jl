@@ -115,19 +115,20 @@ function finalize_output()
 	end
 end 
 
-function rk2_step(d_rho, rho_in, time, it)
+function rk2_step!(rho_in, d_rho, time, it)
   h = time[it+1] - time[it]
-  return rho_in + h * d_rho(rho_in + d_rho(rho_in, time[it]) * h/2, time[it] + h/2)
+  rho_in.=rho_in + h * d_rho(rho_in + d_rho(rho_in, time[it]) * h/2, time[it] + h/2)
+  return nothing
 end
 
-function rk4_step(d_rho, rho_in, time, it)
+function rk4_step!(rho_in, d_rho, time, it)
   h = time[it+1] - time[it]
   rho1 = d_rho(rho_in, time[it])
   rho2 = d_rho(rho_in+rho1*h/2.0, time[it]+h/2.0)
   rho3 = d_rho(rho_in+rho2*h/2.0, time[it]+h/2.0)
   rho4 = d_rho(rho_in+rho3*h, time[it]+h)
-  rho_out = rho_in + h*(rho1/6.0+rho2/3.0+rho3/3.0+rho4/6.0)
-  return rho_out
+  rho_in .= rho_in + h*(rho1/6.0+rho2/3.0+rho3/3.0+rho4/6.0)
+  return nothing
 end
 #
 # Fix phase of the eigenvectors in such a way

@@ -461,9 +461,9 @@ let rho=copy(rho0)
      # Integration
      #
      if Integrator==RK2
-      rho=rk2_step(deriv_rho, rho, t_range, it) 
+      rk2_step!(rho, deriv_rho, t_range, it) 
     elseif Integrator==RK4
-     rho=rk4_step(deriv_rho, rho, t_range, it) 
+      rk4_step!(rho ,deriv_rho, t_range, it) 
     else
       println("Unknown integrator")
       exit()
