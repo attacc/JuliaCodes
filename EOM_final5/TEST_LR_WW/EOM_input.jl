@@ -61,7 +61,7 @@ props.eval_pol  =true
 #EInt = 2.64E8*kWCMm22AU
 
 field_name="delta"
-EInt  = 2.64E1*kWCMm22AU
+EInt  = 2.64E11*kWCMm22AU
 
 E_vec=[0.0,1.0]
 

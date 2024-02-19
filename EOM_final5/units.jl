@@ -24,6 +24,6 @@ AU2KWCMm2=1.0/kWCMm22AU                   # AU      = AU2KWCMm2 kW/cm^2
 
 EAMPAU2VM=5.14220826E11      # Unit of electric field strength
 
-export ha2ev,fs2aut,kWCMm22AU,AU2KWCMm2,SPEED_of_LIGHT
+export ha2ev,fs2aut,kWCMm22AU,AU2KWCMm2,SPEED_of_LIGHT,EAMPAU2VM
 
 end

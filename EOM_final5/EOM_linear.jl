@@ -22,7 +22,9 @@ TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 println(" K-point list ")
 println(" nk = ",k_grid.nk)
 
-Eamp =sqrt(EInt*4.0*pi/SPEED_of_LIGHT)
+Eamp =sqrt(EInt*4.0*pi/SPEED_of_LIGHT)  # Do I miss a fator 2 in the sqrt? 8\pi instead of 4\pi
+println("Field amplitute $Eamp  a.u. ")
+println("Field amplitute $(Eamp*EAMPAU2VM/10e6*100)  M/Cm ")
 
 if dyn_props.dyn_gauge==H_gauge     
 	println("* * * Hamiltonian gauge * * * ")             
