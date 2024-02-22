@@ -208,9 +208,11 @@ if dyn_props.damping
    println("Life-time      ",T_1/fs2aut," [fs] ")
 end
 println("External field versor :",E_vec)
-
 #
 itstart = 20 # start of the external field
+
+if dt!=nothing:
+    println("* * * * * Real-time dynamics not compatible with dt!=nothing * * * * * * ")
 
 function get_Efield(t, ftype; itstart=3)
 	#
