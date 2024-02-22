@@ -20,8 +20,8 @@ using .BZ_sampling
 
 lattice=set_Lattice(2,[a_1,a_2])
 
-n_k1=5
-n_k2=5
+n_k1=24
+n_k2=24
 #
 # Integrator
 #
@@ -61,7 +61,7 @@ props.eval_pol  =true
 #EInt = 2.64E8*kWCMm22AU
 
 field_name="delta"
-EInt  = 2.64E11*kWCMm22AU
+EInt  = 2.64E1*kWCMm22AU
 
 E_vec=[0.0,1.0]
 
@@ -82,3 +82,11 @@ T_1=0.0             #  electron life-time fs
 dt =0.005*fs2aut   #  time-step fs
 t_end  =72.0*fs2aut #  simulation lenght T_2*12.0
 itstart = 20 # start of the external field
+
+# For Linear reponse only
+freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
+eta          =0.15/ha2ev
+freqs_nsteps =400
+
+# Only for linear response analysis
+T2_PP = 0.0 # Damping in post processing

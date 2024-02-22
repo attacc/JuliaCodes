@@ -18,10 +18,13 @@ using .Units
 #
 # In this program the lattice constant is equal to 1
 #
-#
 # Default TB paramters from PRB 94, 125303 
-t_0 = 2.30/ha2ev  # eV
-E_gap=3.625*2.0/ha2ev  # eV
+#t_0 = 2.92/ha2ev  # eV
+#E_gap=2.81*2.0/ha2ev  # eV
+#
+# Parameters from Ducastelle, Paleari etc...
+t_0  =2.30/ha2ev
+E_gap=3.625*2.0/ha2ev
 #
 s_dim=2 # space dimension
 h_dim=2 # hamiltonian dimension
