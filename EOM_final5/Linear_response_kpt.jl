@@ -7,21 +7,6 @@ using DataFrames
 using Base.Threads
 using PyPlot
 
-include("TB_hBN.jl")
-using .hBN2D
-
-include("TB_tools.jl")
-using .TB_tools
-
-include("units.jl")
-using .Units
-
-include("lattice.jl")
-using .LatticeTools
-
-include("bz_sampling.jl")
-using .BZ_sampling
-
 include("EOM_input.jl")
 
 lattice =set_Lattice(2,[a_1,a_2])
@@ -128,7 +113,7 @@ freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 #
 # Function that calculate the linear respone
 #
-function Linear_response(freqs,E_vec, eta)
+function Linear_response(freqs,E_field_ver, eta)
    nv=1
    xhi=zeros(Complex{Float64},length(freqs))
    Res=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
@@ -160,7 +145,7 @@ function generate_header(k_grid,eta,Efield_ver,freqs)
     return header
 end
 
-xhi = Linear_response(freqs, E_field_ver, eta)
+xhi = Linear_response(freqs, E_vec, eta)
 # 
 # Plot and write on disk
 #
@@ -171,7 +156,7 @@ PyPlot.show();
 
 
 f = open("xhi_w.csv","w")
-header=generate_header(k_grid,eta,E_field_ver,freqs)
+header=generate_header(k_grid,eta,E_vec,freqs)
 write(f,header)
 for iw in 1:freqs_nsteps
     write(f," $(freqs[iw]*ha2ev) $(imag(xhi[iw])) $(real(xhi[iw])) \n")

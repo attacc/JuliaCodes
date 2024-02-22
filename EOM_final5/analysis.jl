@@ -8,13 +8,6 @@ using FFTW
 using ProgressBars
 using PyPlot
 
-
-include("TB_hBN.jl")
-using .hBN2D
-
-include("units.jl")
-using .Units
-
 include("EOM_input.jl")
 
 # function fft_pol(time, pol,e_vec)

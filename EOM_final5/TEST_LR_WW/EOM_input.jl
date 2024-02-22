@@ -20,8 +20,8 @@ using .BZ_sampling
 
 lattice=set_Lattice(2,[a_1,a_2])
 
-n_k1=24
-n_k2=24
+n_k1=12
+n_k2=12
 #
 # Integrator
 #
