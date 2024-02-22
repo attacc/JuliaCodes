@@ -15,6 +15,8 @@ using .hBN2D
 include("units.jl")
 using .Units
 
+include("EOM_input.jl")
+
 # function fft_pol(time, pol,e_vec)
 #     pol_along_Efield=pol*e_vec
 #     pol_w = fftshift(fft(pol_along_Efield))
@@ -77,7 +79,6 @@ end
 
 df = CSV.read("polarization.csv",DataFrame, comment="#",delim=',')
 pol_and_times=Matrix(df)
-e_vec=[0.0, 1.0]
 
 s_dim=size(pol_and_times)[2]-1
 n_steps=size(pol_and_times)[1]
@@ -92,18 +93,13 @@ freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
 freqs_nsteps =250
 
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
-
-# These two paramters should be the same of the EOM_dm_dipoles.jl
-itstart=10 
-#T2     =6.0*fs2aut
-T2     =0.0
 #
-# Dampo polarization if required
+# Additional damping in post-processing
 #
-if T2 !=0.0
-   pol  =damp_it(times, pol, T2, itstart)
+if T2_PP !=0.0
+   pol  =damp_it(times, pol, T2_PP, itstart)
 end
-pol_w=FFT_1D(times, freqs, pol, e_vec)
+pol_w=FFT_1D(times, freqs, pol, E_vec)
 # I multiply for -1im lost somewhere
 pol_w=-1im*Divide_by_the_field(pol_w,times,itstart)
 #

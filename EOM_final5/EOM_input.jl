@@ -88,3 +88,5 @@ freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
 eta          =0.15/ha2ev
 freqs_nsteps =400
 
+# Only for linear response analysis
+T2_PP = 0.0 # Damping in post processing
