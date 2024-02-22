@@ -82,3 +82,9 @@ T_1=0.0             #  electron life-time fs
 dt =0.005*fs2aut   #  time-step fs
 t_end  =72.0*fs2aut #  simulation lenght T_2*12.0
 itstart = 20 # start of the external field
+
+# For Linear reponse only
+freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
+eta          =0.15/ha2ev
+freqs_nsteps =400
+

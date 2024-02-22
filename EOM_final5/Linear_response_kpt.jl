@@ -22,6 +22,8 @@ using .LatticeTools
 include("bz_sampling.jl")
 using .BZ_sampling
 
+include("EOM_input.jl")
+
 lattice =set_Lattice(2,[a_1,a_2])
 # 
 # Code This code is in Hamiltonian space
@@ -40,10 +42,6 @@ use_GradH=true#false
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
-# K-points
-n_k1=12
-n_k2=12
-
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
 #nk=1
@@ -59,9 +57,6 @@ println(" K-point list ")
 println(" nk = ",k_grid.nk)
 #print_k_grid(k_grid, lattice)
 #
-#TB_gauge=TB_lattice
-TB_gauge=TB_atomic
-dk=nothing #0.01
 println("Tight-binding gauge : $TB_gauge ")
 println("Delta-k for derivatives : $dk ")
 
@@ -129,18 +124,11 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
 end
 #
-# External field and response parameters
-# 
-E_field_ver=[1.0,1.0]
-freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
-eta          =0.15/ha2ev
-freqs_nsteps =400
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
-
 #
 # Function that calculate the linear respone
 #
-function Linear_response(freqs,E_field_ver, eta)
+function Linear_response(freqs,E_vec, eta)
    nv=1
    xhi=zeros(Complex{Float64},length(freqs))
    Res=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
