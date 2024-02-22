@@ -211,8 +211,9 @@ println("External field versor :",E_vec)
 #
 itstart = 20 # start of the external field
 
-if dt!=nothing:
-    println("* * * * * Real-time dynamics not compatible with dt!=nothing * * * * * * ")
+if dt!=nothing
+  println("* * * * * Real-time dynamics not compatible with dt!=nothing * * * * * * ")
+end
 
 function get_Efield(t, ftype; itstart=3)
 	#
