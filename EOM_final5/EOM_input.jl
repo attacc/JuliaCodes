@@ -59,6 +59,7 @@ props.eval_pol  =true
 
 #field_name="PHHG"
 #EInt = 2.64E8*kWCMm22AU
+#sigma=34.2*fs2aut  # Parameter from De Silva
 
 field_name="delta"
 EInt  = 2.64E1*kWCMm22AU

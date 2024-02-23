@@ -231,7 +231,6 @@ function get_Efield(t, ftype; itstart=3)
 	  #
  	elseif ftype=="PHHG"
 	  w    =0.4132/ha2ev # Parameter from De Silva
-	  sigma=34.2*fs2aut  # Parameter from De Silva
 	  T_0  = itstart*dt
 	  if (t-T_0)>=sigma || (t-T_0)<0.0
 	          a_t=0.0
