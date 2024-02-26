@@ -64,10 +64,11 @@ props.eval_pol  =true
 #EInt = 2.64E8*kWCMm22AU
 #sigma=34.2*fs2aut  # Parameter from De Silva
 
-e_field.ftype   ="delta"
+e_field.ftype   ="sin"
 e_field.EInt    = 2.64E1*kWCMm22AU
 e_field.E_vec   = [0.0,1.0]
 e_field.itstart = 20
+e_field.w       = 2.0/ha2ev
 e_field.sigma   = 34.2*fs2aut
 
 #
