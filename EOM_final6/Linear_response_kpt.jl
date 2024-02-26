@@ -145,7 +145,7 @@ function generate_header(k_grid,eta,Efield_ver,freqs)
     return header
 end
 
-xhi = Linear_response(freqs, E_vec, eta)
+xhi = Linear_response(freqs, e_field.E_vec, eta)
 # 
 # Plot and write on disk
 #
@@ -156,7 +156,7 @@ PyPlot.show();
 
 
 f = open("xhi_w.csv","w")
-header=generate_header(k_grid,eta,E_vec,freqs)
+header=generate_header(k_grid,eta,e_field.E_vec,freqs)
 write(f,header)
 for iw in 1:freqs_nsteps
     write(f," $(freqs[iw]*ha2ev) $(imag(xhi[iw])) $(real(xhi[iw])) \n")

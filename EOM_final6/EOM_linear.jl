@@ -21,7 +21,7 @@ TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 println(" K-point list ")
 println(" nk = ",k_grid.nk)
 
-Eamp =sqrt(EInt*4.0*pi/SPEED_of_LIGHT)  # Do I miss a fator 2 in the sqrt? 8\pi instead of 4\pi
+Eamp =sqrt(e_field.EInt*4.0*pi/SPEED_of_LIGHT)  # Do I miss a fator 2 in the sqrt? 8\pi instead of 4\pi
 println("Field amplitute $Eamp  a.u. ")
 println("Field amplitute $(Eamp*EAMPAU2VM/10e6*100)  M/Cm ")
 
@@ -45,7 +45,7 @@ if dyn_props.include_drho_dk
    println("* * * Using drho/dk in the dynamics * * * ") 
 end
 
-println(" Field name : ",field_name)
+println(" Field name : ",e_field.ftype)
 println(" Number of threads: ",Threads.nthreads())
 
 println("Tight-binding gauge : $TB_gauge ")
@@ -206,7 +206,7 @@ if dyn_props.damping
    println("Dephasing time ",T_2/fs2aut," [fs] ")
    println("Life-time      ",T_1/fs2aut," [fs] ")
 end
-println("External field versor :",E_vec)
+println("External field versor :",e_field.E_vec)
 #
 if dt!=nothing
   println("* * * * * Real-time dynamics not compatible with dt!=nothing * * * * * * ")
@@ -230,7 +230,7 @@ else
 end
 E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 for id in 1:s_dim, ik in 1:k_grid.nk
-  E_dot_DIP[:,:,ik]+=E_vec[id]*DIP_matrix[:,:,id,ik]
+  E_dot_DIP[:,:,ik]+=e_field.E_vec[id]*DIP_matrix[:,:,id,ik]
 end
 
 
@@ -260,7 +260,7 @@ function deriv_rho(rho_in, t)
 	#
 	# Electrinc field
 	#
-	E_field=get_Efield(t, e_field)
+	E_field=get_Efield(t, dt, e_field)
 	#
 	Threads.@threads for ik in 1:k_grid.nk
 	  #
@@ -455,8 +455,8 @@ let rho=copy(rho0)
     #
     # Write field on disk disk
     #
-    E_field_t=get_Efield(t_range[it],e_field)
-    write(f_field,"$(t_range[it]/fs2aut),  $(E_field_t*E_vec[1]),  $(E_field_t*E_vec[2]) \n")
+    E_field_t=get_Efield(t_range[it],dt,e_field)
+    write(f_field,"$(t_range[it]/fs2aut),  $(E_field_t*e_field.E_vec[1]),  $(E_field_t*e_field.E_vec[2]) \n")
     #
     if mod(it,1000)==0; GC.gc() end
     #
