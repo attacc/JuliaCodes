@@ -23,8 +23,8 @@ using .ExternalField
 
 lattice=set_Lattice(2,[a_1,a_2])
 
-n_k1=36
-n_k2=36
+n_k1=120
+n_k2=120
 #
 # Integrator
 #
@@ -90,9 +90,9 @@ t_end  =72.0*fs2aut #  simulation lenght T_2*12.0
 
 # For Linear reponse only
 use_GradH=true #false
-freqs_range  =[4.0/ha2ev, 14.0/ha2ev] # eV
-eta          =0.15/ha2ev
-freqs_nsteps =400
+freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
+eta          =0.1/ha2ev
+freqs_nsteps =1200
 
 # Only for linear response analysis
 T2_PP = 0.0 # Damping in post processing

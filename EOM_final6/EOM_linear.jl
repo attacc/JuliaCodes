@@ -56,10 +56,6 @@ TB_sol=Solve_TB_on_grid(k_grid,BN_Hamiltonian,TB_gauge)
 for i in 1:h_dim
   H_h[i,i,:]=TB_sol.eigenval[i,:]
 end
-
-# k-gradients of Hmailtonian, eigenvalues and eigenvectors
-Dip_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
-∇H_w =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
 #
 # Calculate Dipoles
 #
