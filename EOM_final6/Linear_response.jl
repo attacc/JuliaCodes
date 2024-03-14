@@ -10,53 +10,26 @@ using PyPlot
 include("EOM_input.jl")
 #
 include("Dipoles.jl")
+#
+include("TB_tools.jl")
 # 
+# Generate the Monkhorst-Pack grid
+#
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
-
-TB_sol.h_dim=2
-TB_sol.eigenval=zeros(Float64,h_dim,k_grid.nk)
-TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
-TB_sol.H_w     =zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
-
-println(" K-point list ")
-println(" nk = ",k_grid.nk)
 #
-#print_k_grid(k_grid, lattice)
+# Solve the Hamiltonian on the grid and store the solution in TB_sol
 #
-println("Tight-binding gauge : $TB_gauge ")
-println("Delta-k for derivatives : $dk ")
-
-println("Building Hamiltonian: ")
-Threads.@threads for ik in ProgressBar(1:k_grid.nk)
-   TB_sol.H_w[:,:,ik]=BN_Hamiltonian(k_grid.kpt[:,ik],TB_gauge)
-   data= eigen(TB_sol.H_w[:,:,ik])      # Diagonalize the matrix
-   TB_sol.eigenval[:,ik]   = data.values
-   TB_sol.eigenvec[:,:,ik] = data.vectors
-   TB_sol.eigenvec[:,:,ik] = fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik])
-end
+TB_sol=Solve_TB_on_grid(k_grid,BN_Hamiltonian,TB_gauge)
 #
-#Print Hamiltonian info
+# Calculate Dipoles
 #
-dir_gap=minimum(TB_sol.eigenval[2,:]-TB_sol.eigenval[1,:])
-println("Direct gap : ",dir_gap*ha2ev," [eV] ")
-ind_gap=minimum(TB_sol.eigenval[2,:])-maximum(TB_sol.eigenval[1,:])
-println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
-
-if use_GradH
-  println("Building Dipoles using dH/dk:")
-else
-  println("Building Dipoles using UdU/dk:")
-end
-# 
-# Dipoles
-#
-Dip_h=Build_Dipole(k_grid,lattice,TB_sol,TB_gauge,BN_orbitals,BN_Hamiltonian,dk,use_GradH)
+Dip_h,∇H_w=Build_Dipole(k_grid,lattice,TB_sol,TB_gauge,BN_orbitals,BN_Hamiltonian,dk,use_GradH)
 #
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 #
 # Function that calculate the linear respone
 #
-function Linear_response(freqs,E_field_ver, eta)
+function Linear_response(freqs,E_field_ver, η)
    nv=1
    xhi=zeros(Complex{Float64},length(freqs))
    Res=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
@@ -64,7 +37,7 @@ function Linear_response(freqs,E_field_ver, eta)
    println("Residuals: ")
    Threads.@threads for ik in ProgressBar(1:k_grid.nk)
      for iv in 1:nv,ic in nv+1:h_dim
-        Res[iv,ic,ik]=sum(Dip_h[iv,ic,ik,:].*E_field_ver[:])
+        Res[iv,ic,ik]=sum(Dip_h[iv,ic,:,ik].*E_field_ver[:])
      end
    end
    print("Xhi: ")
@@ -72,7 +45,7 @@ function Linear_response(freqs,E_field_ver, eta)
      for ik in 1:k_grid.nk,iv in 1:nv,ic in nv+1:h_dim
          e_v=TB_sol.eigenval[iv,ik]
          e_c=TB_sol.eigenval[ic,ik]
-         xhi[ifreq]=xhi[ifreq]+abs(Res[iv,ic,ik])^2/(e_c-e_v-freqs[ifreq]-eta*1im)
+         xhi[ifreq]=xhi[ifreq]+abs(Res[iv,ic,ik])^2/(e_c-e_v-freqs[ifreq]-η*1im)
      end
    end
    xhi.=xhi/k_grid.nk

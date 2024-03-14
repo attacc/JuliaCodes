@@ -2,7 +2,7 @@ module TB_tools
 
 using ProgressBars
 
-export evaluate_DOS,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,RK2,RK4,rk2_step,rk4_step,generate_header,TB_lattice,TB_atomic
+export evaluate_DOS,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,RK2,RK4,rk2_step,rk4_step,generate_header,TB_lattice,TB_atomic,TB_Solution
 
 const W_gauge=true
 const H_gauge=false
@@ -40,7 +40,6 @@ end
 RK2=1
 RK4=2
 
-TB_sol=TB_Solution()
 
 dyn_props = Dynamics_Properties(true,true,false,true,true,false)
 
@@ -456,3 +455,40 @@ function generate_header(k_grid=nothing,dyn_props=nothing,props=nothing)
   return header
 end
 
+function Solve_TB_on_grid(k_grid,Hamiltonian,TB_gauge)
+  # 
+  TB_sol=TB_Solution()
+  #
+  TB_sol.h_dim=2
+  TB_sol.eigenval=zeros(Float64,h_dim,k_grid.nk)
+  TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+  TB_sol.H_w     =zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+  #
+  println(" K-point list ")
+  println(" nk = ",k_grid.nk)
+  #
+  #print_k_grid(k_grid, lattice)
+  #
+  println("Tight-binding gauge : $TB_gauge ")
+  println("Delta-k for derivatives : $dk ")
+
+  println("Building Hamiltonian: ")
+
+  Threads.@threads for ik in ProgressBar(1:k_grid.nk)
+    TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik],TB_gauge)
+    data= eigen(TB_sol.H_w[:,:,ik])      # Diagonalize the matrix
+    TB_sol.eigenval[:,ik]   = data.values
+    TB_sol.eigenvec[:,:,ik] = data.vectors
+    TB_sol.eigenvec[:,:,ik] = fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik])
+  end
+  #
+  #Print Hamiltonian info
+  #
+  dir_gap=minimum(TB_sol.eigenval[2,:]-TB_sol.eigenval[1,:])
+  println("Direct gap : ",dir_gap*ha2ev," [eV] ")
+  ind_gap=minimum(TB_sol.eigenval[2,:])-maximum(TB_sol.eigenval[1,:])
+  println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
+  #
+  return TB_sol
+  #
+end
