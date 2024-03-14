@@ -71,11 +71,11 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #  
   #
   if dk!=nothing || TB_gauge==TB_lattice
-    ∇H_w=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge,Hamiltonian=BN_Hamiltonian,deltaK=dk)
-    ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge,Hamiltonian=BN_Hamiltonian,deltaK=dk)
+    ∇H_w=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=BN_orbitals, Hamiltonian=BN_Hamiltonian,deltaK=dk)
+    ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=BN_orbitals, Hamiltonian=BN_Hamiltonian,deltaK=dk)
   else
-    ∇H_w=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge,orbitals=BN_orbitals)
-    ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge,orbitals=BN_orbitals)
+    ∇H_w=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=BN_orbitals)
+    ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=BN_orbitals)
   end
   #
   if use_GradH

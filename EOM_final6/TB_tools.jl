@@ -2,10 +2,13 @@ module TB_tools
 
 using ProgressBars
 
-export evaluate_DOS,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,RK2,RK4,rk2_step,rk4_step,generate_header
+export evaluate_DOS,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,TB_sol,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,RK2,RK4,rk2_step,rk4_step,generate_header,TB_lattice,TB_atomic
 
 const W_gauge=true
 const H_gauge=false
+
+TB_lattice="lattice"
+TB_atomic ="atomic"
 
 mutable struct Properties
 	eval_curr   ::Bool
@@ -174,7 +177,7 @@ end
 # In this subroutine I do not recalculate H because
 # I fix the phase
 #
-function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, deltaK=nothing)
+function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, deltaK=nothing, orbitals=nothing)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
