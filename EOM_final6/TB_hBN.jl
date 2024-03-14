@@ -47,15 +47,15 @@ d_2=-a_cc*[1.0,0.0]
 TB_lattice="lattice"
 TB_atomic ="atomic"
 
-orbitals=set_Orbitals(2,[d_1,d_2])
+BN_orbitals=set_Orbitals(2,[d_1,d_2])
 
-export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice,TB_atomic
+export BN_Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,BN_orbitals,TB_lattice,TB_atomic
   #
   global ndim=2
   #
   global off_diag=.~I(h_dim)
   #
-  function Hamiltonian(k, gauge)::Matrix{Complex{Float64}}
+  function BN_Hamiltonian(k, gauge)::Matrix{Complex{Float64}}
         #
 	H=zeros(Complex{Float64},2,2)
         #
@@ -76,7 +76,7 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice
         # includes also the k-dependent phase factor 
         #
         if gauge==TB_atomic
-          d_tau=orbitals.tau[2]-orbitals.tau[1]
+          d_tau=BN_orbitals.tau[2]-BN_orbitals.tau[1]
           k_dot_dtau=dot(k,d_tau)
           H[1,2]=H[1,2]*exp(-1im*k_dot_dtau)
         end
@@ -103,8 +103,8 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice
         #
 	A=zeros(Complex{Float64},2,2,ndim)
 #        for ih in 1:h_dim
-           A[1,1,:]=orbitals.tau[1][:]
-           A[2,2,:]=orbitals.tau[2][:]
+           A[1,1,:]=BN_orbitals.tau[1][:]
+           A[2,2,:]=BN_orbitals.tau[2][:]
 #        end
 #        for id in 1:s_dim
 #         A[1,2,id]=(orbitals.tau[2][id]-orbitals.tau[1][id])
@@ -112,40 +112,6 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice
 #        end
 #       end
 	return A
-   end
-   #
-   #
-   function Calculate_Berry_Conec_FD(ik, k_grid, U; dk=0.01)
-       #
-       k_plus =copy(k_grid.kpt[:,ik])
-       k_minus=copy(k_grid.kpt[:,ik])
-       A_w=zeros(Complex{Float64},2,2,ndim)
-       #
-       for id in 1:ndim
-	   if k_grid.nk_dir[id]==1
-	      continue
-	   end
-           k_plus[id] =k_grid.kpt[id,ik]+dk
-           k_minus[id]=k_grid.kpt[id,ik]-dk
-           H_plus =Hamiltonian(k_plus)
-	   data_plus= eigen(H_plus)
-	   eigenvec_p = data_plus.vectors
-	   eigenvec_p= fix_eigenvec_phase(eigenvec_p)
-
-           H_minus=Hamiltonian(k_minus)
-	   data_minus= eigen(H_minus)
-	   eigenvec_m = data_minus.vectors
-	   eigenvec_m= fix_eigenvec_phase(eigenvec_m)
-	   
-	   dS=(U*eigenvec_p-U*eigenvec_m)/(2.0*dk)
-	   A_w[:,:,id]=1im*dS  
-	   #Rotation to Hamiltonian gauge is performed outside
-
-           k_plus[id] =k_grid.kpt[id,ik]
-           k_minus[id]=k_grid.kpt[id,ik]
-       end
-       #
-       return A_w
    end
    #
 end

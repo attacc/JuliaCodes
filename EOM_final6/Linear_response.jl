@@ -44,7 +44,7 @@ println("Delta-k for derivatives : $dk ")
 
 println("Building Hamiltonian: ")
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
-   TB_sol.H_w[:,:,ik]=Hamiltonian(k_grid.kpt[:,ik],TB_gauge)
+   TB_sol.H_w[:,:,ik]=BN_Hamiltonian(k_grid.kpt[:,ik],TB_gauge)
    data= eigen(TB_sol.H_w[:,:,ik])      # Diagonalize the matrix
    TB_sol.eigenval[:,ik]   = data.values
    TB_sol.eigenvec[:,:,ik] = data.vectors
@@ -69,9 +69,14 @@ end
 Dip_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk,s_dim)
 Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #  
-  ∇H_w=Grad_H(ik,k_grid,lattice,Hamiltonian,TB_sol,TB_gauge,dk)
   #
-  ∇U=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge,dk)
+  if dk!=nothing || TB_gauge==TB_lattice
+    ∇H_w=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge,Hamiltonian=BN_Hamiltonian,deltaK=dk)
+    ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge,Hamiltonian=BN_Hamiltonian,deltaK=dk)
+  else
+    ∇H_w=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge,orbitals=BN_orbitals)
+    ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge,orbitals=BN_orbitals)
+  end
   #
   if use_GradH
     for id in 1:s_dim

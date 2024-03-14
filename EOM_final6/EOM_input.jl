@@ -23,8 +23,8 @@ using .ExternalField
 
 lattice=set_Lattice(2,[a_1,a_2])
 
-n_k1=96
-n_k2=96
+n_k1=36
+n_k2=36
 #
 # Integrator
 #

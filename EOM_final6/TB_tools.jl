@@ -174,7 +174,7 @@ end
 # In this subroutine I do not recalculate H because
 # I fix the phase
 #
-function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge, deltaK=nothing)
+function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, deltaK=nothing)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
@@ -285,7 +285,7 @@ end
 # For the derivative of the Hamiltonian
 # I recalcualte it because H(k+G)/=H(k)
 
-function Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge, deltaK=nothing)
+function Grad_H(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, deltaK=nothing, orbitals=nothing)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
