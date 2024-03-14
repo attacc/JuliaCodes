@@ -12,7 +12,7 @@ include("EOM_input.jl")
 lattice =set_Lattice(2,[a_1,a_2])
 # 
 # Code This code is in Hamiltonian space
-# in dipole approximation only at the K-point
+# in dipole approximation 
 #
 # * * * DIPOLES * * * #
 #
@@ -22,17 +22,13 @@ lattice =set_Lattice(2,[a_1,a_2])
 # if use_GradH=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_GradH=true#false
+use_GradH=true #false
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
-#nk=1
-#k_vec=[1,1/sqrt(3)]
-#k_vec=k_vec*2*pi/(3*a_cc)
-#k_list=k_vec
 TB_sol.h_dim=2
 TB_sol.eigenval=zeros(Float64,h_dim,k_grid.nk)
 TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
@@ -40,6 +36,7 @@ TB_sol.H_w     =zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 
 println(" K-point list ")
 println(" nk = ",k_grid.nk)
+#
 #print_k_grid(k_grid, lattice)
 #
 println("Tight-binding gauge : $TB_gauge ")
