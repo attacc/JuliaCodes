@@ -89,6 +89,7 @@ dt =0.005*fs2aut   #  time-step fs
 t_end  =72.0*fs2aut #  simulation lenght T_2*12.0
 
 # For Linear reponse only
+use_GradH=true #false
 freqs_range  =[4.0/ha2ev, 14.0/ha2ev] # eV
 eta          =0.15/ha2ev
 freqs_nsteps =400

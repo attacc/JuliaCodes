@@ -8,25 +8,9 @@ using Base.Threads
 using PyPlot
 
 include("EOM_input.jl")
-
-lattice =set_Lattice(2,[a_1,a_2])
+#
+include("Dipoles.jl")
 # 
-# Code This code is in Hamiltonian space
-# in dipole approximation 
-#
-# * * * DIPOLES * * * #
-#
-# if use_gradH=true  dipoles are calculated
-# using dH/dh
-#
-# if use_GradH=false dipoles are calculated
-# uding UdU with fixed phase
-#
-use_GradH=true #false
-
-# a generic off-diagonal matrix example (0 1; 1 0)
-off_diag=.~I(h_dim)
-
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 
 TB_sol.h_dim=2
@@ -66,50 +50,7 @@ end
 # 
 # Dipoles
 #
-Dip_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk,s_dim)
-Threads.@threads for ik in ProgressBar(1:k_grid.nk)
-  #  
-  #
-  if dk!=nothing || TB_gauge==TB_lattice
-    ∇H_w=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=BN_orbitals, Hamiltonian=BN_Hamiltonian,deltaK=dk)
-    ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=BN_orbitals, Hamiltonian=BN_Hamiltonian,deltaK=dk)
-  else
-    ∇H_w=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=BN_orbitals)
-    ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=BN_orbitals)
-  end
-  #
-  if use_GradH
-    for id in 1:s_dim
-      Dip_h[:,:,ik,id]=WH_rotate(∇H_w[:,:,id],TB_sol.eigenvec[:,:,ik])
-# I set to zero the diagonal part of dipoles
-      Dip_h[:,:,ik,id]=Dip_h[:,:,ik,id].*off_diag
-    end
-#    
-# Now I have to divide for the energies
-#
-#  p = \grad_k H 
-#
-#  r_{ij} = i * p_{ij}/(e_j - e_i)
-#
-#  (diagonal terms are set to zero)
-#
-    for i in 1:h_dim
-      for j in i+1:h_dim
-            Dip_h[i,j,ik,:]= 1im*Dip_h[i,j,ik,:]/(TB_sol.eigenval[j,ik]-TB_sol.eigenval[i,ik])
-            Dip_h[j,i,ik,:]=conj(Dip_h[i,j,ik,:])
-  	end
-    end
-  else
-     #
-     #  Build dipoles using U\grad U
-     #
-     U=TB_sol.eigenvec[:,:,ik]
-     for id in 1:s_dim
-        Dip_h[:,:,ik,id]=1im*(U')*∇U[:,:,id]
-     end
-  end
-  #
-end
+Dip_h=Build_Dipole(k_grid,lattice,TB_sol,TB_gauge,BN_orbitals,BN_Hamiltonian,dk,use_GradH)
 #
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 #
