@@ -23,8 +23,8 @@ using .ExternalField
 
 lattice=set_Lattice(2,[a_1,a_2])
 
-n_k1=12
-n_k2=12
+n_k1=96
+n_k2=96
 #
 # Integrator
 #
@@ -89,7 +89,7 @@ dt =0.005*fs2aut   #  time-step fs
 t_end  =72.0*fs2aut #  simulation lenght T_2*12.0
 
 # For Linear reponse only
-freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
+freqs_range  =[4.0/ha2ev, 14.0/ha2ev] # eV
 eta          =0.15/ha2ev
 freqs_nsteps =400
 
