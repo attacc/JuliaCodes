@@ -4,7 +4,7 @@
 #
 using LinearAlgebra
 using Base.Threads
-
+#
 #
 # * * * DIPOLES * * * #
 #
