@@ -23,8 +23,8 @@ using .ExternalField
 
 lattice=set_Lattice(2,[a_1,a_2])
 
-n_k1=120
-n_k2=120
+n_k1=12
+n_k2=12
 #
 # Integrator
 #
@@ -57,7 +57,7 @@ dyn_props.include_A_w=true
 # Print properties on disk
 props.print_dm  =false
 props.eval_curr =true
-props.curr_gauge=H_gauge
+props.curr_gauge=W_gauge
 props.eval_pol  =true
 
 #field_name="PHHG"
@@ -87,12 +87,6 @@ T_2=6.0*fs2aut      #  dephasing fs
 T_1=0.0             #  electron life-time fs
 dt =0.005*fs2aut   #  time-step fs
 t_end  =72.0*fs2aut #  simulation lenght T_2*12.0
-
-# For Linear reponse only
-use_GradH=true #false
-freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
-eta          =0.1/ha2ev
-freqs_nsteps =1200
 
 # Only for linear response analysis
 T2_PP = 0.0 # Damping in post processing
