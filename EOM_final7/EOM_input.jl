@@ -62,7 +62,11 @@ props.eval_pol  =true
 
 #field_name="PHHG"
 #EInt = 2.64E8*kWCMm22AU
-#
+
+field_name="delta"
+EInt  = 2.64E1*kWCMm22AU
+E_vec=[0.0,1.0]
+
 e_field.ftype   ="delta"
 e_field.EInt    = 2.64E1*kWCMm22AU
 e_field.E_vec   = [0.0,1.0]
@@ -84,7 +88,7 @@ dk=nothing
 T_2=6.0*fs2aut      #  dephasing fs
 T_1=0.0             #  electron life-time fs
 dt =0.005*fs2aut   #  time-step fs
-t_end  =72.0*fs2aut #  simulation lenght T_2*12.0
+t_end  =12.0*fs2aut #  simulation lenght T_2*12.0
 itstart = 20 # start of the external field
 
 # For Linear reponse only

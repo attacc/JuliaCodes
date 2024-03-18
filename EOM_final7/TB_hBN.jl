@@ -44,9 +44,12 @@ d_2=-a_cc*[1.0,0.0]
 #d_3=-a_cc*[1.0,0.0]
 #d_4= [0.0,0.0]
 
+TB_lattice="lattice"
+TB_atomic ="atomic"
+
 orbitals=set_Orbitals(2,[d_1,d_2])
 
-export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals
+export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals,TB_lattice,TB_atomic
   #
   global ndim=2
   #
