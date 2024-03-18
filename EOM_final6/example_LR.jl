@@ -7,25 +7,50 @@ using DataFrames
 using Base.Threads
 using PyPlot
 
-include("EOM_input.jl")
-include("Dipoles.jl")
+include("units.jl")
+using .Units
+
+include("TB_hBN.jl")
+using .hBN2D
+
 include("TB_tools.jl")
+using .TB_tools
+
+include("bz_sampling.jl")
+using .BZ_sampling
+
+include("external_field.jl")
+using .ExternalField
+
+include("lattice.jl")
+using .LatticeTools
+
+include("Dipoles.jl")
 include("Linear_response.jl")
 # 
 # Input parameters
 #===================#
 # 
+# Create lattice using vectors defined in TB_hBN.jl
+lattice=set_Lattice(2,[a_1,a_2])
+
 # k_grid
 n_k1=120
 n_k2=120
+
 # TB-gauge
 TB_gauge=TB_atomic
+
 # electric field
 e_field.E_vec   = [0.0,1.0]
+
 # k-derivatives
-dk=0.01
+dk=0.01        # recalculate H(k+dk)
+# dk=nothing   # use the MK grid
+
 # Dipole calculation
 use_GradH=true #false
+
 # Spectrum range
 freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
 eta          =0.1/ha2ev
