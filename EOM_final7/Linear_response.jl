@@ -8,8 +8,7 @@ using Base.Threads
 #
 # Function that calculate the linear respone
 #
-function Linear_response(TB_sol, Dip_h, freqs,E_field_ver, η)
-   nv=1
+function Linear_response(TB_sol, Dip_h, freqs,E_field_ver, η, nv=1)
    h_dim=TB_sol.h_dim
    xhi=zeros(Complex{Float64},length(freqs))
    Res=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
