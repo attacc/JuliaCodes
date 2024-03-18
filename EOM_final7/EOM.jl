@@ -5,12 +5,9 @@
 using LinearAlgebra
 using Base.Threads
 
+
 include("EOM_input.jl")
 # 
-include("external_field.jl")
-#
-include("Dipoles.jl")
-#
 # EOM of the density matrix in Hamiltonian or Wannier gauge
 #
 k_grid=generate_unif_grid(n_k1, n_k2, lattice)
@@ -18,6 +15,12 @@ k_grid=generate_unif_grid(n_k1, n_k2, lattice)
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
+TB_sol.h_dim=h_dim # Hamiltonian dimension
+TB_sol.eigenval=zeros(Float64,h_dim,k_grid.nk)
+TB_sol.eigenvec=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+
+println(" K-point list ")
+println(" nk = ",k_grid.nk)
 
 Eamp =sqrt(e_field.EInt*4.0*pi/SPEED_of_LIGHT)  # Do I miss a fator 2 in the sqrt? 8\pi instead of 4\pi
 println("Field amplitute $Eamp  a.u. ")
@@ -43,7 +46,7 @@ if dyn_props.include_drho_dk
    println("* * * Using drho/dk in the dynamics * * * ") 
 end
 
-println(" Field name : ",e_field.ftype)
+println(" Field name : ",field_name)
 println(" Number of threads: ",Threads.nthreads())
 
 println("Tight-binding gauge : $TB_gauge ")
@@ -55,18 +58,65 @@ println(orbitals.tau[2])
 
 println("Building Hamiltonian: ")
 H_h=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
+TB_sol.H_w=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 
-TB_sol=Solve_TB_on_grid(k_grid,Hamiltonian,TB_gauge)
-for i in 1:h_dim
-  H_h[i,i,:]=TB_sol.eigenval[i,:]
+Threads.@threads for ik in ProgressBar(1:k_grid.nk)
+    H_w=Hamiltonian(k_grid.kpt[:,ik],TB_gauge)
+    data= eigen(H_w)      # Diagonalize the matrix
+    TB_sol.eigenval[:,ik]   = data.values
+    TB_sol.eigenvec[:,:,ik] = data.vectors
+    for i in 1:h_dim
+      H_h[i,i,ik]=TB_sol.eigenval[i,ik]
+    end
+    TB_sol.H_w[:,:,ik]=H_w
+    #
+    # Fix phase of eigenvectors
+    #
+    TB_sol.eigenvec[:,:,ik]=fix_eigenvec_phase(TB_sol.eigenvec[:,:,ik])
+    #
 end
-#
+
+#Hamiltonian info
+dir_gap=minimum(TB_sol.eigenval[2,:]-TB_sol.eigenval[1,:])
+println("Direct gap : ",dir_gap*ha2ev," [eV] ")
+ind_gap=minimum(TB_sol.eigenval[2,:])-maximum(TB_sol.eigenval[1,:])
+println("Indirect gap : ",ind_gap*ha2ev," [eV] ")
+
 # k-gradients of Hmailtonian, eigenvalues and eigenvectors
+Dip_h=zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
+∇H_w =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
+
+println("Building ∇H and Dipoles: ")
+Threads.@threads for ik in ProgressBar(1:k_grid.nk)
+# Dipoles 
+  #Gradient of the Hamiltonian by finite difference 
+  ∇H_w[:,:,:,ik]=Grad_H(ik, k_grid, lattice, Hamiltonian, TB_sol, TB_gauge,dk)
+  #
+  # Build dipoles
+  for id in 1:s_dim
+        Dip_h[:,:,id,ik]=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik])
+# I set to zero the diagonal part of dipoles
+	Dip_h[:,:,id,ik]=Dip_h[:,:,id,ik].*off_diag
+  end
+
+# Now I have to divide for the energies
 #
-use_GradH=~dyn_props.use_UdU_for_dipoles
-Dip_h,∇H_w=Build_Dipole(k_grid,lattice,TB_sol,TB_gauge,orbitals,Hamiltonian,dk,use_GradH)
-if dyn_props.dyn_gauge==W_gauge
-  Threads.@threads for ik in ProgressBar(1:k_grid.nk)
+#  p = \grad_k H 
+#
+#  r_{ij} = i * p_{ij}/(e_j - e_i)
+#
+#  (diagonal terms are set to zero)
+#
+  for i in 1:h_dim
+      for j in i+1:h_dim
+          Dip_h[i,j,:,ik]= 1im*Dip_h[i,j,:,ik]/(TB_sol.eigenval[j,ik]-TB_sol.eigenval[i,ik])
+          Dip_h[j,i,:,ik]=conj(Dip_h[i,j,:,ik])
+      end
+  end
+  #
+  # I bring them back in Wannier gauge
+  #
+  if dyn_props.dyn_gauge==W_gauge
     for id in 1:s_dim
         Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik])
      end
@@ -108,7 +158,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
   #Gradient of eigenvectors/eigenvalus on the regular grid
   #
-  UdU=Grad_H(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=Hamiltonian, deltaK=dk, orbitals=orbitals)
+  UdU=Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge,dk)
   #
   #  Using the fixing of the guage
   #
@@ -185,7 +235,6 @@ E_dot_DIP=zeros(Complex{Float64},h_dim,h_dim,k_grid.nk)
 for id in 1:s_dim, ik in 1:k_grid.nk
   E_dot_DIP[:,:,ik]+=e_field.E_vec[id]*DIP_matrix[:,:,id,ik]
 end
-
 
 function deriv_rho(rho_in, t)
 	#
