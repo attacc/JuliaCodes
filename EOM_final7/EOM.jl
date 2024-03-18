@@ -153,8 +153,6 @@ if dyn_props.damping
 end
 println("External field versor :",e_field.E_vec)
 #
-itstart = 20 # start of the external field
-
 if dk!=nothing
   println("* * * * * Real-time dynamics not compatible with dt!=nothing * * * * * * ")
 end
