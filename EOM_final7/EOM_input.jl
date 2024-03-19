@@ -63,10 +63,6 @@ props.eval_pol  =true
 #field_name="PHHG"
 #EInt = 2.64E8*kWCMm22AU
 
-field_name="delta"
-EInt  = 2.64E1*kWCMm22AU
-E_vec=[0.0,1.0]
-
 e_field.ftype   ="delta"
 e_field.EInt    = 2.64E1*kWCMm22AU
 e_field.E_vec   = [0.0,1.0]

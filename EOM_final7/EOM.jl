@@ -34,7 +34,7 @@ if dyn_props.include_drho_dk
    println("* * * Using drho/dk in the dynamics * * * ") 
 end
 
-println(" Field name : ",field_name)
+println(" Field name : ",efield.ftype)
 println(" Number of threads: ",Threads.nthreads())
 
 println("Tight-binding gauge : $TB_gauge ")
