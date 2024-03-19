@@ -220,9 +220,9 @@ function deriv_rho(rho_in, t)
           # Add d_rho/dk
           #
    	  Threads.@threads for ik in 1:k_grid.nk
-            Dk_rho=Evaluate_Dk_rho(rho_in, ik, k_grid, TB_sol.eigenvec, lattice)
+            Dk_rho=Evaluate_Dk_rho(rho_in, ik, k_grid, lattice)
             for id in 1:s_dim
-              d_rho[:,:,ik].=d_rho[:,:,ik]+1im*E_field[id]*Dk_rho[:,:,id]
+              d_rho[:,:,ik]=d_rho[:,:,ik]+1im*E_field*e_field.E_vec[id]*Dk_rho[:,:,id]
             end
             Dk_rho=nothing
           end

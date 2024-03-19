@@ -380,8 +380,8 @@ function Grad_H(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, delt
 end
 
 
-function Evaluate_Dk_rho(rho, ik, k_grid, U, lattice)
-
+function Evaluate_Dk_rho(rho, ik, k_grid, lattice)
+  #
   dk_rho=zeros(Complex{Float64},h_dim,h_dim,s_dim)
   for id in 1:s_dim
     #
@@ -414,7 +414,6 @@ function Evaluate_Dk_rho(rho, ik, k_grid, U, lattice)
       dk_rho[:,:,id]=(8.0*Δρ_k-Δρ_2k)/(12.0*dk)
       #
     end
-    #
     #
   end
   #
