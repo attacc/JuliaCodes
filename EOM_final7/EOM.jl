@@ -7,6 +7,7 @@ using Base.Threads
 
 include("EOM_input.jl")
 include("Dipoles.jl")
+include("EOM_tools.jl")
 # 
 # EOM of the density matrix in Hamiltonian or Wannier gauge
 #
@@ -34,7 +35,7 @@ if dyn_props.include_drho_dk
    println("* * * Using drho/dk in the dynamics * * * ") 
 end
 
-println(" Field name : ",efield.ftype)
+println(" Field name : ",e_field.ftype)
 println(" Number of threads: ",Threads.nthreads())
 
 println("Tight-binding gauge : $TB_gauge ")
@@ -57,10 +58,10 @@ Dip_h,∇H_w=Build_Dipole(k_grid,lattice,TB_sol,TB_gauge,orbitals,Hamiltonian,dk
 
 
 if dyn_props.dyn_gauge==W_gauge
+  #
+  # I bring them back in Wannier gauge
+  #
   Threads.@threads for ik in ProgressBar(1:k_grid.nk)
-    #
-    # I bring them back in Wannier gauge
-    #
     for id in 1:s_dim
      Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik])
     end
@@ -112,15 +113,6 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   end
   #
   A_h[:,:,:,ik]+=1im*UdU[:,:,:]
-  #
-  if dyn_props.use_UdU_for_dipoles
-    Dip_h[:,:,:,ik]=1im*UdU[:,:,:]
-    if dyn_props.dyn_gauge==W_gauge
-      for id in 1:s_dim
-          Dip_h[:,:,id,ik]=HW_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik])
-       end
-    end
-  end
   #
 end
 #
@@ -264,92 +256,12 @@ function deriv_rho(rho_in, t)
     return d_rho
 end
 
-function polarization(rho)
-  pol_t=zeros(Float64,s_dim)
-  for ik in 1:k_grid.nk
-    if dyn_props.dyn_gauge==W_gauge
-       rho_in=WH_rotate(rho[:,:,ik],TB_sol.eigenvec[:,:,ik])
-    else
-      rho_in=rho[:,:,ik]
-    end
-    for id in 1:s_dim
-       if dyn_props.dyn_gauge==W_gauge
-          dip=WH_rotate(Dip_h[:,:,id,ik],TB_sol.eigenvec[:,:,ik]).*off_diag
-        else
-          dip=Dip_h[:,:,id,ik].*off_diag
-        end
-        pol_t[id]+=real.(sum(dip.*transpose(rho_in)))
-    end
-  end
-  pol_t=pol_t/k_grid.nk
-  return pol_t
-end 
-
-function current(rho)
- j_intra_t=zeros(Float64, s_dim, Threads.nthreads())
- j_inter_t=zeros(Float64, s_dim, Threads.nthreads())
- if dyn_props.dyn_gauge==H_gauge
-   Threads.@threads for ik in 1:k_grid.nk
-     rho_t_H=transpose(rho[:,:,ik])
-     t_id=Threads.threadid()
-     for id in 1:s_dim
-        ∇H_h=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik]) #.*off_diag
-        j_intra_t[id,t_id]=j_intra_t[id,t_id]-real.(sum(∇H_h.*rho_t_H))
-        commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
-        j_inter_t[id,t_id]=j_inter_t[id,t_id]-imag(sum(commutator.*rho_t_H))
-     end
-   end
- else
-   if props.curr_gauge==H_gauge
-#  Current using the Hamiltonian gauge
-     Threads.@threads for ik in 1:k_grid.nk
-        rho_h=WH_rotate(rho[:,:,ik],TB_sol.eigenvec[:,:,ik])
-        rho_h=transpose(rho_h)
-        t_id=Threads.threadid()
-        for id in 1:s_dim
-           # 
-           # Not sure if I should multiply for off_diag this is not clear
-           # If I do not do so I get finite current after the pulse (that it is fine)
-           # Probably introducing a LifeTime for the electron remove the necessity
-           # of this off_diag or a windows for the current 
-           #
-           ∇H_h=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik]) #.*off_diag
-           j_intra_t[id,t_id]=j_intra_t[id,t_id]-real.(sum(∇H_h.*rho_h))
-           commutator=A_h[:,:,id,ik]*H_h[:,:,ik]-H_h[:,:,ik]*A_h[:,:,id,ik]
-	   j_inter_t[id,t_id]=j_inter_t[id,t_id]-imag(sum(commutator.*rho_h))
-	end
-     end
-
-   elseif props.curr_gauge==W_gauge
-#    Current using the Wannier gauge
-     Threads.@threads for ik in 1:k_grid.nk
-       t_id=Threads.threadid()
-       rho_w=transpose(rho[:,:,ik])
-       for id in 1:s_dim
-          j_intra_t[id,t_id]=j_intra_t[id,t_id]-real.(sum(∇H_w[:,:,id,ik].*rho_w))
-          commutator=A_w[:,:,id,ik]*TB_sol.H_w[:,:,ik]-TB_sol.H_w[:,:,ik]*A_w[:,:,id,ik]
-	  j_inter_t[id,t_id]=j_inter_t[id,t_id]-imag(sum(commutator.*rho_w))
-       end
-     end
-   end
-  end
-  j_intra=zeros(Float64,s_dim)
-  j_inter=zeros(Float64,s_dim)
-  for id in 1:s_dim
-      j_intra[id]=sum(j_intra_t[id,:])/k_grid.nk
-      j_inter[id]=sum(j_inter_t[id,:])/k_grid.nk
-  end
-  j_intra_t=nothing
-  j_inter_t=nothing
-  return j_intra,j_inter
-end 
-
 nsteps = length(t_range)
 
 header=generate_header(k_grid,dyn_props,props)
 
 if props.eval_curr
-  j0_intra,j0_inter=current(rho0)
+  j0_intra,j0_inter=current(rho0,k_grid,lattice,dyn_props.dyn_gauge,TB_sol,H_h,A_h,∇H_w)
   f_curr = open("current.csv","w") 
   write(f_curr,header)
   write(f_curr,"#time[fs] j_intra_x  j_intra_y  j_inter_x  j_inter_y\n") 
@@ -385,14 +297,14 @@ let rho=copy(rho0)
     # Evaluate properties
     #
     if props.eval_curr;  
-       j_intra,j_inter=current(rho)      
+       j_intra,j_inter=current(rho,k_grid,lattice,dyn_props.dyn_gauge,TB_sol,H_h,A_h,∇H_w)      
        j_intra-= j0_intra
        j_inter-= j0_inter
        write(f_curr,"$(t_range[it]/fs2aut), $(j_intra[1]),  $(j_intra[2]),  $(j_inter[1]),  $(j_inter[2]) \n")
        j_intra,j_inter=nothing,nothing
     end
     if props.eval_pol;   
-       pol=polarization(rho) 
+       pol=polarization(rho,k_grid,lattice,dyn_props.dyn_gauge,TB_sol,Dip_h) 
        write(f_pol,"$(t_range[it]/fs2aut), $(pol[1]),  $(pol[2]) \n")
        pol=nothing
     end    

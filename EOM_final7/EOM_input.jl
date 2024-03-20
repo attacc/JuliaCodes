@@ -57,7 +57,7 @@ dyn_props.include_A_w=true
 # Print properties on disk
 props.print_dm  =false
 props.eval_curr =true
-props.curr_gauge=H_gauge
+props.curr_gauge=W_gauge
 props.eval_pol  =true
 
 #field_name="PHHG"
