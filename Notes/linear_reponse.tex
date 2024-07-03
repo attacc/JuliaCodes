@@ -96,7 +96,39 @@ i\hbar\frac{\partial}{\partial t}\rho_{nm}\left(\boldsymbol{k},t\right) & =\left
 \end{align}
 We can derive the linear response using the expantion of $\rho(t)$ for small external fields as:
 \be
+\rho_{nm}\left(\boldsymbol{k},t\right) = \rho^0_{nm} + \sum_{ij} \int dt' \frac{\partial \rho_{nm}\left(\boldsymbol{k},t\right)}{\partial U_{ij}(t')} \Delta U_{ij}(t') + O(\Delta U^2) 
+\label{rhoexp}
 \ee
+in our case $U$ corresponds to:
+\be
+ U_{ij}(t) = \left|e\right|\boldsymbol{E}\left(t\right).\left[i\delta_{nm}\frac{\partial}{\partial\boldsymbol{k}}+\boldsymbol{A}_{nm}\left(\boldsymbol{k}\right)\right]
+\ee
+and we can define the response function $\chi$ as:
+\be
+\chi_{ij,nm}(\kk,t,t')= \frac{\partial \rho_{nm}\left(\boldsymbol{k},t\right)}{\partial U_{ij}(t')} 
+\ee
+In order to get an equation for $\chi_{ij,nm}(\kk,t,t')$ we insert expation Eq.~\ref{rhoexp} in Eq.~\ref{eq:RDM_eq_motion} and retain only term to the first order in the external field. Notice that:
+\bea
+H_{ij}\left(\boldsymbol{k}\right) &=& \epsilon_{i \kk} \delta_{ij} \\
+\rho^0_{nm}(\kk) &=& f_{n \kk} \delta_{nm} \\
+\partial_\kk \rho^0_{nm}(\kk) &=& 0 
+\eea
+where $f_{n\kk}=f(\epsilon_{n \kk})$ is the Fermi distribution. Therefore we get:
+\bea
+\label{dtGtt}
+i \frac{\partial}{\partial t} \chi^{\mathrm r}_{\substack{ij,lm, \kk }}(t,t^\prime)=\frac{\delta}{ \delta U_{lm, \pp}(t^{\prime})} [H({\kk}) + \left|e\right|\boldsymbol{E}\left(t\right) \boldsymbol{A}\left(\boldsymbol{k}\right) , \rho(\kk,t) ]_{\substack{ji}}. 
+\eea
+Notice that the term with the k-derivative $\partial_k \rho(\kk)$ do not contribute to the linear reponse, because it gives a contribution of the second order in $E$. Doing some math we get:
+\bean
+\label{diag_contr}
+\left. \frac{\delta}{ \delta U_{l,m}(t^{\prime})} [H(\kk)+ \UU_{\kk},\rho(\kk,t)]_{\substack{ji}} \right\vert_{U=0}=
+(e_{j\kk} - e_{i\kk})  \chi^{\mathrm r}_{\substack{ji, \kk \\ lm }}(t-t^\prime) + i(f_{i\kk}-f_{j\kk})\delta_{jl}\delta_{im} \delta(t-t'). 
+\eean
+and by Fourier transform we get:
+\bea
+ \left[  \omega- \left(\epsilon_{j \kk} -\epsilon_{i \kk}\right) \right] \chi^{\mathrm r}_{\substack{ij,\kk\\lm \mathbf p}}(\omega) = i \(f_{i \kk}-f_{j \kk}\) \left[ \delta_{jl} \delta_{im} \delta_{\kk,\pp} + \right.
+\eea
+
 \addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{apsrev4-1}
 \bibliography{hhg}
