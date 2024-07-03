@@ -1,0 +1,144 @@
+%\documentclass[twocolumn,showpacs,prb,superscriptaddress,aps,floatfix]{revtex4-1}
+\documentclass[preprint,showpacs,prb,superscriptaddress,aps,floatfix]{revtex4-1}
+\usepackage{rotating}
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{courier}
+\usepackage[active]{srcltx}
+\usepackage[sort&compress]{natbib}
+
+
+\newcommand{\uu}{{\bf u}}
+\newcommand{\qq}{{\bf q}}
+\newcommand{\ab}{{\bf a}}
+\newcommand{\bb}{{\bf b}}
+\newcommand{\hh}{{\bf h}}
+\newcommand{\rr}{{\bf r}}
+\newcommand{\pp}{{\bf p}}
+\newcommand{\PP}{{\bf P}}
+\newcommand{\RR}{{\bf R}}
+\newcommand{\kk}{{\bf k}}
+\newcommand{\HH}{{\bf H}}
+\newcommand{\GG}{{\bf G}}
+\newcommand{\SiS}{{\bf \Sigma}}
+\newcommand{\VV}{{\bf V}}
+\newcommand{\UU}{{\bf U}}
+\newcommand{\w}{\omega}
+\newcommand{\tf}{\textbf}
+\newcommand{\bo}{\mathbf}
+\newcommand{\br}{{\bf r}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\ben}{\begin{equation*}}
+\newcommand{\een}{\end{equation*}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\bean}{\begin{eqnarray*}}
+\newcommand{\eean}{\end{eqnarray*}}
+\newcommand{\nup}{n_{\uparrow}}
+\newcommand{\ndown}{n_{\downarrow}}
+\newcommand{\Id}[1] {\int \! \! {\rm d}^3 #1}
+\renewcommand{\v}[1]{{\bf #1}}
+\renewcommand{\[}{\left[}
+\renewcommand{\]}{\right]}
+\renewcommand{\(}{\left(}
+\renewcommand{\)}{\right)}
+\def\efield{\boldsymbol{\cal E}} 
+\def\ket#1{\vert#1\rangle}
+\def\bra#1{\langle#1\vert}
+\def\pw{^{({\rm W})}}
+\def\ph{^{({\rm H})}}
+\def\D{{D}\ph}
+
+
+
+
+ 
+\newcommand{\grenoble}{Institut N\'eel,
+CNRS/UJF, 25 rue des Martyrs BP 166, B\^{a}timent D 38042 Grenoble
+cedex 9 France} 
+\newcommand{\rome}{Istituto di Struttura della Materia (ISM), Consiglio Nazionale delle Ricerche, Via Salaria Km 29.5, CP 10, 00016 Monterotondo Stazione, Italy}
+\newcommand{\coimbra}{Centre for Computational Physics and Physics Department, University of Coimbra, Rua Larga, 3004-516 Coimbra, Portugal}
+
+\begin{document}
+\title{Linear response from EOM of the density matrix}
+\author{C. Attaccalite}
+\affiliation{\grenoble}
+
+\begin{abstract}
+In these notes I sketch the linear response from density matrix equation of motion in length gauge
+\end{abstract}           
+
+\maketitle
+
+\section{Position operator in periodic system}
+The position operator in periodic system is defined as:\cite{blount1962solid}
+\be
+\hat \rr = i \frac{\partial}{\partial \kk} + \hat A
+\label{rperiodic}
+\ee
+where $\hat A$ is the transition dipole moment or a generalization of the Berry connection:\cite{silva2019high,wang2006ab}: 
+\be
+\boldsymbol{A}\pw_{nm}\left(\boldsymbol{k}\right)=i\int_{V_{C}}d\boldsymbol{r}~u^{*}_{n\boldsymbol{k}}\left(\boldsymbol{r}\right)\frac{\partial}{\partial\boldsymbol{k}}u_{m\boldsymbol{k}}\left(\boldsymbol{r}\right).
+\ee
+The above defintion of $\hat \rr$ can be obtained from the Blount\cite{blount1962solid} or starting from the definition of polarization given by Resta\cite{resta1994macroscopic} and reduction of the many-body wave-function to a single slater determinant.\cite{souza2004dynamics}
+Using the definition Eq.\ref{rperiodic} for the position operator, it is possible to write down the equation of motion(EOM) for the density matrix in the Wannier gauge as:
+\begin{align}
+i\hbar\frac{\partial}{\partial t}\rho\pw_{nm}\left(\boldsymbol{k},t\right) & =\left[H\pw\left(\boldsymbol{k}\right),\rho\pw\left(\boldsymbol{k},t\right)\right]_{nm}\nonumber \\
+ & +i\left|e\right|\boldsymbol{E}\left(t\right).\frac{\partial}{\partial\boldsymbol{k}}\rho\pw_{nm}\left(\boldsymbol{k},t\right)\nonumber \\
+ & +\left|e\right|\boldsymbol{E}\left(t\right).\left[\boldsymbol{A}\pw\left(\boldsymbol{k}\right),\rho\pw\left(\boldsymbol{k},t\right)\right]_{nm}\label{eq:RDM_eq_motion}
+\end{align}
+Notice that in this gauge everything is smooth function of $\kk$. Then we can rotate these equations in the Hamiltonian gauge, using the relations:
+\begin{align}
+\rho_{nm}^{\left(H\right)}\left(\boldsymbol{k},t\right) & =\sum_{ab}U_{nb}^{\dagger}\left(\boldsymbol{k}\right)\rho_{ba}^{\left(W\right)}\left(\boldsymbol{k},t\right)U_{am}\left(\boldsymbol{k}\right)\\
+	\rho_{nm}^{\left(W\right)}\left(\boldsymbol{k},t\right) & =\sum_{ab}U_{nb}\left(\boldsymbol{k}\right)\rho_{ba}^{\left(H\right)}\left(\boldsymbol{k},t\right)U_{am}^{\dagger}\left(\boldsymbol{k}\right). \label{eq_rho_w}
+\end{align}
+and we get:
+\begin{align}
+i\hbar\frac{\partial}{\partial t}\rho_{nm}^{\left(H\right)}\left(\boldsymbol{k},t\right) & =\left[H^{\left(H\right)}\left(\boldsymbol{k}\right),\rho^{\left(H\right)}\left(\boldsymbol{k},t\right)\right]_{nm}\nonumber \\
+ & +i\left|e\right|\boldsymbol{E}\left(t\right).\frac{\partial}{\partial\boldsymbol{k}}\rho_{nm}^{\left(H\right)}\left(\boldsymbol{k},t\right)\nonumber \\
+	& +\left|e\right|\boldsymbol{E}\left(t\right).\left[\boldsymbol{A}^{\left(H\right)}\left(\boldsymbol{k}\right),\rho^{\left(H\right)}\left(\boldsymbol{k},t\right)\right]_{nm} \label{eq_rho_h}
+\end{align}
+Notice that in this gauge $A\ph(\kk)$ is composed of two terms, the rotation of $A\pw(\kk)$ and a term that is generated by the derivative in $\kk$ applied to the rotation matrices. Eq.~\ref{eq_rho_h} is obtained from Eq.~\ref{eq_rho_w}, using Eqs.~\ref{eq:RDM_eq_motion} and the fact that $(\partial_\kk  U^\dagger) U = - U^\dagger( \partial_\kk U) $.\\
+Notice that in the Hamiltonian gauge we can safely include dephasing or self-energies.
+\section{Current and polarization}	
+The current is written as:
+The matrix representation of the current operator in a Bloch basis
+is defined as
+\begin{align}
+\hat{\boldsymbol{J}} & =\frac{-\left|e\right|}{i\hbar}\left[\hat{\boldsymbol{r}},\hat{H}\left(t\right)\right]\\
+\left(\hat{\boldsymbol{J}}\right)_{\boldsymbol{k},nm} & =\frac{-\left|e\right|}{\hbar}\left(\frac{\partial}{\partial\boldsymbol{k}}H_{nm}\left(\boldsymbol{k}\right)-i\left[\boldsymbol{A}\left(\boldsymbol{k}\right),H\left(\boldsymbol{k}\right)\right]_{nm}\right).
+\end{align}
+In the Hamiltonian gauge, we can identify the two terms in the expression
+for the current as the \emph{intraband }and \emph{interband }current.
+\begin{align}
+\left(\hat{\boldsymbol{J}}_{intra}\right)_{\boldsymbol{k},nm} & =\frac{-\left|e\right|}{\hbar}\left(\frac{\partial}{\partial\boldsymbol{k}}H_{nm}^{\left(H\right)}\left(\boldsymbol{k}\right)\right)\\
+\left(\hat{\boldsymbol{J}}_{inter}\right)_{\boldsymbol{k},nm} & =\frac{i\left|e\right|}{\hbar}\left(\left[\boldsymbol{A}^{\left(H\right)}\left(\boldsymbol{k}\right),H^{\left(H\right)}\left(\boldsymbol{k}\right)\right]_{nm}\right).
+\end{align}
+Notice that the current include the gradient in $\kk$ of $H$ that should be correct from the lattice to the atomic gauge.
+
+\appendix
+\section{Derivatives in k-space}
+In general to perform derivative in k-space we define quantities as:
+\be
+\PP = \frac{1}{2\pi} \sum_{i=1,3} \ab_i (\PP \cdot \bb_i) = \frac{1}{2\pi} \sum_{i=1,3} \ab_i \PP_i
+\ee
+where $\bb_i$ are reciprocal lattice vectors and $\ab_i$ direct lattice vectors that satisfy the relation:
+\be
+\ab_i \cdot \bb_j = 2\pi\delta_{ij}
+\ee
+then the derivative along a $\bb_i$ vector can be rewritten in Cartesian coordinates as:
+\be
+\nabla \PP = \frac{1}{2\pi} \sum_{i=1,3} \ab_i \left( \frac{\partial \PP_i}{\partial \kk_i} |\bb_i| \right)
+\ee 
+where $\partial \PP_i/\partial \kk_i$ is the derivative along the $\bb_i$ direction, or one can write the finite difference derivative using $\Delta \kk_i = \bb_i/N_i$.
+\be
+\nabla \PP = \frac{1}{2\pi} \sum_{i=1,3} \ab_i \left( \frac{\Delta \PP_i}{\Delta \kk_i}  |\bb_i|  \right) = \frac{1}{2\pi} \sum_{i=1,3} \ab_i \left( N_i \Delta \PP_i \right)
+\ee 
+
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliographystyle{apsrev4-1}
+\bibliography{hhg}
+\end{document}
