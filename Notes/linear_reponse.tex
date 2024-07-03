@@ -72,7 +72,44 @@ In these notes I sketch the linear response from density matrix equation of moti
 \end{abstract}           
 
 \maketitle
-
+When an external perturbation $U(t)$ is switched on it induces a variation of the density matrix, 
+$\Delta \rho(\kk,t)$.
+In the case of a strong applied laser field these changes depend on
+all possible orders in the external field. However for weak fields the
+linear term is dominant. 
+Proceeding similarly to Ref.~\cite{bsedynamic} we consider the retarded density-density correlation function:
+\be
+\label{chi-rr}
+\chi^{\mathrm{r}}(\rr,t;\rr',t') =
+-i\[\langle \rho(\rr,t)\rho(\rr',t')\rangle 
+- \langle \rho(\rr,t)\rangle \langle \rho(\rr',t')\rangle\]\theta\(t-t'\).
+\ee
+$\chi^{\mathrm{r}}$ describes the linear response of the system to a weak
+perturbation, represented in Eq.~\eqref{hamiltonian}  by $U$,
+\be
+\label{eq:phychi}
+\chi^{\mathrm{r}}(\rr,t;\rr',t') = \left. \frac{\langle
+  \delta\rho(\rr t) \rangle}{\delta U(\rr^\prime t^{\prime})}\right\vert_{U=0}.
+\ee
+We start by expanding  $\chi (\mathrm{r})$ in terms of the Kohn-Sham orbitals:
+\be
+\label{basisChi}
+\chi^{\mathrm r}(\rr,t; \mathbf{r'},t'; \mathbf q) =
+  \sum_{\substack{i,j,\kk \\ l,m,\kk^\prime} } \chi^{\mathrm r}_{\substack{i,j,\kk \\ l,m,\kk^\prime} }(t,t^\prime; \mathbf q)
+\times \varphi_{i,\kk} (\rr)\varphi^*_{j, \mathbf {k+q}} (\rr) \varphi^*_{l, \mathbf {k^\prime}} (\rr')
+\varphi_{m, \mathbf {k^\prime+q}} (\rr'),
+\ee
+where $\qq$ is the momentum, and we define the matrix elements of $\chi^{\mathrm r}$ as,
+\be
+\label{eq:chimat}
+ \chi^{\mathrm r}_{\substack{ij,\kk \\ lm,\kk^\prime} }(t,t^\prime; \mathbf q) =
+\iint \mathbf{d}^3r \mathbf{d}^3r^\prime \varphi^*_{i,\kk}(\rr)
+\varphi^*_{m, \kk^\prime+\qq} (\rr^\prime)
+\varphi_{j,\kk+\qq} (\rr) \varphi_{l, \kk^\prime} (\rr^\prime).
+\ee
+Since we are interested only in the optical response, in what follows
+we restrict ourselves to the case $\qq =0$ and drop the $\qq$
+dependence of $\chi^{\mathrm r}$. 
 The position operator in periodic system is defined as:\cite{blount1962solid}
 \be
 \hat \rr = i \frac{\partial}{\partial \kk} + \hat A
@@ -126,9 +163,33 @@ Notice that the term with the k-derivative $\partial_k \rho(\kk)$ do not contrib
 \eean
 and by Fourier transform we get:
 \bea
- \left[  \omega- \left(\epsilon_{j \kk} -\epsilon_{i \kk}\right) \right] \chi^{\mathrm r}_{\substack{ij,\kk\\lm \mathbf p}}(\omega) = i \(f_{i \kk}-f_{j \kk}\) \left[ \delta_{jl} \delta_{im} \delta_{\kk,\pp} + \right.
+ \left[  \omega- \left(\epsilon_{j \kk} -\epsilon_{i \kk}\right) \right] \chi^{\mathrm r}_{\substack{ij,\kk\\lm \mathbf p}}(\omega) = i \(f_{i \kk}-f_{j \kk}\) \left[ \delta_{jl} \delta_{im} \delta_{\kk,\pp} \right.
 \eea
-
+Now we want to reconstruct the $\chi(\rr,\rr)$ average on the cell and we insert again the position operator keeping only the linear terms and we get:
+\be
+\chi(\omega) = \sum_{ij} \frac{|A_{ij}(\kk)|^2}{\omega- \epsilon_{j \kk} -\epsilon_{i \kk}}  \(f_{i \kk}-f_{j \kk}\)  = \sum_{ij} \frac{| \langle \psi_{i \kk} | \partial_k \psi_{j \kk} \rangle|^2}{\omega- \epsilon_{j \kk} -\epsilon_{i \kk}}  \(f_{i \kk}-f_{j \kk}\) 
+\label{xhiw}
+\ee
+Using perturbation theory in $\kk$ we can transform this formula in the standard one.\cite{wang2006ab}
+We consider an Hamiltonian:
+\be
+H (\kk + \Delta \kk_\alpha) = H (\kk)  + \Delta \kk_\alpha \partial_\alpha  H (\kk)
+\ee
+where $\partial_\alpha = \partial/\partial_{\kk_\alpha}$. We consider the second term as a perturbation and write the perturbation theory:
+\be
+	\ket{ \psi_{n,\boldsymbol{k}+\Delta \kk}}=\ket{ \psi_{n,\boldsymbol{k}}}+\Delta \kk_\alpha \sum_{m} \frac{\bra{\psi_{m,\boldsymbol{k} }} H_\alpha   \ket{\psi_{n,\boldsymbol{k} }}}{\epsilon_{m\kk}-\epsilon_{n\kk}} \ket{\psi_{m,\boldsymbol{k} }}
+\ee
+where $ H_\alpha =\partial_\alpha  H$. Then we can define the derivative respect to $\kk$ of an eigenvector as:
+\be
+\ket{ \partial_\alpha \psi_{n,\boldsymbol{k}}}=   \frac{\ket{ \psi_{n,\boldsymbol{k}+\Delta \kk}}-\ket{ \psi_{n,\boldsymbol{k}}}}{\Delta \kk}= \sum_{m \neq n} \frac{\bra{\psi_{m,\boldsymbol{k} }} H_\alpha   \ket{\psi_{n,\boldsymbol{k} }}}{\epsilon_{m\kk}-\epsilon_{n\kk}} \ket{\psi_{m,\boldsymbol{k} }}
+\ee
+If you substitute this formula in Eq.~\ref{xhiw} you get the standard definition of dipoles in term of the commutator of the Hamiltonian.\\
+\be
+\chi(\omega) =  \sum_{ij} \frac{| \langle \psi_{i \kk} | \partial_k H(\kk)| \psi_{j \kk} \rangle|^2}{\left (\epsilon_{j \kk} -\epsilon_{i \kk} \right)^2}\frac{ \(f_{i \kk}-f_{j \kk}\)}{\omega- \epsilon_{j \kk} -\epsilon_{i \kk}} 
+\label{xhiw}
+\ee
+\textbf{Nota bene 1:} The above derivation of linear response is beatuful but is not fully correct because we assume the differentiability of $\psi_k$ and $H(\kk)$ respect to $\kk$ and this it is true only in a smooth k-gauge. \cite{silva2019high} \\
+\textbf{Nota bene 2:} In the above derivation I used the Bloch function $\psi_\kk$, the same result can be obtained using only the periodic part of the Bloch function $u_\kk$ but in this case the term $\partial_k \rho(\kk)$ cannot be distregarded because it will aquire a contribution linear with the field.\cite{PythTB}
 \addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{apsrev4-1}
 \bibliography{hhg}
