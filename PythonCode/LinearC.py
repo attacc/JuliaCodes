@@ -126,7 +126,7 @@ def gradU_H(h_dim, vec_k, a_cc, E_g, t_0, delta, dk=1e-3,eta=0.0+1e-5j):
           if m != n:
             u_m=eigvec[:,m]
             E_m=eigval[m]
-            s=s+sandwich_product(u_m,WH_rotate(dH_k[a,:,:],eigvec),u_n)*u_m/(E_n-E_m+eta)
+            s=s+sandwich_product(u_m,WH_rotate(dH_k[a,:,:],eigvec),u_n)*u_m/(E_n-E_m)
         dU_H[a,n,:]=s
         Dip_H[a,:,:]=WH_rotate(dH_k[a,:,:],eigvec)
       for i in range(h_dim):
@@ -157,42 +157,41 @@ def linear_coefficient(h_dim, omega_space, eigval, eigvec, vec_k, a_cc, E_g, t_0
                     X1 += abs(np.vdot(u_i, dk_psi[a, :, j]))**2/ (E_i - E_j - w- eta)
             lin_coff[a, w_idx] = X1
     return lin_coff
-'''
-
+#'''
 # Function-2: Claudio's definition of linear coefficient
-def linear_coefficient(h_dim, freqs, eigval, eigvec, vec_k, a_cc, E_g, t_0, delta, eta=0+1e-4j, nv=1):
-    xhi = np.zeros(len(freqs), dtype=complex)
-    Res = np.zeros((h_dim, h_dim), dtype=complex)
-    Ef_vec=[0.0,0.1]
-    Dip_H=gradU_H(h_dim, vec_k, a_cc, E_g, t_0, delta)[0]
-    for iv in range(nv):
-      for ic in range(nv, h_dim):
-        Res[iv, ic] = np.sum(Dip_H[iv, ic, :] * Ef_vec[:])
-        e_v = eigval[iv]
-        e_c = eigval[ic]
-        for ifreq, w in enumerate(freqs):
-          xhi[ifreq] = abs(Res[iv, ic])**2 / (e_c - e_v - w - eta )
-    xhi = xhi
-    return xhi
-
+#def linear_coefficient(h_dim, freqs, eigval, eigvec, vec_k, a_cc, E_g, t_0, delta, eta=0+1e-4j, nv=1):
+#    xhi = np.zeros(len(freqs), dtype=complex)
+#    Res = np.zeros((h_dim, h_dim), dtype=complex)
+#    Ef_vec=[0.0,0.1]
+#    Dip_H=gradU_H(h_dim, vec_k, a_cc, E_g, t_0, delta)[0]
+#    for iv in range(nv):
+#      for ic in range(nv, h_dim):
+#        Res[iv, ic] = np.sum(Dip_H[iv, ic, :] * Ef_vec[:])
+#        e_v = eigval[iv]
+#        e_c = eigval[ic]
+##        for ifreq, w in enumerate(freqs):
+#          xhi[ifreq] = abs(Res[iv, ic])**2 / (e_c - e_v - w - eta )
+#    xhi = xhi
+#    return xhi
+#
 # Function-3: Analytical definition of linear coefficient from notes
-def linear_coefficient(h_dim, freqs, eigval, eigvec, vec_k, a_cc, E_g, t_0, delta, eta=0+1e-4j, nv=1):
-    xhi = np.zeros((s_dim, len(freqs)), dtype=complex)
-    dH_k=gradH(h_dim,vec_k,a_cc,E_g,t_0,delta)
-    for a in range(s_dim):
-      for i in range(h_dim):
-        ei=eigval[i]
-        u_i=eigvec[:,i]
-        for j in range(h_dim):
-          if j != i:
-            ej=eigval[j]
-            u_j=eigvec[:,j]
-            numer=abs(sandwich_product(u_i,dH_k[a,:,:],u_j))**2*(fermi_dis(ei)-fermi_dis(ej))
-            denomer=(ej-ei)**2
-            for ifreq, w in enumerate(freqs):
-              xhi[a,ifreq]=(numer/denomer)*(1.0/(w-ej-ei+eta))
-    return xhi
-'''
+##def linear_coefficient(h_dim, freqs, eigval, eigvec, vec_k, a_cc, E_g, t_0, delta, eta=0+1e-4j, nv=1):
+#    xhi = np.zeros((s_dim, len(freqs)), dtype=complex)
+#    dH_k=gradH(h_dim,vec_k,a_cc,E_g,t_0,delta)
+#    for a in range(s_dim):
+#      for i in range(h_dim):
+#        ei=eigval[i]
+#        u_i=eigvec[:,i]
+##        for j in range(h_dim):
+#          if j != i:
+#            ej=eigval[j]
+#            u_j=eigvec[:,j]
+#            numer=abs(sandwich_product(u_i,dH_k[a,:,:],u_j))**2*(fermi_dis(ei)-fermi_dis(ej))
+#            denomer=(ej-ei)**2
+#            for ifreq, w in enumerate(freqs)
+#              xhi[a,ifreq]=(numer/denomer)*(1.0/(w-ej-ei+eta))
+#    return xhi
+
 # Parameters
 ha2ev=27.211396132              #Hartree to eV
 E_g=3.625*2.0/ha2ev             #Energy Gap
@@ -200,7 +199,7 @@ t_0=2.30/ha2ev                  #NN hopping parameter
 h_dim=2                         #Hamiltonian dimension
 s_dim=2                         #Spatial dimension
 a_cc=2.632                      #Lattice constant
-Num_k=3 #401                       #Number of k points
+Num_k=120 #401                       #Number of k points
 k_1=-M.pi/a_cc                  #Starting k-value
 k_2=-1*k_1                      #Ending k-value
 
