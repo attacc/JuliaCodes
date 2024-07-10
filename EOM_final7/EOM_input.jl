@@ -23,8 +23,8 @@ using .ExternalField
 
 lattice=set_Lattice(2,[a_1,a_2])
 
-n_k1=6
-n_k2=6
+n_k1=3
+n_k2=3
 #
 # Integrator
 #
@@ -78,8 +78,8 @@ TB_gauge=TB_atomic
 #
 # Step for finite differences in k-space
 #
-dk=nothing 
-#dk=0.01
+# dk=nothing 
+dk=0.01
         
 T_2=6.0*fs2aut      #  dephasing fs
 T_1=0.0             #  electron life-time fs

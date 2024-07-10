@@ -33,7 +33,7 @@ function get_Efield(t, dt, e_field)
 		a_t=0.0
 	  end
           #
-      elseif lowercase(e_field.ftype)=="PHHG"
+      elseif lowercase(e_field.ftype)=="phhg"
 	  if (t-T_0)>=e_field.sigma-eps || (t-T_0)<eps
 	     a_t=0.0
 	  else
