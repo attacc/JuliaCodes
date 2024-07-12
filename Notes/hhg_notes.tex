@@ -201,7 +201,20 @@ If we insert this result in Eq.~\ref{deriv_u} and together with Eq.~\ref{u_trans
 	\ket{ \partial_{\kk} u_{n\boldsymbol{k}}^{\left(H\right)}}=\sum_{m}U_{mn}\left(\boldsymbol{k}\right)\ket{\partial_{\kk} u_{m\boldsymbol{k}}^{\left(W\right)}} + \sum_{m}\ket{u_{m\boldsymbol{k}}\ph} \D_{mn,\alpha}
 	\label{deriv_uh}
 \end{equation}
-we will use this result to define the position operator.
+we will use this result to define the position operator.\\
+Notice that rotation from Wannier to Hamiltonian base is equaivalent to take the braket in the Hamiltonian basis. In fact we have that
+\bea
+\nabla H^H_{ij} = \langle u_{i\kk} | \nabla   H^W | u_{j,\kk} \rangle
+\eea
+or in the linear algebra notation
+\bea
+\nabla H^H_{ij} = u^{+}_{i\kk} [ \nabla   H^W ]  u_{j,\kk}
+\eea
+and then in matrix notation
+\bea
+\nabla H^H = U^{+}(\kk) [ \nabla   H^W ]  U(\kk)
+\eea
+
 
 \section{Position operator in periodic system}
 The position operator in periodic system is defined as:\cite{blount1962solid}

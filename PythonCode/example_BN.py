@@ -22,7 +22,7 @@ h_dim=2                         #Hamiltonian dimension
 s_dim=2                         #Spatial dimension
 
 a_cc=2.632                      #Lattice constant
-Num_k=2                        #Number of k points
+Num_k=64                        #Number of k points
 
 dk=1e-3
 eta=0.1/ha2ev
@@ -36,7 +36,7 @@ eigenvectors = np.zeros((h_dim, h_dim), dtype=np.cdouble)
 eigenvalues = np.zeros((1, h_dim), dtype=np.cdouble)
 
 
-max_omega=2.0/ha2ev
+max_omega=15.0/ha2ev
 omega_space = np.linspace(0.0, max_omega, 400)
 chi=np.zeros((s_dim,len(omega_space)),dtype=np.cdouble)
   
@@ -89,9 +89,9 @@ chi/=Num_k**2
 fig, axs = plt.subplots(2, 1, figsize=(14, 10))
 fig.suptitle('Electric susceptiblity first order plot', fontsize=20)
 for s in range(s_dim):
-    axs[s].set_xlim([0,max_omega])
-    axs[s].plot(omega_space, np.real(chi[s, :]), label=f'Real Part')
-    axs[s].plot(omega_space, np.imag(chi[s, :]), label=f'Imaginary Part')
+    axs[s].set_xlim([0,max_omega*ha2ev])
+    axs[s].plot(omega_space*ha2ev, np.real(chi[s, :]), label=f'Real Part')
+    axs[s].plot(omega_space*ha2ev, np.imag(chi[s, :]), label=f'Imaginary Part')
     axs[s].set_xlabel('$\omega$')
     if s == 0:
       axs[s].set_ylabel('$\chi^{(1)}_x$')
