@@ -25,7 +25,7 @@ a_cc=2.632                      #Lattice constant
 Num_k=64                        #Number of k points
 
 dk=1e-3
-eta=0.1/ha2ev
+eta=0.15/ha2ev
 
 # Create a 2x2 matrix with zeros
 delta = np.full((3,s_dim),1.0)
@@ -36,7 +36,7 @@ eigenvectors = np.zeros((h_dim, h_dim), dtype=np.cdouble)
 eigenvalues = np.zeros((1, h_dim), dtype=np.cdouble)
 
 
-max_omega=15.0/ha2ev
+max_omega=20.0/ha2ev
 omega_space = np.linspace(0.0, max_omega, 400)
 chi=np.zeros((s_dim,len(omega_space)),dtype=np.cdouble)
   

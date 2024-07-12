@@ -5,9 +5,8 @@ def Linear_Coefficient_k(h_dim, s_dim, omega_space, eigval, dipole, eta):
     for a in range(s_dim):
         for i in range(h_dim):
             E_i = eigval[i]
-            for j in range(h_dim):
-                if j != i:
+            for j in range(i+1,h_dim):
                     E_j = eigval[j]
                     for w_idx, w in enumerate(omega_space):
-                        lin_coff[a, w_idx] += abs(dipole[a, i, j])**2/ (E_i - E_j - w- 1j*eta)
+                        lin_coff[a, w_idx] += abs(dipole[a, i, j])**2/ (E_j - E_i - w -1j*eta)
     return lin_coff

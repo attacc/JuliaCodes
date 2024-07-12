@@ -60,10 +60,10 @@ TB_gauge=TB_atomic
 # Step for finite differences in k-space
 #
 # dk=nothing 
-dk=0.01
+dk=0.001
 
 # For Linear reponse only
-freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
+freqs_range  =[0.0/ha2ev, 20.0/ha2ev] # eV
 eta          =0.15/ha2ev
 freqs_nsteps =400
 e_field.E_vec   = [0.0,1.0]
