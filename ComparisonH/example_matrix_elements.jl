@@ -98,7 +98,7 @@ for ik in 1:k_grid.nk
     println("Dip^h_x(1,2) = $(Dip_h[1,2,1,ik])     Dip^h_y(1,2) = $(Dip_h[1,2,2,ik])")
     e_ij=TB_sol.eigenval[2,ik]-TB_sol.eigenval[1,ik]
     println("ϵ_i-ϵ_j = $(e_ij)")
-    println("<u_i| ∇H^h_x| u_j> = $(Dip_h[1,2,1,ik]*e_ij)")
+    println("<u_i| ∇H^h_x| u_j> = $(-1im*Dip_h[1,2,1,ik]*e_ij)")
 end
 
 #

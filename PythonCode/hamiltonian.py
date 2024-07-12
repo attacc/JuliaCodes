@@ -27,3 +27,15 @@ def Hamiltonian(h_dim,vec_k, a_cc,E_g,t_0,delta):
     return np.zeros((h_dim, h_dim), dtype=complex)
   else:
     return H
+
+
+#Fixing eigenvector phase
+def fix_eigenvec_phase(eigenvec,h_dim):
+  phase_m = np.zeros(h_dim, dtype=complex)
+  # Rotation phase matrix
+  for i in range(h_dim):
+    phase_m[i] = np.exp(-1j * np.angle(eigenvec[i, i]))
+    # Apply phase corrections
+    eigenvec[:, i] = eigenvec[:, i]*phase_m[i]
+  return eigenvec
+
