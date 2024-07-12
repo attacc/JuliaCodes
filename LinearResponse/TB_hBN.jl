@@ -65,7 +65,7 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals
         # f(k)=e^{-i*k_y*a} * (1+2*e^{ i*k_y*3*a/2} ) * cos(sqrt(3)*a/2*k_x)
         #
 	f_k=exp(-1im*k[1]*a_cc)*(1.0+2.0*exp(1im*k[1]*3.0*a_cc/2.0)*cos(sqrt(3.0)*k[2]*a_cc/2.0))
-	H[1,2]=t_0*f_k
+	H[1,2]=-t_0*f_k
         #
         # Transform the Hamiltonian in "atomic gauge" see notes.
         # The "atomic gauge" is equivalent to the periodic part

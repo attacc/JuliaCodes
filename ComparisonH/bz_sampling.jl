@@ -73,8 +73,9 @@ function generate_circuit(points, n_steps)
     println("grid dimensions : ",k_grid.nk_dir, "\n\n")
     
     for ik in 1:size(k_grid.kpt, 2)
-       k_crystal=lattice.b_mat_inv*k_grid.kpt[:,ik]
-       println("ik ",ik," kpt ",cfmt(fmt,k_crystal[1]),"  ",cfmt(fmt,k_crystal[2])," ik_grid ",k_grid.ik_map_inv[:,ik])
+       #k_crystal=lattice.b_mat_inv*k_grid.kpt[:,ik]
+       #println("ik ",ik," kpt ",cfmt(fmt,k_crystal[1]),"  ",cfmt(fmt,k_crystal[2])," ik_grid ",k_grid.ik_map_inv[:,ik])
+       println("ik ",ik," kpt ",cfmt(fmt,k_grid.kpt[1,ik]),"  ",cfmt(fmt,k_grid.kpt[2,ik]))
        ik_left =get_k_neighbor(ik,1,1,k_grid)
        ik_right=get_k_neighbor(ik,1,-1,k_grid)
        println("x-neighboar ",ik_left," - ",ik_right)

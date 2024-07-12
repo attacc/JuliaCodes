@@ -46,4 +46,7 @@ for ik1 in range(Num_k):
         vec_k=lattice.rvectors[0]*ik1/Num_k+lattice.rvectors[1]*ik2/Num_k
         print(" ik1 ",ik1," ik2 ",ik2," vec_k ",vec_k)
         H=Hamiltonian(h_dim,vec_k,a_cc,E_g,t_0,delta)
+        print("H(1,1) ",H[0,0]*ha2ev)
+        print("H(1,2) ",H[0,1]*ha2ev)
         eigenvalues, eigenvectors = np.linalg.eigh(H)
+

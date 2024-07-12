@@ -5,7 +5,7 @@ def e_k(t_0,vec_k,delta):
   # Initialize the result
   ek = 0+0j
   # Calculate the dot product of A and each vector in B, raise it to the power of 'e', and sum the results
-  for i in range(delta.shape[1]):
+  for i in range(delta.shape[0]):
     dot_product = np.dot(vec_k, delta[i,:])
     ek = ek+(np.exp(1j*dot_product))
   return -t_0*ek
