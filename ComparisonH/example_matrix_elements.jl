@@ -35,6 +35,7 @@ include("Dipoles.jl")
 # if use_GradH=false dipoles are calculated
 # uding UdU with fixed phase
 #
+#use_GradH=false
 use_GradH=true
 
 # a generic off-diagonal matrix example (0 1; 1 0)
@@ -48,13 +49,13 @@ n_k2=2
 #
 # Gauge for the tight-binding
 #
-#TB_gauge=TB_lattice
-TB_gauge=TB_atomic
+TB_gauge=TB_lattice
+#TB_gauge=TB_atomic   
 #
 # Step for finite differences in k-space
 #
 # dk=nothing 
-dk=0.01
+dk=0.001
 
 # For Linear reponse only
 freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
