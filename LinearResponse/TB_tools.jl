@@ -267,9 +267,9 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, delt
     #
     dU         =K_crys_to_cart(dU,lattice)
     #
-    # Correction in atomic gauge
+    # Correction in lattice gauge
     #
-    if TB_gauge==TB_atomic
+    if TB_gauge==TB_lattice 
       VdV=zeros(Complex{Float64},h_dim,h_dim,s_dim)
       for ih in 1:h_dim
         VdV[ih,ih,:]=-1im*orbitals.tau[ih][:]
@@ -364,13 +364,13 @@ function Grad_H(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, delt
       dH_w  =K_crys_to_cart(dH_w,lattice)
     end
     #
-    # If gauge is "atomic" apply correction to ∇H
+    # If gauge is "lattice" apply correction to ∇H
     #
-    if TB_gauge==TB_atomic
+    if TB_gauge==TB_lattice
        d_tau=orbitals.tau[2]-orbitals.tau[1]     
        k_dot_dtau=dot(k_grid.kpt[:,ik],d_tau)     
        for id in 1:s_dim
-         dH_w[1,2,id]=exp(1im*k_dot_dtau)*(dH_w[1,2,id]+1im*d_tau[id]*TB_sol.H_w[1,2,ik])
+         dH_w[1,2,id]=exp(+1im*k_dot_dtau)*(dH_w[1,2,id]+1im*d_tau[id]*TB_sol.H_w[1,2,ik])
          dH_w[2,1,id]=conj(dH_w[1,2,id])
        end
     end
