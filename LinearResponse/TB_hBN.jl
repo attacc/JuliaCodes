@@ -39,10 +39,11 @@ a_2=a_cc/2.0*[3.0, -sqrt(3.0)]
 # Atom positions
 d_1=      [0.0,0.0]
 d_2=-a_cc*[1.0,0.0]
-#d_1= a_cc/2.0*[1.0,  sqrt(3.0)]
-#d_2= a_cc/2.0*[1.0, -sqrt(3.0)]
-#d_3=-a_cc*[1.0,0.0]
-#d_4= [0.0,0.0]
+
+nn=zeros(Complex{Float64},3,2)
+nn[1,:]= a_cc/2.0*[1.0,  sqrt(3.0)]
+nn[2,:]= a_cc/2.0*[1.0, -sqrt(3.0)]
+nn[3,:]=-a_cc*[1.0,0.0]
 
 orbitals=set_Orbitals(2,[d_1,d_2])
 
@@ -63,8 +64,13 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals
         #
         # Off diagonal part
         # f(k)=e^{-i*k_y*a} * (1+2*e^{ i*k_y*3*a/2} ) * cos(sqrt(3)*a/2*k_x)
+        # f_k=exp(-1im*k[1]*a_cc)*(1.0+2.0*exp(1im*k[1]*3.0*a_cc/2.0)*cos(sqrt(3.0)*k[2]*a_cc/2.0))
         #
-	f_k=exp(-1im*k[1]*a_cc)*(1.0+2.0*exp(1im*k[1]*3.0*a_cc/2.0)*cos(sqrt(3.0)*k[2]*a_cc/2.0))
+        f_k=0.0
+        for inn in 1:3
+            f_k+=exp(1im*dot(k[:],nn[inn,:]))
+        end
+
 	H[1,2]=-t_0*f_k
         #
         # Transform the Hamiltonian in "atomic gauge" see notes.

@@ -54,8 +54,8 @@ n_k2=64
 #
 # Gauge for the tight-binding
 #
-#TB_gauge=TB_lattice
-TB_gauge=TB_atomic
+TB_gauge=TB_lattice
+#TB_gauge=TB_atomic
 #
 # Step for finite differences in k-space
 #
