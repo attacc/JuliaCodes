@@ -2,7 +2,7 @@ module TB_tools
 
 using ProgressBars
 
-export evaluate_DOS,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,RK2,RK4,rk2_step,rk4_step,generate_header,TB_lattice,TB_atomic,TB_Solution
+export evaluate_DOS,fix_eigenvec_phase,ProgressBar,K_crys_to_cart,props,IO_output,dyn_props,Grad_H,Grad_U,W_gauge,H_gauge,HW_rotate,WH_rotate,RK2,RK4,rk2_step,rk4_step,generate_header,TB_lattice,TB_atomic,TB_Solution,Gauge_Correction
 
 const W_gauge=true
 const H_gauge=false
@@ -367,7 +367,7 @@ function Gauge_Correction(ik,TB_sol,orbitals)
    for id in 1:s_dim
       VdV[:,:,id]*=U
    end
-   return VdU
+   return VdV
 end
 
 

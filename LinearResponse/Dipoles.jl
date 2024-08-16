@@ -75,8 +75,8 @@ function Build_Dipole(k_grid,lattice,TB_sol,TB_gauge,orbitals,Hamiltonian,dk,use
     # Gauge correction to the \grad U in the lattice gauge
     #
     if TB_gauge==TB_lattice
-        VdV=Gauge_Correction(TB_sol,orbitals)
-        do id in 1:s_dim
+        VdV=Gauge_Correction(ik,TB_sol,orbitals)
+        for id in 1:s_dim
             Dip_h[:,:,id,ik]=1im*(U')*VdV[:,:,id]
         end
     end
