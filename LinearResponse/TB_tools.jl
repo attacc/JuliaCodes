@@ -287,7 +287,7 @@ end
 # For the derivative of the Hamiltonian
 # I recalcualte it because H(k+G)/=H(k)
 
-function Grad_H(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, deltaK=nothing, orbitals=nothing)
+function Grad_H(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, deltaK=nothing)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
@@ -364,19 +364,23 @@ function Grad_H(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, delt
       dH_w  =K_crys_to_cart(dH_w,lattice)
     end
     #
-    # If gauge is "lattice" apply correction to ∇H
-    #
-    if TB_gauge==TB_lattice
-       d_tau=orbitals.tau[2]-orbitals.tau[1]     
-       k_dot_dtau=dot(k_grid.kpt[:,ik],d_tau)     
-       for id in 1:s_dim
-         dH_w[1,2,id]=exp(+1im*k_dot_dtau)*(dH_w[1,2,id]+1im*d_tau[id]*TB_sol.H_w[1,2,ik])
-         dH_w[2,1,id]=conj(dH_w[1,2,id])
-       end
-    end
-    #
     return dH_w
     #
+end
+
+#
+# Correction to Grad_U from the atomic to the lattice gauge
+#
+function Gauge_Correction(TB_sol,orbitals)
+  VdV=zeros(Complex{Float64},h_dim,h_dim,s_dim)
+  for ih in 1:h_dim
+     VdV[ih,ih,:]=-1im*orbitals.tau[ih][:]
+   end
+   U=TB_sol.eigenvec[:,:,ik]
+   for id in 1:s_dim
+      VdV[:,:,id]*=U
+   end
+   return VdU
 end
 
 
