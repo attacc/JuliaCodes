@@ -176,7 +176,7 @@ end
 # In this subroutine I do not recalculate H because
 # I fix the phase
 #
-function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, deltaK=nothing, orbitals=nothing)
+function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, deltaK=nothing)
     #
     # calculate dH/dk in the Wannier Gauge
     # derivatives are in cartesian coordinates
@@ -266,19 +266,6 @@ function Grad_U(ik, k_grid, lattice, TB_sol, TB_gauge; Hamiltonian=nothing, delt
     # Convert from crystal to cartesian
     #
     dU         =K_crys_to_cart(dU,lattice)
-    #
-    # Correction in lattice gauge
-    #
-    if TB_gauge==TB_lattice 
-      VdV=zeros(Complex{Float64},h_dim,h_dim,s_dim)
-      for ih in 1:h_dim
-        VdV[ih,ih,:]=-1im*orbitals.tau[ih][:]
-      end
-      U=TB_sol.eigenvec[:,:,ik]
-      for id in 1:s_dim
-        dU[:,:,id]=dU[:,:,id]+VdV[:,:,id]*U
-      end
-    end
     #
     return dU
     #
@@ -371,7 +358,7 @@ end
 #
 # Correction to Grad_U from the atomic to the lattice gauge
 #
-function Gauge_Correction(TB_sol,orbitals)
+function Gauge_Correction(ik,TB_sol,orbitals)
   VdV=zeros(Complex{Float64},h_dim,h_dim,s_dim)
   for ih in 1:h_dim
      VdV[ih,ih,:]=-1im*orbitals.tau[ih][:]

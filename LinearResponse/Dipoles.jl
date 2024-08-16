@@ -33,18 +33,16 @@ function Build_Dipole(k_grid,lattice,TB_sol,TB_gauge,orbitals,Hamiltonian,dk,use
   ∇H_w =zeros(Complex{Float64},h_dim,h_dim,s_dim,k_grid.nk)
   Threads.@threads for ik in ProgressBar(1:k_grid.nk)
     #  
-    if(use_GradH) 
-      ∇H_w[:,:,:,ik]=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=orbitals, Hamiltonian=Hamiltonian,deltaK=dk)
-    else
-      ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=orbitals, Hamiltonian=Hamiltonian,deltaK=dk)
-    end
-    #
     if use_GradH
+      #  
+      ∇H_w[:,:,:,ik]=Grad_H(ik,k_grid,lattice,TB_sol,TB_gauge; Hamiltonian=Hamiltonian,deltaK=dk)
+      #
       for id in 1:s_dim
         Dip_h[:,:,id,ik]=WH_rotate(∇H_w[:,:,id,ik],TB_sol.eigenvec[:,:,ik])
 # I set to zero the diagonal part of dipoles
         Dip_h[:,:,id,ik]=Dip_h[:,:,id,ik].*off_diag
       end
+      #
 #    
 # Now I have to divide for the energies
 #
@@ -60,14 +58,27 @@ function Build_Dipole(k_grid,lattice,TB_sol,TB_gauge,orbitals,Hamiltonian,dk,use
             Dip_h[j,i,:,ik]=conj(Dip_h[i,j,:,ik])
   	end
       end
+      #
     else
-       #
-       #  Build dipoles using U\grad U
-       #
-       U=TB_sol.eigenvec[:,:,ik]
-       for id in 1:s_dim
-          Dip_h[:,:,id,ik]=1im*(U')*∇U[:,:,id]
-       end
+      #
+      #  Build dipoles using U\grad U
+      #
+      ∇U  =Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge; Hamiltonian=Hamiltonian,deltaK=dk)
+      #
+      U=TB_sol.eigenvec[:,:,ik]
+      for id in 1:s_dim
+        Dip_h[:,:,id,ik]=1im*(U')*∇U[:,:,id]
+      end
+      # 
+    end
+    #
+    # Gauge correction to the \grad U in the lattice gauge
+    #
+    if TB_gauge==TB_lattice
+        VdV=Gauge_Correction(TB_sol,orbitals)
+        do id in 1:s_dim
+            Dip_h[:,:,id,ik]=1im*(U')*VdV[:,:,id]
+        end
     end
     #
   end
