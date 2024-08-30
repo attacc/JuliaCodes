@@ -92,7 +92,7 @@ freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
 if T2_PP !=0.0
    pol  =damp_it(times, pol, T2_PP, itstart)
 end
-pol_w=FFT_1D(times, freqs, pol, E_vec)
+pol_w=FFT_1D(times, freqs, pol, e_field.E_vec)
 # I multiply for -1im lost somewhere
 pol_w=-1im*Divide_by_the_field(pol_w,times,itstart)
 #

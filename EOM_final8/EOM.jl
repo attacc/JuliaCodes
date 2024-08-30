@@ -103,7 +103,7 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   #
   #Gradient of eigenvectors/eigenvalus on the regular grid
   #
-  UdU=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge; orbitals=orbitals, Hamiltonian=Hamiltonian,deltaK=dk)
+  UdU=Grad_U(ik,k_grid,lattice,TB_sol,TB_gauge; Hamiltonian=Hamiltonian,deltaK=dk)
   #
   #  Using the fixing of the guage
   #
@@ -113,6 +113,13 @@ Threads.@threads for ik in ProgressBar(1:k_grid.nk)
   end
   #
   A_h[:,:,:,ik]+=1im*UdU[:,:,:]
+  #
+  if TB_gauge==TB_lattice
+    VdV=Gauge_Correction(ik,TB_sol,orbitals)
+    for id in 1:s_dim
+      A_h[:,:,id,ik]+=1im*(U')*VdV[:,:,id]
+    end
+  end
   #
 end
 #
