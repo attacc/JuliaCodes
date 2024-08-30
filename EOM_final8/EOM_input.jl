@@ -43,7 +43,7 @@ dyn_props.damping=true
 #
 # Use dipole d_k = d_H/d_k (in the Wannier guage)
 #
-dyn_props.use_dipoles=true
+dyn_props.use_dipoles=false #true
 #
 # Use UdU for dipoles
 #
