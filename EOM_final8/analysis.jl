@@ -82,7 +82,7 @@ pol  =pol_and_times[:,2:s_dim+1]
 println(pol_and_times[1:10,1])
 times=pol_and_times[:,1]*fs2aut
 
-freqs_range  =[0.0/ha2ev, 25.0/ha2ev] # eV
+freqs_range  =[0.0/ha2ev, 20.0/ha2ev] # eV
 freqs_nsteps =250
 
 freqs=LinRange(freqs_range[1],freqs_range[2],freqs_nsteps)
