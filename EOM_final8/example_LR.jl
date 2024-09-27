@@ -41,16 +41,16 @@ lattice =set_Lattice(2,[a_1,a_2])
 # if use_GradH=false dipoles are calculated
 # uding UdU with fixed phase
 #
-use_GradH=false
-#use_GradH=true
+#use_GradH=false
+use_GradH=true
 
 # a generic off-diagonal matrix example (0 1; 1 0)
 off_diag=.~I(h_dim)
 
 lattice=set_Lattice(2,[a_1,a_2])
 
-n_k1=12
-n_k2=12
+n_k1=64
+n_k2=64
 
 #
 # Gauge for the tight-binding

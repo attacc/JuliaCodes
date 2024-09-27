@@ -1,7 +1,7 @@
 import numpy as np
 import sys
-from yambopy import *
-from yambopy.plot  import *
+from units    import *
+from hhg_tool import *
 import matplotlib.pyplot as plt
 
 def plot_psd_new(f,psd,lfreq,tstring='',singlefig = True, lmax=41,ymin=10e-7, gap=None):
