@@ -32,16 +32,16 @@ function Floquet_Hamiltonian(k; t_0 = 1.0/2.0, Q=0.0, omega=1.0, F=0.0, n_modes=
         
         H_flq=zeros(Complex{Float64},H_flq_size,H_flq_size)
 
-#Fill the Diagonal
+#Diagonal terms respect to mode and Q
         for i_m in (1:n_modes)
           for ih in (1:h_size)
             H_flq[(i_m-1)*h_size+ih,(i_m-1)*h_size+ih]=i_m*omega+(-Q)^ih
           end
         end
         
-#Fill the Off-diagonal
+#Off-diagonal terms in mode and t_0
         for i_m in (1:n_modes)
-          for i_n in (i_m+1:n_modes)
+          for i_n in (i_m:n_modes)
               H_flq[(i_m-1)*h_size+1,(i_n-1)*h_size+2]=(1.0im)^(i_m-i_n)*besselj(i_m-i_n,F)*cos(k[1]-(i_m-i_n)*pi/2.0)
               H_flq[(i_m-1)*h_size+2,(i_n-1)*h_size+1]=H_flq[(i_m-1)*h_size+1,(i_n-1)*h_size+2]
               #
@@ -87,11 +87,12 @@ mPi=[-pi/(2.0*L)]
 pPi=[+pi/(2.0*L)]
 
 points=[mPi,pPi]
+n_kpt=10
 
 t_0=0.5
 Q=0.1
 
-path=generate_circuit(points,40)
+path=generate_circuit(points,n_kpt)
 band_structure = zeros(Float64, length(path), 2)
 
 for (i,kpt) in enumerate(path)
