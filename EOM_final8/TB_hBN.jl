@@ -117,38 +117,4 @@ export Hamiltonian,Berry_Connection,a_1,a_2,s_dim,h_dim,a_cc,orbitals
 	return A
    end
    #
-   #
-   function Calculate_Berry_Conec_FD(ik, k_grid, U; dk=0.01)
-       #
-       k_plus =copy(k_grid.kpt[:,ik])
-       k_minus=copy(k_grid.kpt[:,ik])
-       A_w=zeros(Complex{Float64},2,2,ndim)
-       #
-       for id in 1:ndim
-	   if k_grid.nk_dir[id]==1
-	      continue
-	   end
-           k_plus[id] =k_grid.kpt[id,ik]+dk
-           k_minus[id]=k_grid.kpt[id,ik]-dk
-           H_plus =Hamiltonian(k_plus)
-	   data_plus= eigen(H_plus)
-	   eigenvec_p = data_plus.vectors
-	   eigenvec_p= fix_eigenvec_phase(eigenvec_p)
-
-           H_minus=Hamiltonian(k_minus)
-	   data_minus= eigen(H_minus)
-	   eigenvec_m = data_minus.vectors
-	   eigenvec_m= fix_eigenvec_phase(eigenvec_m)
-	   
-	   dS=(U*eigenvec_p-U*eigenvec_m)/(2.0*dk)
-	   A_w[:,:,id]=1im*dS  
-	   #Rotation to Hamiltonian gauge is performed outside
-
-           k_plus[id] =k_grid.kpt[id,ik]
-           k_minus[id]=k_grid.kpt[id,ik]
-       end
-       #
-       return A_w
-   end
-   #
 end
