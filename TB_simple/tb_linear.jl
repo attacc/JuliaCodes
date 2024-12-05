@@ -108,8 +108,8 @@ sleep(5)
 # Build the Floquet Hamiltonian
 #
 Q=0.1       # gap
-F=0.5       # Intensity
-omega=1.0   # Frequency
+F=0.0       # Intensity
+omega=0.1   # Frequency
 max_mode=1  # max number of modes
 h_size=2    # Hamiltonian size
 #
@@ -120,18 +120,18 @@ println("")
 @printf("Floquet Hamiltonian Q=%f  F=%f  omega=%f max_mode=%d ",Q,F,omega,max_mode)
 println("")
 #
-flq_bands = zeros(Float64, length(path), n_modes*h_size)
+flq_bands = zeros(Float64, length(path), n_modes, h_size)
 for (i,kpt) in enumerate(path)
 	H_flq=Floquet_Hamiltonian(kpt,F_modes;Q,omega,F)
 	eigenvalues = eigen(H_flq).values       # Diagonalize the matrix
-        flq_bands[i, :] = eigenvalues  # Store eigenvalues in an array
+        flq_bands[i, :,:] = reshape(eigenvalues,(n_modes,h_size))  # Store eigenvalues in an array
 end
-display(plot(flq_bands[:, 1], label="Band 1", xlabel="k", ylabel="Energy [eV]", legend=:topright))
-display(plot!(flq_bands[:, 2], label="Band 2"))
-display(plot!(flq_bands[:, 3], label="Band 3"))
-display(plot!(flq_bands[:, 4], label="Band 4"))
-display(plot!(flq_bands[:, 5], label="Band 5"))
-display(plot!(flq_bands[:, 6], label="Band 6"))
+display(plot(flq_bands[:, 1,1],  label="Mode 1 band 1",lc=:green, xlabel="k", ylabel="Energy [eV]", legend=:topright))
+display(plot!(flq_bands[:, 1,2], label="Mode 1 band 2",lc=:green))
+display(plot!(flq_bands[:, 2,1], label="Mode 2 band 1",lc=:blue))
+display(plot!(flq_bands[:, 2,2], label="Mode 2 band 2",lc=:blue))
+display(plot!(flq_bands[:, 3,1], label="Mode 3 band 1",lc=:red))
+display(plot!(flq_bands[:, 3,2], label="Mode 3 band 2",lc=:red))
 title!("Floquet band structure for two site 1D model")
 sleep(10)
 
