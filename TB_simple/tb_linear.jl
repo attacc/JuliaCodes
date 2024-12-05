@@ -41,21 +41,17 @@ function Floquet_Hamiltonian(k, F_modes;  Q=0.0, omega=1.0, F=0.0)
 #Off-diagonal terms in mode 
         for i1 in 1:n_modes
           i_m=F_modes[i1]
-          for i2 in 1:n_modes
+          for i2 in i1:n_modes
              i_n=F_modes[i2]
              H_flq[i1,i2,1,2]=(1.0im)^(i_m-i_n)*besselj(i_m-i_n,F)*cos(k[1]-(i_m-i_n)*pi/2.0)
              H_flq[i1,i2,2,1]=H_flq[i1,i2,1,2]
+             if i1 != i2
+                 H_flq[i2,i1,:,:]=conj(H_flq[i1,i2,:,:])
+             end
           end
        end
  #My own reshape
-       H_out=zeros(Complex{Float64},n_modes*h_size,n_modes*h_size)
-       for i1 in 1:n_modes
-       for i2 in 1:n_modes
-           H_out[(i1-1)*h_size+1:(i1-1)*h_size+2,(i2-1)*h_size+1:(i2-1)*h_size+2]=H_flq[i1,i2,:,:]
-       end
-       end
-       return H_out
-#       return copy(reshape(permutedims(H_flq,(1,3,2,4)),(n_modes*h_size,n_modes*h_size)))
+       return copy(reshape(permutedims(H_flq,(1,3,2,4)),(n_modes*h_size,n_modes*h_size)))
 end
 
 
@@ -112,7 +108,7 @@ sleep(5)
 # Build the Floquet Hamiltonian
 #
 Q=0.1       # gap
-F=0.0       # Intensity
+F=0.5       # Intensity
 omega=1.0   # Frequency
 max_mode=1  # max number of modes
 h_size=2    # Hamiltonian size
