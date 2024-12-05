@@ -25,29 +25,29 @@ function Hamiltonian(k; t_0 = 1.0/2.0, Q=0.0)::Matrix{Complex{Float64}}
 	return H
 end
 
-function Floquet_Hamiltonian(k, F_modes; t_0 = 1.0/2.0, Q=0.0, omega=1.0, F=0.0)::Matrix{Complex{Float64}}
+function Floquet_Hamiltonian(k, F_modes; t_0 = 1.0/2.0, Q=0.0, omega=1.0, F=0.0)
         h_size =2
         n_modes=length(F_modes)
         H_flq=zeros(Complex{Float64},n_modes,n_modes,h_size,h_size)
 
 #Diagonal terms respect to the mode and Q
         for i1 in 1:n_modes
-          i_m=F_modes(i1)
+          i_m=F_modes[i1]
           for ih in (1:h_size)
-            H_flq[i_m,i_m,ih,ih]=i_m*omega+(-Q)^ih
+            H_flq[i1,i1,ih,ih]=i_m*omega+(-Q)^ih
           end
         end
         
 #Off-diagonal terms in mode and t_0
         for i1 in 1:n_modes
-          i_m=F_modes(i1)
+          i_m=F_modes[i1]
           for i2 in 1:n_modes
-              i_n=F_modes(i2)
-              H_flq[i_m,i_n,1,2]=(1.0im)^(i_m-i_n)*besselj(i_m-i_n,F)*t_0*cos(k[1]-(i_m-i_n)*pi/2.0)
-              H_flq[i_m,i_n,2,1]=H_flq[i_m,i_n,1,2]
+             i_n=F_modes[i2]
+             H_flq[i1,i2,1,2]=(1.0im)^(i_m-i_n)*besselj(i_m-i_n,F)*t_0*cos(k[1]-(i_m-i_n)*pi/2.0)
+             H_flq[i1,i2,2,1]=H_flq[i1,i2,1,2]
           end
        end
-       return reshape(H_flq,(n_modes*h_size,n_modes*h_size))
+       return copy(reshape(permutedims(H_flq,(1,3,2,4)),(n_modes*h_size,n_modes*h_size)))
 end
 
 
@@ -95,24 +95,26 @@ for (i,kpt) in enumerate(path)
 	H=Hamiltonian(kpt;t_0,Q)
 	eigenvalues = eigen(H).values       # Diagonalize the matrix
         band_structure[i, :] = eigenvalues  # Store eigenvalues in an array
-        println(eigenvalues[1])
 end
 display(plot(band_structure[:, 1], label="Band 1", xlabel="k", ylabel="Energy [eV]", legend=:topright))
 display(plot!(band_structure[:, 2], label="Band 2"))
 title!("Band structure for two site 1D model")
+sleep(5)
 
 #
 # Build the Floquet Hamiltonian
 #
-t_0=0.5
-Q=0.1
-F=0.0
-omega=1.0
-max_mode=2
-h_size=2
+t_0=0.5     # hopping
+Q=0.1       # gap
+F=0.0       # Intensity
+omega=1.0   # Frequency
+max_mode=0  # max number of modes
+h_size=2    # Hamiltonian size
 #
 F_modes=range(-max_mode,max_mode,step=1)
 n_modes=length(F_modes)
+#
+@printf("Floquet Hamiltonian Q=%f  F=%f  max_mode=%d ",Q,F,max_mode)
 #
 flq_bands = zeros(Float64, length(path), n_modes*h_size)
 for (i,kpt) in enumerate(path)
@@ -122,8 +124,8 @@ for (i,kpt) in enumerate(path)
 end
 display(plot(flq_bands[:, 1], label="Band 1", xlabel="k", ylabel="Energy [eV]", legend=:topright))
 display(plot!(flq_bands[:, 2], label="Band 2"))
-display(plot!(flq_bands[:, 3], label="Band 3"))
-display(plot!(flq_bands[:, 4], label="Band 4"))
+#display(plot!(flq_bands[:, 3], label="Band 3"))
+#display(plot!(flq_bands[:, 4], label="Band 4"))
 title!("Floquet band structure for two site 1D model")
 sleep(10)
 
