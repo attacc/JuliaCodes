@@ -20,38 +20,34 @@ function Hamiltonian(k; t_0 = 1.0/2.0, Q=0.0)::Matrix{Complex{Float64}}
         #
         # Off diagonal part
         #
-        H[1,2]=t_0*(exp(-1im*k[1])+exp(+1im*k[1]))
+        H[1,2]=t_0*cos(k[1])
 	H[2,1]=conj(H[1,2])
-#        println(H[1,2])
 	return H
 end
 
-function Floquet_Hamiltonian(k; t_0 = 1.0/2.0, Q=0.0, omega=1.0, F=0.0, n_modes=2)::Matrix{Complex{Float64}}
+function Floquet_Hamiltonian(k, F_modes; t_0 = 1.0/2.0, Q=0.0, omega=1.0, F=0.0)::Matrix{Complex{Float64}}
         h_size =2
-        H_flq_size=n_modes*h_size
-        
-        H_flq=zeros(Complex{Float64},H_flq_size,H_flq_size)
+        n_modes=length(F_modes)
+        H_flq=zeros(Complex{Float64},n_modes,n_modes,h_size,h_size)
 
-#Diagonal terms respect to mode and Q
-        for i_m in (1:n_modes)
+#Diagonal terms respect to the mode and Q
+        for i1 in 1:n_modes
+          i_m=F_modes(i1)
           for ih in (1:h_size)
-            H_flq[(i_m-1)*h_size+ih,(i_m-1)*h_size+ih]=i_m*omega+(-Q)^ih
+            H_flq[i_m,i_m,ih,ih]=i_m*omega+(-Q)^ih
           end
         end
         
 #Off-diagonal terms in mode and t_0
-        for i_m in (1:n_modes)
-          for i_n in (i_m:n_modes)
-              H_flq[(i_m-1)*h_size+1,(i_n-1)*h_size+2]=(1.0im)^(i_m-i_n)*besselj(i_m-i_n,F)*cos(k[1]-(i_m-i_n)*pi/2.0)
-              H_flq[(i_m-1)*h_size+2,(i_n-1)*h_size+1]=H_flq[(i_m-1)*h_size+1,(i_n-1)*h_size+2]
-              #
-              # complex conjugate
-              #
-              H_flq[(i_n-1)*h_size+2,(i_m-1)*h_size+1]=conj(H_flq[(i_m-1)*h_size+2,(i_n-1)*h_size+1])
-              H_flq[(i_n-1)*h_size+1,(i_m-1)*h_size+2]=conj(H_flq[(i_m-1)*h_size+1,(i_n-1)*h_size+2])
+        for i1 in 1:n_modes
+          i_m=F_modes(i1)
+          for i2 in 1:n_modes
+              i_n=F_modes(i2)
+              H_flq[i_m,i_n,1,2]=(1.0im)^(i_m-i_n)*besselj(i_m-i_n,F)*t_0*cos(k[1]-(i_m-i_n)*pi/2.0)
+              H_flq[i_m,i_n,2,1]=H_flq[i_m,i_n,1,2]
           end
        end
-    return H_flq
+       return reshape(H_flq,(n_modes*h_size,n_modes*h_size))
 end
 
 
@@ -83,11 +79,11 @@ function generate_circuit(points, n_steps)
 end
 
 L=1.0
-mPi=[-pi/(2.0*L)]
-pPi=[+pi/(2.0*L)]
+zero=[0.0]
+Pi2=[+pi/(2.0*L)]
 
-points=[mPi,pPi]
-n_kpt=10
+points=[zero,Pi2]
+n_kpt=30
 
 t_0=0.5
 Q=0.1
@@ -104,21 +100,23 @@ end
 display(plot(band_structure[:, 1], label="Band 1", xlabel="k", ylabel="Energy [eV]", legend=:topright))
 display(plot!(band_structure[:, 2], label="Band 2"))
 title!("Band structure for two site 1D model")
-sleep(10)
 
 #
 # Build the Floquet Hamiltonian
 #
 t_0=0.5
-Q=1.0
+Q=0.1
 F=0.0
 omega=1.0
-n_modes=2
+max_mode=2
 h_size=2
+#
+F_modes=range(-max_mode,max_mode,step=1)
+n_modes=length(F_modes)
 #
 flq_bands = zeros(Float64, length(path), n_modes*h_size)
 for (i,kpt) in enumerate(path)
-	H_flq=Floquet_Hamiltonian(kpt;t_0,Q,omega,F,n_modes)
+	H_flq=Floquet_Hamiltonian(kpt,F_modes;t_0,Q,omega,F)
 	eigenvalues = eigen(H_flq).values       # Diagonalize the matrix
         flq_bands[i, :] = eigenvalues  # Store eigenvalues in an array
 end
