@@ -1,8 +1,11 @@
 import numpy as np
+import sys
 import matplotlib.pyplot as plt
 from fractions import Fraction as frac
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 import scipy.sparse.linalg as scp
+from tqdm import tqdm
+
 
 def pi_axis_formatter(val, pos, denomlim=10, pi=r'\pi'):
     """Formats axis ticks with fractions of pi."""
@@ -408,6 +411,8 @@ for kp,vec_k in enumerate(k_space):
     plt.scatter(vec_k,E[kp,a], color=color_map[a])
 plt.savefig('1D-BS.png',dpi=my_dpi, bbox_inches='tight')
 plt.close()
+
+
 #H_F=Floq_Ham(F_modes,params, vec_k)
 
 

@@ -4,12 +4,54 @@
 #
 using Printf
 using LinearAlgebra
-using Plots
+using PyPlot
 using Bessels
+using ArgParse
+using TB_parms
+
+
+function parse_commandline()
+    s = ArgParseSettings()
+
+    @add_arg_table s begin
+        "-t"
+            help = "diagonalize tb-Hamiltonian"
+            action = :store_true
+        "-f"
+            help = "diagonalize flq-Hamiltonian"
+            action = :store_true
+        "-r"
+            help = "real-time dynamics"
+            action = :store_true
+        "--Q"
+            help = "gap parameter"
+            arg_type = Float64
+        "--nkpt"
+            help = "number of k-ponints"
+            arg_type = Int
+        "--nmax"
+            help = "max number of modes"
+            arg_type = Int
+        "--F"
+            help = "Field intensity"
+            arg_type = Float64
+        "--omega"
+            help = "Field frequency"
+            arg_type = Float64
+        "--tstep"
+            help = "Time-step for real-time dynamics"
+            arg_type = Float64
+        "--nsteps"
+            help = "Number of steps for real-time dynamics"
+            arg_type = Int
+    end
+
+    return parse_args(s)
+end
 
 # In this program the lattice constant is equal to 1
 
-function Hamiltonian(k; Q=0.0)::Matrix{Complex{Float64}}
+function Hamiltonian(k,Q;At=0.0)::Matrix{Complex{Float64}}
         #
 	H=zeros(Complex{Float64},2,2)
         #
@@ -20,7 +62,7 @@ function Hamiltonian(k; Q=0.0)::Matrix{Complex{Float64}}
         #
         # Off diagonal part
         #
-        H[1,2]=cos(k[1])
+        H[1,2]=cos(k[1]+At)
 	H[2,1]=conj(H[1,2])
 	return H
 end
@@ -55,11 +97,7 @@ function Floquet_Hamiltonian(k, F_modes;  Q=0.0, omega=1.0, F=0.0)
 end
 
 
-
-println("")
-println(" * * * Tight-binding code for 1D-system  * * *")
-println("")
-# 
+    
 #
 function generate_circuit(points, n_steps)
 	println("Generate k-path ")
@@ -82,56 +120,102 @@ function generate_circuit(points, n_steps)
 	return path
 end
 
-L=1.0
-zero=[0.0]
-Pi2=[+pi/(2.0*L)]
 
-points=[zero,Pi2]
-n_kpt=30
+function main()
+    parsed_args = parse_commandline()
+    #
+    # generate k-points list
+    # 
+    n_kpt=parsed_args["nkpt"] 
+    zero=[0.0]
+    Pi2=[+pi/(2.0)]
+    kpoints=[zero,Pi2]
+    path=generate_circuit(kpoints,n_kpt)
+    #    
+    #tb-parameters
+    #
+    Q=parsed_args["Q"]
+    if parsed_args["t"]
+        TB_diag(path,Q)
+    end
+    #
+    #
+    # Floquet Hamiltonian parameters
+    #
+    F       =parsed_args["F"]    # Intensity
+    omega   =parsed_args["omega"] # Frequency
+    max_mode=parsed_args["nmax"]  # max number of modes
+    if parsed_args["f"]
+        FLQ_diag(path,Q,omega,F,max_mode)
+    end
+    #
+    # Real-time
+    #
+    if parsed_args["r"]
+       # RT_dynamics()
+    end
+end
 
-Q=0.1
+function TB_diag(path,Q)
+  println("")
+  println(" * * * Tight-binding code for 1D-system  * * *")
+  println("")
 
-path=generate_circuit(points,n_kpt)
-band_structure = zeros(Float64, length(path), 2)
-
-for (i,kpt) in enumerate(path)
-	H=Hamiltonian(kpt;Q)
-	eigenvalues = eigen(H).values       # Diagonalize the matrix
+  band_structure = zeros(Float64, length(path), 2)
+  
+  for (i,kpt) in enumerate(path)
+  	H=Hamiltonian(kpt,Q)
+  	eigenvalues = eigen(H).values       # Diagonalize the matrix
         band_structure[i, :] = eigenvalues  # Store eigenvalues in an array
+  end
+  plot(band_structure[:, 1], label="Band 1")
+  plot(band_structure[:, 2], label="Band 2")
+  title("Band structure for two site 1D model")
+  PyPlot.show()
 end
-display(plot(band_structure[:, 1], label="Band 1", xlabel="k", ylabel="Energy [eV]", legend=:topright))
-display(plot!(band_structure[:, 2], label="Band 2"))
-title!("Band structure for two site 1D model")
-sleep(5)
 
-#
-# Build the Floquet Hamiltonian
-#
-Q=0.1       # gap
-F=0.0       # Intensity
-omega=0.1   # Frequency
-max_mode=1  # max number of modes
-h_size=2    # Hamiltonian size
-#
-F_modes=range(-max_mode,max_mode,step=1)
-n_modes=length(F_modes)
-#
-println("")
-@printf("Floquet Hamiltonian Q=%f  F=%f  omega=%f max_mode=%d ",Q,F,omega,max_mode)
-println("")
-#
-flq_bands = zeros(Float64, length(path), n_modes, h_size)
-for (i,kpt) in enumerate(path)
-	H_flq=Floquet_Hamiltonian(kpt,F_modes;Q,omega,F)
-	eigenvalues = eigen(H_flq).values       # Diagonalize the matrix
+
+function FLQ_diag(path,Q,omega,F,max_mode)
+  h_size=2    # Hamiltonian size
+  #
+  F_modes=range(-max_mode,max_mode,step=1)
+  n_modes=length(F_modes)
+  #
+  println("")
+  @printf("Floquet Hamiltonian Q=%f  F=%f  omega=%f max_mode=%d ",Q,F,omega,max_mode)
+  println("")
+  #
+  flq_bands = zeros(Float64, length(path), n_modes, h_size)
+  for (i,kpt) in enumerate(path)
+  	H_flq=Floquet_Hamiltonian(kpt,F_modes;Q,omega,F)
+  	eigenvalues = eigen(H_flq).values       # Diagonalize the matrix
         flq_bands[i, :,:] = reshape(eigenvalues,(n_modes,h_size))  # Store eigenvalues in an array
+  end
+  plot(flq_bands[:, 1,1], label="Mode 1 band 1",color="green")
+  plot(flq_bands[:, 1,2], label="Mode 1 band 2",color="green")
+  plot(flq_bands[:, 2,1], label="Mode 2 band 1",color="blue")
+  plot(flq_bands[:, 2,2], label="Mode 2 band 2",color="blue")
+  plot(flq_bands[:, 3,1], label="Mode 3 band 1",color="red")
+  plot(flq_bands[:, 3,2], label="Mode 3 band 2",color="red")
+  title("Floquet band structure for two site 1D model")
+  PyPlot.show()
 end
-display(plot(flq_bands[:, 1,1],  label="Mode 1 band 1",lc=:green, xlabel="k", ylabel="Energy [eV]", legend=:topright))
-display(plot!(flq_bands[:, 1,2], label="Mode 1 band 2",lc=:green))
-display(plot!(flq_bands[:, 2,1], label="Mode 2 band 1",lc=:blue))
-display(plot!(flq_bands[:, 2,2], label="Mode 2 band 2",lc=:blue))
-display(plot!(flq_bands[:, 3,1], label="Mode 3 band 1",lc=:red))
-display(plot!(flq_bands[:, 3,2], label="Mode 3 band 2",lc=:red))
-title!("Floquet band structure for two site 1D model")
-sleep(10)
 
+function RT_dynamics(kpoints,Q,omega,F,tstep,nsteps)
+  h_size=2    # Hamiltonian size
+  #
+  nk=length(kpoints)
+  psi0=zeros(Complex{Float64},nk,h_size)
+  #
+  # Initial WF in the ground-state
+  psi0[:,1]=1.0
+  #
+end
+
+function time_evolution(ψ,time;t0=0.0)
+        A_t=0.0
+        if time>t0
+           A_t=sim(omega(time-t0)
+
+
+main()
