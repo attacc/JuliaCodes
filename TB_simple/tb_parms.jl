@@ -14,5 +14,4 @@ tstep = 0.1
 n_steps = 1000
 
 #Ream-time floquet parameters
-
 end

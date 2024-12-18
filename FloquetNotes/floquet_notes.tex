@@ -1,0 +1,139 @@
+\documentclass[%
+% reprint,
+superscriptaddress,
+%groupedaddress,
+%unsortedaddress,
+%runinaddress,
+%frontmatterverbose, 
+preprint,
+preprintnumbers,
+%nofootinbib,
+%nobibnotes,
+%bibnotes,
+ amsmath,amssymb,
+ aps,
+%pra,
+%prb,
+%rmp,
+%prstab,
+%prstper,
+%floatfix,
+%twocolumn,
+]{revtex4-2}
+
+\usepackage{xcolor}
+\usepackage{bbold}
+\usepackage{graphicx}% Include figure files
+\usepackage{dcolumn}% Align table columns on decimal point
+\usepackage{bm}% bold math
+\usepackage[colorlinks,allcolors=blue,urlcolor=blue]{hyperref}
+\usepackage[normalem]{ulem}
+\newcommand\corr[1]{\textcolor{red}{{{#1}}}}
+
+
+\newcommand{\uu}{{\bf u}}
+\newcommand{\qq}{{\bf q}}
+\newcommand{\hh}{{\bf h}}
+\newcommand{\rr}{{\bf r}}
+\newcommand{\pp}{{\bf p}}
+\newcommand{\PP}{{\bf P}}
+\newcommand{\kk}{{\bf k}}
+\newcommand{\HH}{{\bf H}}
+\newcommand{\GG}{{\bf G}}
+\newcommand{\SiS}{{\bf \Sigma}}
+\newcommand{\VV}{{\bf V}}
+\newcommand{\UU}{{\bf U}}
+\newcommand{\w}{\omega}
+\newcommand{\tf}{\textbf}
+\newcommand{\bo}{\mathbf}
+\newcommand{\br}{{\bf r}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\ben}{\begin{equation*}}
+\newcommand{\een}{\end{equation*}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\bean}{\begin{eqnarray*}}
+\newcommand{\eean}{\end{eqnarray*}}
+\newcommand{\nup}{n_{\uparrow}}
+\newcommand{\ndown}{n_{\downarrow}}
+
+\newcommand{\bdq}{\hat b^{\dagger}_\qq}
+\newcommand{\bq}{\hat b_\qq}
+
+\newcommand{\aald}[1]{\hat a^{\dagger}_{\alpha #1}}
+\newcommand{\aal}[1]{\hat a_{\alpha #1}}
+
+\newcommand{\abe}[1]{\hat a_{\beta #1 }}
+\newcommand{\abed}[1]{\hat a^{\dagger}_{\beta #1}}
+
+
+
+\newcommand{\Id}[1] {\int \! \! {\rm d}^3 #1}
+\renewcommand{\v}[1]{{\bf #1}}
+\renewcommand{\[}{\left[}
+\renewcommand{\]}{\right]}
+\renewcommand{\(}{\left(}
+\renewcommand{\)}{\right)}
+\def\efield{\boldsymbol{\cal E}} 
+\def\ket#1{\vert#1\rangle}
+\def\bra#1{\langle#1\vert}
+
+
+
+\begin{document}
+
+\preprint{APS/123-QED}
+
+\newcommand{\cinam}{CNRS/Aix-Marseille Universit\'e, Centre Interdisciplinaire de Nanoscience de Marseille UMR 7325 Campus de Luminy, 13288 Marseille cedex 9, France}
+
+\title{Floquet in a tight-binding model}
+\author{Claudio Attaccalite}
+\affiliation{\cinam}
+
+%\date{\today}
+
+\begin{abstract}
+
+We sketch the derivation of Floquet following the work of Ikeda et al. \cite{ikeda2018floquet}
+\end{abstract}
+
+\maketitle
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+We start from Eq.~12 of Ref.~\cite{ikeda2018floquet}:
+\begin{equation}
+\bold H_{mn}^F(k)=(n\Omega \mathbb{I} + Q\sigma_z) \delta_{mn} + i^{m-n} J_{m-n} cos\left [ k - \frac{(m-n)\pi}{2}  \right] \sigma_x
+\end{equation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The corresponding Floquet states are defined as the solution of:
+\begin{equation}
+    \sum_n \bold H^F_{mn} \chi_n^\alpha(k) = E_\alpha(k) \chi_n^\alpha(k)
+\end{equation}
+where in our case $\alpha=1,2$. In general the size of the Floquet matrix is $\#modes \cdot \#bands$.
+The matrix has the structure described in the Ashwin notes.
+From the solution of the Floquet Hamiltonia we can find the eigenmodes of the time-dependent Schoerdinger eq.:
+\begin{equation}
+	\vec \chi^\alpha(k,t)=e^{E_\alpha(k),t} \sum_n \vec \chi^\alpha_n(k)e^{in\Omega t}
+\end{equation}
+Notice that in our case $\vec \chi^\alpha(k,t)$ is a vector of dimension 2.
+The general expression for a time dependent function in term of Floquet states writes:
+\be
+\vec \psi(k,t)= \sum_\alpha \omega_\alpha \vec \chi^\alpha(k,t) 
+\ee
+Now we want to use this basis to describe the EOM when a field $sin(\Omega t)$ is turned on at $t=0$. 
+We supposed that only valence orbitals are occupied at $t=0$, namely:
+\be
+\omega_\alpha= \vec \chi^\alpha_n(k)^\dagger \vec \psi_0(k) \\
+\ee
+\begin{acknowledgments}
+CA. acknowledges ANR project COLIBRI No. ANR-22-CE30-0027 and AMIDEX INDIGENA project.
+
+\end{acknowledgments}
+%\bibliographystyle{naturemag}
+%\bibliographystyle{mynaturemag}
+\bibliography{references}
+
+\end{document}
