@@ -153,7 +153,7 @@ end
 println("External field versor :",e_field.E_vec)
 #
 if dk!=nothing
-  println("* * * * * Real-time dynamics not compatible with dt!=nothing * * * * * * ")
+  println("* * * * * Real-time dynamics not compatible with dk!=nothing * * * * * * ")
 end
 # 
 # Different possible matrix for the coupling
