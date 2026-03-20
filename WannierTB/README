@@ -1,0 +1,17 @@
+Walkthrough: TightBinding.jl
+What was accomplished
+I've implemented a new Julia package, TightBinding.jl, leveraging WannierIO to read Wannier90 hopping integrals and build a tight-binding model. The package evaluates the Hamiltonian $H(\mathbf{k})$ accurately in k-space.
+
+Per your request, the project has been fully initialized in the new folder: /home/attacc/SOFTWARE/lumen/TightBinding.
+
+Architecture Details
+The package is composed of:
+
+src/model.jl: Defines the TBModel struct and the read_tb_model function to parse the hr.dat hopping matrices using WannierIO.
+src/hamiltonian.jl: Defines hamiltonian(model, k) to construct the exact $H(\mathbf{k})$ hermitian matrix via a sum over the $\mathbf{R}$ vectors.
+src/bands.jl: Implements get_bands to iterate through k-points and diagonalize $H(\mathbf{k})$ to obtain energy eigenvalues.
+test/runtests.jl: We've included an automated test that validates the correct matrix evaluations and band structure parsing with a mock 1D chain data file.
+Validation Results
+All automated tests passed successfully, covering reading, parsing, pointwise evaluation, and band extraction.
+
+To build on this package, you can now cd to /home/attacc/SOFTWARE/lumen/TightBinding and run julia --project=@. -e 'using Pkg; Pkg.test()' at your convenience.
